@@ -2,6 +2,8 @@
 
 import { useRef, useCallback, useState, useEffect } from "react";
 import { toPng } from "html-to-image";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 import type { Variant } from "./refresh-engine";
 
 /* ── Feedback types ────────────────────────────────────────────── */
@@ -1040,6 +1042,7 @@ function AdMockup({
   onToggleApprove,
   themePenalties,
   forcedTheme,
+  mockupRefs,
 }: {
   variant: Variant;
   index: number;
@@ -1048,10 +1051,20 @@ function AdMockup({
   onToggleApprove: () => void;
   themePenalties: ThemePenalties;
   forcedTheme?: AdTheme;
+  mockupRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
 }) {
   const mockupRef = useRef<HTMLDivElement>(null);
   const themeName = forcedTheme || pickTheme(index, themePenalties);
   const theme = THEMES[themeName];
+
+  // Register this mockup's DOM ref so FigmaSendPanel can render it to PNG
+  useEffect(() => {
+    const el = mockupRef.current;
+    if (el) {
+      mockupRefs.current.set(variant.variant_id, el);
+    }
+    return () => { mockupRefs.current.delete(variant.variant_id); };
+  }, [variant.variant_id, mockupRefs]);
 
   const handleDownload = useCallback(async () => {
     if (!mockupRef.current) return;
@@ -1303,31 +1316,86 @@ function FeedbackLog({ entries, penalties }: { entries: FeedbackEntry[]; penalti
 function FigmaSendPanel({
   variants,
   approvedIds,
+  mockupRefs,
 }: {
   variants: Variant[];
   approvedIds: Set<string>;
+  mockupRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
 }) {
   const [figmaUrl, setFigmaUrl] = useState("");
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<{ success?: boolean; error?: string; figma_url?: string } | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [result, setResult] = useState<{ success?: boolean; error?: string; figma_url?: string; zipReady?: boolean } | null>(null);
 
   const approvedVariants = variants.filter((v) => approvedIds.has(v.variant_id));
   const count = approvedVariants.length;
 
   if (count === 0) return null;
 
-  const handleSend = async () => {
+  /** Render approved mockups to PNGs and bundle into a ZIP download */
+  const handleExportZip = async () => {
+    setExporting(true);
+    try {
+      const zip = new JSZip();
+      const imgFolder = zip.folder("docebo-approved-mockups");
+
+      for (const v of approvedVariants) {
+        const el = mockupRefs.current.get(v.variant_id);
+        if (!el) continue;
+        const dataUrl = await toPng(el, { quality: 1, pixelRatio: 2 });
+        // Convert data URL to binary
+        const base64 = dataUrl.split(",")[1];
+        const filename = `docebo-${v.variant_id}-${v.ad_type}.png`;
+        imgFolder!.file(filename, base64, { base64: true });
+      }
+
+      // Add a brief.txt with the creative details
+      const briefLines = approvedVariants.map((v) =>
+        [
+          `━━━ ${v.variant_id} | ${v.ad_type} | ${v.hook_type} ━━━`,
+          `File: docebo-${v.variant_id}-${v.ad_type}.png`,
+          `Headline: ${v.headline}`,
+          `Overlay: ${v.creative_overlay}`,
+          `CTA: ${v.cta_text}`,
+          `Intro: ${v.intro_text}`,
+          `Visual direction: ${v.visual_direction}`,
+          `UTM: ${v.utm_content_tag}`,
+          `Scores — Voice: ${v.self_score?.voice_compliance} | Brand: ${v.self_score?.visual_brand_fit} | Diff: ${v.self_score?.differentiation} | Term: ${v.self_score?.terminology}`,
+          "",
+        ].join("\n")
+      );
+      imgFolder!.file("brief.txt", briefLines.join("\n"));
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      saveAs(blob, `docebo-approved-${count}-variants.zip`);
+      setResult((prev) => ({ ...prev, zipReady: true }));
+    } catch (err) {
+      console.error("ZIP export failed:", err);
+      setResult({ error: "Failed to export mockup PNGs" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  /** Post the creative brief as a Figma comment */
+  const handleSendComment = async () => {
     if (!figmaUrl.trim()) return;
     setSending(true);
     setResult(null);
 
     try {
+      // Build comment with filename references so designers can match PNGs
+      const commentVariants = approvedVariants.map((v) => ({
+        ...v,
+        _filename: `docebo-${v.variant_id}-${v.ad_type}.png`,
+      }));
+
       const res = await fetch("/api/figma", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           figma_url: figmaUrl.trim(),
-          variants: approvedVariants,
+          variants: commentVariants,
         }),
       });
       const data = await res.json();
@@ -1352,33 +1420,61 @@ function FigmaSendPanel({
         </span>
       </div>
 
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={figmaUrl}
-          onChange={(e) => setFigmaUrl(e.target.value)}
-          placeholder="Paste Figma file URL..."
-          className="flex-1 text-xs bg-gray-900/60 border border-gray-700/50 rounded px-2 py-1.5 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/50"
-        />
-        <button
-          onClick={handleSend}
-          disabled={!figmaUrl.trim() || sending}
-          className="text-xs px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5"
-        >
-          {sending ? (
-            <>
-              <span className="inline-block w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
-              Sending...
-            </>
-          ) : (
-            <>Send to Figma</>
-          )}
-        </button>
-      </div>
+      {/* Export PNGs as ZIP */}
+      <button
+        onClick={handleExportZip}
+        disabled={exporting}
+        className="w-full text-xs px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-center gap-2 mb-2"
+      >
+        {exporting ? (
+          <>
+            <span className="inline-block w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+            Rendering {count} mockup{count > 1 ? "s" : ""} to PNG...
+          </>
+        ) : (
+          <>Download {count} PNG{count > 1 ? "s" : ""} + brief (ZIP)</>
+        )}
+      </button>
+
+      {result?.zipReady && (
+        <p className="text-[10px] text-emerald-400/70 mb-2">
+          ZIP downloaded — drag PNGs into your Figma file
+        </p>
+      )}
+
+      {/* Optional: also post brief as Figma comment */}
+      <details className="group">
+        <summary className="text-[10px] text-gray-500 cursor-pointer hover:text-gray-400 mb-1">
+          Also post brief as Figma comment (optional)
+        </summary>
+        <div className="flex gap-2 mt-1">
+          <input
+            type="text"
+            value={figmaUrl}
+            onChange={(e) => setFigmaUrl(e.target.value)}
+            placeholder="Paste Figma file URL..."
+            className="flex-1 text-xs bg-gray-900/60 border border-gray-700/50 rounded px-2 py-1.5 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/50"
+          />
+          <button
+            onClick={handleSendComment}
+            disabled={!figmaUrl.trim() || sending}
+            className="text-xs px-3 py-1.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+          >
+            {sending ? (
+              <>
+                <span className="inline-block w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>Post comment</>
+            )}
+          </button>
+        </div>
+      </details>
 
       {result?.success && (
         <div className="mt-2 flex items-center gap-2 text-xs text-emerald-400">
-          <span>✓</span> Creative brief posted as comment —{" "}
+          <span>✓</span> Brief posted as comment —{" "}
           <a
             href={result.figma_url}
             target="_blank"
@@ -1421,6 +1517,7 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
   const [feedbackLog, setFeedbackLog] = useState<FeedbackEntry[]>([]);
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [selectedStyle, setSelectedStyle] = useState<AdTheme | "mix" | null>(null);
+  const mockupRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // Reset style selection when new variants arrive
   useEffect(() => {
@@ -1520,7 +1617,7 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
       </div>
 
       {/* Figma send panel (shows when variants are approved) */}
-      <FigmaSendPanel variants={variants} approvedIds={approvedIds} />
+      <FigmaSendPanel variants={variants} approvedIds={approvedIds} mockupRefs={mockupRefs} />
 
       {/* Feedback log (shows after any feedback is submitted) */}
       <FeedbackLog entries={feedbackLog} penalties={themePenalties} />
@@ -1536,6 +1633,7 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
             onToggleApprove={() => toggleApprove(v.variant_id)}
             themePenalties={themePenalties}
             forcedTheme={forcedTheme}
+            mockupRefs={mockupRefs}
           />
         ))}
       </div>

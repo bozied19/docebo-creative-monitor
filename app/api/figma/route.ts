@@ -42,6 +42,9 @@ export async function POST(req: NextRequest) {
 
     for (const v of variants) {
       commentLines.push(`━━━ ${v.variant_id} | ${v.ad_type} | ${v.hook_type} ━━━`);
+      if (v._filename) {
+        commentLines.push(`PNG: ${v._filename}`);
+      }
       commentLines.push(`Headline: ${v.headline}`);
       commentLines.push(`Overlay: ${v.creative_overlay}`);
       commentLines.push(`CTA: ${v.cta_text}`);
