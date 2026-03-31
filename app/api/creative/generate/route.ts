@@ -136,6 +136,54 @@ function generateMockVariants(prompt: string, platform?: string): object[] {
   return variants;
 }
 
+/** Fetch rendering feedback and build a prompt section summarizing learnings */
+async function buildFeedbackContext(): Promise<string> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const res = await fetch(`${baseUrl}/api/feedback`);
+    if (!res.ok) return "";
+    const { entries, themeSummary } = await res.json();
+
+    if (!entries || entries.length === 0) return "";
+
+    // Build a concise rendering-learnings block
+    const lines: string[] = [
+      "\n\nRendering Feedback Loop — Learnings from past mockup reviews:",
+      `Total feedback entries: ${entries.length}`,
+    ];
+
+    for (const [theme, data] of Object.entries(themeSummary) as [string, { negative: string[]; positive: string[] }][]) {
+      if (data.negative.length > 0) {
+        lines.push(`- Theme "${theme}" issues (${data.negative.length}x): ${[...new Set(data.negative)].slice(0, 5).join(", ")}`);
+      }
+      if (data.positive.length > 0) {
+        lines.push(`- Theme "${theme}" praised (${data.positive.length}x): ${[...new Set(data.positive)].slice(0, 5).join(", ")}`);
+      }
+    }
+
+    // Extract unique notes as direct user guidance
+    const recentNotes = entries
+      .filter((e: { note: string }) => e.note)
+      .slice(-10)
+      .map((e: { note: string }) => `  - "${e.note}"`);
+
+    if (recentNotes.length > 0) {
+      lines.push("\nDirect reviewer notes (most recent):");
+      lines.push(...recentNotes);
+    }
+
+    lines.push(
+      "\nUse these learnings to avoid known rendering issues in your visual_direction and gemini_image_prompt fields. " +
+      "Favor color/layout combinations that received positive feedback. " +
+      "Avoid combinations that caused readability, contrast, or overflow issues."
+    );
+
+    return lines.join("\n");
+  } catch {
+    return "";
+  }
+}
+
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -148,6 +196,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Fetch feedback learnings to inject into the prompt
+    const feedbackContext = await buildFeedbackContext();
 
     // Mock mode when no API key
     if (!apiKey) {
@@ -172,10 +223,14 @@ This campaign needs a creative refresh. ${userMessage}`;
 
     const client = new Anthropic({ apiKey });
 
+    const systemPrompt = feedbackContext
+      ? SYSTEM_PROMPT + feedbackContext
+      : SYSTEM_PROMPT;
+
     const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 8000,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
     });
 

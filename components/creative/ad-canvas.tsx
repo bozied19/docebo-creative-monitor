@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import { toPng } from "html-to-image";
 import type { Variant } from "./refresh-engine";
 
@@ -12,6 +12,8 @@ interface FeedbackEntry {
   note: string;
   timestamp: string;
 }
+
+type ThemePenalties = Record<string, number>;
 
 const QUICK_TAGS = [
   { label: "Unreadable text", icon: "🚫" },
@@ -237,8 +239,20 @@ const THEME_ORDER: AdTheme[] = [
   "cobrand-beige",
 ];
 
-function pickTheme(index: number): AdTheme {
-  return THEME_ORDER[index % THEME_ORDER.length];
+/** Pick a theme for variant at `index`, demoting themes with negative feedback.
+ *  Themes with high penalty scores get pushed to the end of the rotation. */
+function pickTheme(index: number, penalties: ThemePenalties = {}): AdTheme {
+  if (Object.keys(penalties).length === 0) {
+    return THEME_ORDER[index % THEME_ORDER.length];
+  }
+  // Sort themes: lower penalty first, preserving original order as tiebreaker
+  const ranked = [...THEME_ORDER].sort((a, b) => {
+    const pa = penalties[a] || 0;
+    const pb = penalties[b] || 0;
+    if (pa !== pb) return pa - pb;
+    return THEME_ORDER.indexOf(a) - THEME_ORDER.indexOf(b);
+  });
+  return ranked[index % ranked.length];
 }
 
 /* ── Score badge ────────────────────────────────────────────────── */
@@ -858,7 +872,7 @@ function FeedbackPanel({
     <div className="px-3 py-3 border-t border-gray-700/30 bg-gray-800/50">
       {submitted ? (
         <div className="flex items-center gap-2 text-xs text-emerald-400">
-          <span>✓</span> Feedback saved — will inform future renders
+          <span>✓</span> Feedback saved — active in generation loop + theme ranking
         </div>
       ) : (
         <>
@@ -920,15 +934,17 @@ function AdMockup({
   onFeedback,
   approved,
   onToggleApprove,
+  themePenalties,
 }: {
   variant: Variant;
   index: number;
   onFeedback: (entry: FeedbackEntry) => void;
   approved: boolean;
   onToggleApprove: () => void;
+  themePenalties: ThemePenalties;
 }) {
   const mockupRef = useRef<HTMLDivElement>(null);
-  const themeName = pickTheme(index);
+  const themeName = pickTheme(index, themePenalties);
   const theme = THEMES[themeName];
 
   const handleDownload = useCallback(async () => {
@@ -1107,15 +1123,41 @@ function AdMockup({
 }
 
 /* ── Feedback log (collapsible summary of all feedback) ─────────── */
-function FeedbackLog({ entries }: { entries: FeedbackEntry[] }) {
+function FeedbackLog({ entries, penalties }: { entries: FeedbackEntry[]; penalties: ThemePenalties }) {
   if (entries.length === 0) return null;
+
+  const demotedThemes = Object.entries(penalties)
+    .filter(([, p]) => p > 0)
+    .sort(([, a], [, b]) => b - a);
+  const promotedThemes = Object.entries(penalties)
+    .filter(([, p]) => p < 0)
+    .sort(([, a], [, b]) => a - b);
 
   return (
     <details className="mx-4 mb-3 rounded-lg border border-amber-500/20 bg-amber-500/5 overflow-hidden">
       <summary className="px-3 py-2 text-xs font-medium text-amber-400 cursor-pointer hover:text-amber-300 flex items-center gap-1.5">
-        <span>📋</span> Rendering feedback log ({entries.length}{" "}
-        {entries.length === 1 ? "note" : "notes"})
+        <span>📋</span> Rendering feedback loop ({entries.length}{" "}
+        {entries.length === 1 ? "note" : "notes"}) — active
+        <span className="ml-auto text-emerald-400/70 text-[10px] font-normal">
+          feeding generation + theme ranking
+        </span>
       </summary>
+      {/* Loop status */}
+      {(demotedThemes.length > 0 || promotedThemes.length > 0) && (
+        <div className="px-3 py-2 border-b border-amber-500/10 bg-gray-900/40">
+          <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Feedback loop effects</p>
+          {demotedThemes.length > 0 && (
+            <p className="text-xs text-red-400/80">
+              Demoted: {demotedThemes.map(([t, p]) => `${t} (−${p})`).join(", ")}
+            </p>
+          )}
+          {promotedThemes.length > 0 && (
+            <p className="text-xs text-emerald-400/80">
+              Promoted: {promotedThemes.map(([t, p]) => `${t} (+${Math.abs(p)})`).join(", ")}
+            </p>
+          )}
+        </div>
+      )}
       <div className="px-3 pb-3 space-y-2">
         {entries.map((entry, i) => (
           <div
@@ -1250,13 +1292,49 @@ function FigmaSendPanel({
   );
 }
 
+/* ── Compute theme penalty scores from feedback history ────────── */
+function computeThemePenalties(entries: FeedbackEntry[]): ThemePenalties {
+  const penalties: ThemePenalties = {};
+  const positiveLabels = new Set(["Great mockup", "On brand"]);
+
+  for (const entry of entries) {
+    if (!penalties[entry.theme]) penalties[entry.theme] = 0;
+    for (const tag of entry.tags) {
+      if (positiveLabels.has(tag)) {
+        penalties[entry.theme] -= 1; // reward good themes
+      } else {
+        penalties[entry.theme] += 2; // penalise bad themes more heavily
+      }
+    }
+  }
+  return penalties;
+}
+
 /* ── Grid of all variants ──────────────────────────────────────── */
 export default function AdCanvas({ variants }: AdCanvasProps) {
   const [feedbackLog, setFeedbackLog] = useState<FeedbackEntry[]>([]);
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
 
+  // Load persisted feedback on mount
+  useEffect(() => {
+    fetch("/api/feedback")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.entries?.length) setFeedbackLog(data.entries);
+      })
+      .catch(() => {}); // silent — feedback is non-critical
+  }, []);
+
+  const themePenalties = computeThemePenalties(feedbackLog);
+
   const handleFeedback = useCallback((entry: FeedbackEntry) => {
     setFeedbackLog((prev) => [...prev, entry]);
+    // Persist to API (fire-and-forget)
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(entry),
+    }).catch(() => {});
   }, []);
 
   const toggleApprove = useCallback((variantId: string) => {
@@ -1314,7 +1392,7 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
       <FigmaSendPanel variants={variants} approvedIds={approvedIds} />
 
       {/* Feedback log (shows after any feedback is submitted) */}
-      <FeedbackLog entries={feedbackLog} />
+      <FeedbackLog entries={feedbackLog} penalties={themePenalties} />
 
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {variants.map((v, i) => (
@@ -1325,6 +1403,7 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
             onFeedback={handleFeedback}
             approved={approvedIds.has(v.variant_id)}
             onToggleApprove={() => toggleApprove(v.variant_id)}
+            themePenalties={themePenalties}
           />
         ))}
       </div>

@@ -8,6 +8,9 @@ out/
 # environment
 .env*.local
 
+# feedback data (generated at runtime)
+data/
+
 # misc
 .DS_Store
 *.tsbuildinfo
