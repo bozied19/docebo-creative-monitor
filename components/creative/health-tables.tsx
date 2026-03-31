@@ -173,9 +173,12 @@ export default function HealthTables({
                       row.status !== "HEALTHY" ? "cursor-pointer" : "cursor-default"
                     }`}
                   >
-                    <td className="px-4 py-2 text-gray-300 max-w-[220px]">
-                      <span title={row.campaign_name}>
-                        {truncate(row.campaign_name, 45)}
+                    <td className="px-4 py-2 text-gray-300 max-w-[240px]">
+                      <span
+                        title={row.campaign_name}
+                        className="block break-words leading-snug text-xs"
+                      >
+                        {row.campaign_name}
                       </span>
                     </td>
                     <td className="px-3 py-2">

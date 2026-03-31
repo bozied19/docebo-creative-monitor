@@ -239,6 +239,110 @@ const THEME_ORDER: AdTheme[] = [
   "cobrand-beige",
 ];
 
+const STYLE_OPTIONS: { theme: AdTheme; label: string; desc: string }[] = [
+  { theme: "navy-white", label: "Navy Clean", desc: "Classic navy + white with purple gradient corner" },
+  { theme: "navy-green", label: "Navy Neon", desc: "Navy + neon green accents" },
+  { theme: "navy-pink", label: "Navy Pink", desc: "Navy + pink diagonal accent" },
+  { theme: "navy-lavender", label: "Navy Lavender", desc: "Navy + soft purple tones" },
+  { theme: "gradient-pink", label: "Gradient Glow", desc: "Blue-to-purple gradient + pink shape" },
+  { theme: "quote-gradient", label: "Quote Card", desc: "Testimonial layout with gradient" },
+  { theme: "beige-navy", label: "Beige Bold", desc: "Warm beige + navy blue text" },
+  { theme: "beige-purple", label: "Beige Purple", desc: "Warm beige + purple accents" },
+  { theme: "beige-wave", label: "Beige Wave", desc: "Beige top + navy wave bottom" },
+  { theme: "white-purple", label: "White Clean", desc: "White + blue-purple accents" },
+  { theme: "cobrand-navy-green", label: "Co-Brand Navy", desc: "Partner layout, navy + lime banner" },
+  { theme: "cobrand-beige", label: "Co-Brand Beige", desc: "Partner layout, beige + lime banner" },
+];
+
+/* ── Style Picker (shown before rendering) ──────────────────────── */
+function StylePicker({
+  onSelect,
+}: {
+  onSelect: (style: AdTheme | "mix") => void;
+}) {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-3 border-b border-gray-700/50">
+        <h2 className="text-sm font-semibold text-white">
+          Choose a Rendering Style
+        </h2>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Select how your mockups should look
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-auto p-4 space-y-3">
+        {/* Mix option — always first */}
+        <button
+          onClick={() => onSelect("mix")}
+          className="w-full text-left rounded-lg border-2 border-dashed border-cyan-500/40 bg-cyan-500/5 hover:border-cyan-400/60 hover:bg-cyan-500/10 transition-all cursor-pointer p-3"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden flex">
+              {["#0033A0", "#E6DACB", "#7E2EE9", "#FF5DD8", "#E3FFAB"].map((c) => (
+                <div key={c} className="flex-1 h-full" style={{ backgroundColor: c }} />
+              ))}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-cyan-300">
+                Show me a mix
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                3+ different styles across your variants
+              </p>
+            </div>
+          </div>
+        </button>
+
+        {/* Individual themes */}
+        <div className="grid grid-cols-2 gap-2">
+          {STYLE_OPTIONS.map(({ theme, label, desc }) => {
+            const cfg = THEMES[theme];
+            return (
+              <button
+                key={theme}
+                onClick={() => onSelect(theme)}
+                className="text-left rounded-lg border border-gray-700/50 bg-gray-800/30 hover:border-gray-500/50 hover:bg-gray-800/60 transition-all cursor-pointer p-2.5 group"
+              >
+                {/* Color swatch */}
+                <div
+                  className="w-full h-8 rounded mb-2 relative overflow-hidden"
+                  style={{
+                    background: cfg.bgGradient || cfg.bg,
+                  }}
+                >
+                  {/* Accent stripe */}
+                  <div
+                    className="absolute right-0 top-0 bottom-0 w-1/4"
+                    style={{
+                      backgroundColor: cfg.accentColor,
+                      opacity: 0.85,
+                      clipPath: "polygon(30% 0, 100% 0, 100% 100%, 0% 100%)",
+                    }}
+                  />
+                  {/* Layout label */}
+                  <span
+                    className="absolute bottom-0.5 left-1.5 text-[9px] font-mono uppercase tracking-wider"
+                    style={{ color: cfg.headlineColor, opacity: 0.7 }}
+                  >
+                    {cfg.layout}
+                  </span>
+                </div>
+                <p className="text-xs font-medium text-gray-200 group-hover:text-white transition-colors">
+                  {label}
+                </p>
+                <p className="text-[10px] text-gray-600 mt-0.5 leading-snug">
+                  {desc}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Pick a theme for variant at `index`, demoting themes with negative feedback.
  *  Themes with high penalty scores get pushed to the end of the rotation. */
 function pickTheme(index: number, penalties: ThemePenalties = {}): AdTheme {
@@ -935,6 +1039,7 @@ function AdMockup({
   approved,
   onToggleApprove,
   themePenalties,
+  forcedTheme,
 }: {
   variant: Variant;
   index: number;
@@ -942,9 +1047,10 @@ function AdMockup({
   approved: boolean;
   onToggleApprove: () => void;
   themePenalties: ThemePenalties;
+  forcedTheme?: AdTheme;
 }) {
   const mockupRef = useRef<HTMLDivElement>(null);
-  const themeName = pickTheme(index, themePenalties);
+  const themeName = forcedTheme || pickTheme(index, themePenalties);
   const theme = THEMES[themeName];
 
   const handleDownload = useCallback(async () => {
@@ -1314,6 +1420,13 @@ function computeThemePenalties(entries: FeedbackEntry[]): ThemePenalties {
 export default function AdCanvas({ variants }: AdCanvasProps) {
   const [feedbackLog, setFeedbackLog] = useState<FeedbackEntry[]>([]);
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
+  const [selectedStyle, setSelectedStyle] = useState<AdTheme | "mix" | null>(null);
+
+  // Reset style selection when new variants arrive
+  useEffect(() => {
+    setSelectedStyle(null);
+    setApprovedIds(new Set());
+  }, [variants]);
 
   // Load persisted feedback on mount
   useEffect(() => {
@@ -1377,15 +1490,33 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
     );
   }
 
+  // Show style picker before rendering
+  if (selectedStyle === null) {
+    return <StylePicker onSelect={setSelectedStyle} />;
+  }
+
+  // Compute forced theme for individual style selection
+  const forcedTheme = selectedStyle !== "mix" ? selectedStyle : undefined;
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-gray-700/50 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-white">
-          Ad Mockups ({variants.length})
-        </h2>
-        <span className="text-xs text-gray-500">
-          12 Docebo themes • Download as PNG
-        </span>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-white">
+            Ad Mockups ({variants.length})
+          </h2>
+          <span className="text-xs px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400 font-mono">
+            {selectedStyle === "mix"
+              ? "Mix"
+              : STYLE_OPTIONS.find((s) => s.theme === selectedStyle)?.label ?? selectedStyle}
+          </span>
+        </div>
+        <button
+          onClick={() => setSelectedStyle(null)}
+          className="text-xs text-gray-500 hover:text-cyan-400 transition-colors cursor-pointer"
+        >
+          Change style
+        </button>
       </div>
 
       {/* Figma send panel (shows when variants are approved) */}
@@ -1404,6 +1535,7 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
             approved={approvedIds.has(v.variant_id)}
             onToggleApprove={() => toggleApprove(v.variant_id)}
             themePenalties={themePenalties}
+            forcedTheme={forcedTheme}
           />
         ))}
       </div>

@@ -36,10 +36,11 @@ Platform-Specific Guidance
 - Meta: Retargeting engine. UGC-style creative. Video remarketing sequences (problem → solution → proof).
 
 Output Requirements (per request)
-- Generate exactly 3–5 variants.
-- Each variant must use a different message angle or hook type.
+- Generate exactly 5 variants.
+- Each variant must use a different hook_type (question / statistic / provocative statement / direct callout / story opener).
 - At least one variant must test a different visual style than the others.
 - Reference the target persona's specific pain points by name.
+- If ad_styles are specified, distribute variants across those styles in the visual_direction and full_ad_mockup_description.
 
 Accepted hook types: question / statistic / provocative statement / direct callout / story opener
 
@@ -188,7 +189,7 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   try {
-    const { prompt, campaign_context } = await req.json();
+    const { prompt, campaign_context, messaging_angles, messaging_hook, persona, ad_styles } = await req.json();
 
     if (!prompt) {
       return NextResponse.json(
@@ -206,7 +207,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ variants: mockVariants, raw_text: null, mock: true });
     }
 
+    const PERSONA_CONTEXT: Record<string, string> = {
+      "brand": "Target: Broad Docebo audience. Use big, bold, category-defining statements. Not persona-specific\u2014appeal to anyone who touches learning, enablement, or workforce development. Lead with Docebo\u2019s insurgent positioning. Make it feel like a movement, not a product.",
+      "ld-leader": "Target Persona: Chief Learning Officer / VP of L&D / Director of L&D. They care about: enterprise learning ROI, workforce readiness, vendor consolidation, skills strategy tied to business outcomes, credibility at the executive table. Pain: can\u2019t tie learning to business KPIs, manual processes killing the team, vendor sprawl, failed implementations. Language they use: business impact, workforce readiness, time to performance, governance, future-proofing. Avoid: feature-first messaging, LMS-centric framing.",
+      "hr-leader": "Target Persona: CHRO / CPO / VP of HR. They care about: people strategy aligned to business outcomes, HRIS integration (Workday, UKG, ADP), retention, compliance defensibility, single source of truth for people data, administrator reduction. Pain: 124 administrators across 29 business units, compliance reporting takes 30-40 minutes, manual org hierarchy updates, fragmented systems. Language: single source of truth, data governance, workforce readiness, internal mobility. Avoid: LMS-centric framing, training-only language.",
+      "enablement": "Target Persona: CRO / CSO / VP of Sales Enablement. They care about: revenue impact, Salesforce integration (embedded Lightning, bi-directional sync), rep ramp time, win rates, certified staff performance (7x more likely to hit ramp goals), customer onboarding from 3-4 months to 5-6 weeks. Pain: enablement not seen as revenue contributor, ramp takes too long, partner performance uneven. Language: direct revenue contribution, incremental sales, win rates, quota attainment. Avoid: learning-first framing, soft outcomes.",
+      "customer-ed": "Target Persona: VP/Director of Customer Education / Head of Customer Enablement. They care about: monetizing training (5x revenue increase), support ticket deflection (5x decrease), customer retention (8-16% boost), lead generation (30% of users are prospects), time-to-value. Pain: 27-28% non-users, revenue potential unrealized, content can\u2019t keep up with product. Language: cost deflection, revenue generation, upsell potential, monetize training. Avoid: HR-centric language, compliance-first narratives.",
+      "partnerships": "Target Persona: VP/Director of Partner Enablement / Head of Partnerships / Director of Channel Enablement. They care about: partner-sourced revenue growth, certification completion (90-95% benchmark), deal win rate by tier, time to first deal, automated provisioning from CRM. Pain: partners added manually, training difficult to track at volume, certification data unreliable. Language: partner-sourced revenue, deal registration, revenue attribution, certification completion. Avoid: internal L&D language, one-size-fits-all framing.",
+      "pro-dev": "Target Persona: VP of Professional Development / Head of Talent Development / Director of Leadership & OE. They care about: skills mapping to job roles, Workday integration, behavioral change measurement (Kirkpatrick Level 3), manager enablement, ROI benchmarking, AI virtual coaching. Pain: competencies mapped to job levels not roles, can\u2019t prove behavioral change, skills dashboard not ready. Language: skills mapping, Kirkpatrick model, behavioral change, career progression. Avoid: compliance-first framing, generic competency frameworks.",
+      "franchise": "Target Persona: VP/Director of Franchise Training / Head of Franchise Dev / Director of Field Learning. They care about: mobile device policy compliance (no phones on floor), HRIS integration with 4+ API data files, offline learning with wage/hour tracking, QR code attendance, 6x engagement improvement, multi-language (52+). Pain: hourly staff can\u2019t use personal devices, HRIS integration is complex, paper-based onboarding. Language: device policy, offline sync, franchisee data management, brand consistency. Avoid: corporate learning language, personal-phone-first assumptions.",
+      "compliance": "Target Persona: Compliance Officer / Director of Corporate Compliance / VP of Risk & Compliance. They care about: proving compliance at any moment, audit-ready records without manual assembly, automated assignment by role/region/regulation, immutable completion records, AI governance with zero data retention. Pain: audit requests they can\u2019t answer instantly, inconsistent records across systems, duplicate user accounts. Language: audit readiness, regulatory defensibility, evidence and traceability, immutable records. Avoid: engagement-first framing, gamification language.",
+      "finance": "Target Persona: CFO / EVP / VP of Finance. They care about: defensible ROI with conservative assumptions, predictable TCO, AI credit governance, vendor consolidation, no pricing surprises at renewal. Pain: variable AI costs unpredictable, implementation costs surface after contract, ROI models too optimistic. Language: total cost of ownership, ROI defensibility, budget predictability, locked pricing. Avoid: feature-first language, optimistic projections.",
+      "it-leader": "Target Persona: CIO / CTO / VP of IT. They care about: enterprise security (SOC 2, ISO 27001), SSO/SAML, HRIS real-time sync, API architecture, AI model transparency and zero data retention, reducing shadow IT, data residency for AI processing. Pain: AI feature sprawl, fragmented tools, integration maintenance burden, vendor updates breaking integrations. Language: security posture, AI governance, integration architecture, trust portal, API reliability. Avoid: feature-first pitches, AI claims without model transparency.",
+      "operations": "Target Persona: COO / Head of Operations / VP of Business Operations. They care about: operational scalability, time-to-productivity, training standardization across distributed workforce, frontline accessibility (offline, QR code), M&A integration. Pain: scaling faster than training infrastructure, compliance completions don\u2019t equal readiness, training doesn\u2019t reach frontline. Language: operational scalability, workforce readiness, process consistency, frontline performance. Avoid: engagement metrics as outcomes, implementation timelines ignoring operational constraints.",
+    };
+
     let userMessage = prompt;
+
+    if (persona && PERSONA_CONTEXT[persona]) {
+      userMessage += `\n\nTarget Persona Direction: ${PERSONA_CONTEXT[persona]}\nWrite every variant as if this persona will see it in their feed. Use their language, hit their pain points, and reference outcomes they actually measure. Do not use generic learning language unless the persona uses it.`;
+    }
+
+    if (messaging_angles && messaging_angles.length > 0) {
+      userMessage += `\n\nMessaging Angle Direction: Focus these variants on the following angles: ${messaging_angles.join(", ")}. Each variant should lean heavily into one of these angles as its primary creative strategy. Match the hook_type and ad_type to the selected angles. Make every word count — these angles were chosen to produce award-winning creative.`;
+    }
+
+    if (messaging_hook) {
+      userMessage += `\n\nMessaging Hook Category: ${messaging_hook}. The user has already provided a detailed prompt above with the specific hook and persona context. Follow that prompt closely.`;
+    }
+
+    if (ad_styles && ad_styles.length > 0) {
+      const AD_STYLE_VISUAL_MAP: Record<string, string> = {
+        "navy-bold": "Navy (#0033A0) background with white/neon headlines. Gradient corner accents. Signature Docebo navy look.",
+        "gradient-neon": "Blue-to-purple gradient background (#0057FF → #7E2EE9 → #B627C6). Neon pink accents. Cinematic, high-energy.",
+        "marble-clean": "Warm beige/marble (#E6DACB) background. Navy or purple text. Clean, editorial feel. Diagonal accent shapes.",
+        "white-minimal": "White background with blue-purple accent elements. Clean, minimal, high contrast text.",
+        "co-brand": "Partner co-brand layout with lime (#E3FFAB) banner area for partner logo. Navy or beige base.",
+        "quote": "Testimonial/quote layout on gradient background. Large quotation marks, customer attribution, proof-forward.",
+      };
+      const styleDescs = ad_styles.map((s: string) => AD_STYLE_VISUAL_MAP[s] || s).join("\n- ");
+      userMessage += `\n\nAd Visual Styles — distribute the 5 variants across these styles:\n- ${styleDescs}\nEach variant's visual_direction and full_ad_mockup_description must specify which style it uses. Distribute roughly evenly across the selected styles.`;
+    }
+
     if (campaign_context) {
       userMessage = `Campaign Context (from PostHog Creative Health Monitor):
 - Campaign: ${campaign_context.campaign_name}
