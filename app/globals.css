@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-docebo-navy: #0033A0;
+  --color-docebo-purple: #6B21A8;
+  --color-docebo-green: #00D4AA;
+  --color-docebo-dark: #0a0e1a;
+  --color-docebo-card: #111827;
+  --color-docebo-border: #1f2937;
+  --color-docebo-muted: #6b7280;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+body {
+  background: var(--color-docebo-dark);
+  color: #e5e7eb;
+  font-family: var(--font-sans);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Status pulse */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Ad mockup card */
+.ad-mockup {
+  background: linear-gradient(135deg, var(--color-docebo-navy), var(--color-docebo-purple));
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ad-mockup-linkedin {
+  width: 1200px;
+  height: 627px;
+}
+
+.ad-mockup-square {
+  width: 1080px;
+  height: 1080px;
+}
