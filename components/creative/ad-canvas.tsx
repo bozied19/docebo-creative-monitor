@@ -4,7 +4,8 @@ import { useRef, useCallback, useState, useEffect } from "react";
 import { toPng } from "html-to-image";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import type { Variant } from "./refresh-engine";
+import type { Variant, CanvasRenderContext } from "./refresh-engine";
+import { BRAND_VOICE_OPTIONS, type BrandVoiceOption } from "./refresh-engine";
 
 /* ── Feedback types ────────────────────────────────────────────── */
 interface FeedbackEntry {
@@ -30,7 +31,19 @@ const QUICK_TAGS = [
 
 interface AdCanvasProps {
   variants: Variant[];
+  renderContext?: CanvasRenderContext;
 }
+
+/* ── Visual Style → Theme mapping (from PDF taxonomy) ──────────── */
+const VISUAL_STYLE_THEME_MAP: Record<string, AdTheme[]> = {
+  "neon-intelligence": ["navy-white", "navy-green", "navy-pink", "navy-lavender"],
+  "human-contrast": ["beige-navy", "beige-purple", "beige-wave"],
+  "rebellious-editorial": ["quote-gradient", "beige-wave"],
+  "data-as-power": ["white-purple", "navy-white"],
+  "digital-rebellion": ["gradient-pink", "navy-pink"],
+  "minimal-authority": ["white-purple"],
+  "system-ui": ["navy-white", "navy-green"],
+};
 
 /* ── Visual theme definitions matching real Docebo ads ──────────── */
 type AdTheme =
@@ -346,17 +359,23 @@ function StylePicker({
 }
 
 /** Pick a theme for variant at `index`, demoting themes with negative feedback.
+ *  When a visual style is specified, restrict to that style's theme pool.
  *  Themes with high penalty scores get pushed to the end of the rotation. */
-function pickTheme(index: number, penalties: ThemePenalties = {}): AdTheme {
+function pickTheme(index: number, penalties: ThemePenalties = {}, visualStyle?: string): AdTheme {
+  // Use visual-style-restricted pool if available, otherwise full pool
+  const pool: AdTheme[] = (visualStyle && VISUAL_STYLE_THEME_MAP[visualStyle])
+    ? VISUAL_STYLE_THEME_MAP[visualStyle]
+    : THEME_ORDER;
+
   if (Object.keys(penalties).length === 0) {
-    return THEME_ORDER[index % THEME_ORDER.length];
+    return pool[index % pool.length];
   }
   // Sort themes: lower penalty first, preserving original order as tiebreaker
-  const ranked = [...THEME_ORDER].sort((a, b) => {
+  const ranked = [...pool].sort((a, b) => {
     const pa = penalties[a] || 0;
     const pb = penalties[b] || 0;
     if (pa !== pb) return pa - pb;
-    return THEME_ORDER.indexOf(a) - THEME_ORDER.indexOf(b);
+    return pool.indexOf(a) - pool.indexOf(b);
   });
   return ranked[index % ranked.length];
 }
@@ -381,10 +400,12 @@ function StandardMockup({
   variant,
   theme,
   mockupRef,
+  aspectRatio,
 }: {
   variant: Variant;
   theme: ThemeConfig;
   mockupRef: React.RefObject<HTMLDivElement | null>;
+  aspectRatio?: string;
 }) {
   const headlineWords = variant.headline.split(" ");
   const splitAt = Math.max(1, headlineWords.length - 2);
@@ -398,7 +419,7 @@ function StandardMockup({
       style={{
         backgroundColor: theme.bg,
         background: theme.bgGradient || theme.bg,
-        aspectRatio: "1 / 1",
+        aspectRatio: aspectRatio || "1 / 1",
       }}
     >
       {/* Corner gradient accent */}
@@ -564,10 +585,12 @@ function WaveMockup({
   variant,
   theme,
   mockupRef,
+  aspectRatio,
 }: {
   variant: Variant;
   theme: ThemeConfig;
   mockupRef: React.RefObject<HTMLDivElement | null>;
+  aspectRatio?: string;
 }) {
   return (
     <div
@@ -575,7 +598,7 @@ function WaveMockup({
       className="relative w-full overflow-hidden"
       style={{
         backgroundColor: theme.bg,
-        aspectRatio: "1 / 1",
+        aspectRatio: aspectRatio || "1 / 1",
       }}
     >
       {/* Navy bottom section with wave curve */}
@@ -680,10 +703,12 @@ function QuoteMockup({
   variant,
   theme,
   mockupRef,
+  aspectRatio,
 }: {
   variant: Variant;
   theme: ThemeConfig;
   mockupRef: React.RefObject<HTMLDivElement | null>;
+  aspectRatio?: string;
 }) {
   return (
     <div
@@ -693,7 +718,7 @@ function QuoteMockup({
         background:
           theme.bgGradient ||
           "linear-gradient(165deg, #0033CC 0%, #4C1D95 50%, #9333EA 100%)",
-        aspectRatio: "1 / 1",
+        aspectRatio: aspectRatio || "1 / 1",
       }}
     >
       {/* Large quote marks */}
@@ -804,10 +829,12 @@ function CoBrandMockup({
   variant,
   theme,
   mockupRef,
+  aspectRatio,
 }: {
   variant: Variant;
   theme: ThemeConfig;
   mockupRef: React.RefObject<HTMLDivElement | null>;
+  aspectRatio?: string;
 }) {
   const isNavy = theme.bg === "#0033A0";
 
@@ -817,7 +844,7 @@ function CoBrandMockup({
       className="relative w-full overflow-hidden"
       style={{
         backgroundColor: theme.bg,
-        aspectRatio: "1 / 1",
+        aspectRatio: aspectRatio || "1 / 1",
       }}
     >
       {/* Lime banner top-left */}
@@ -1043,6 +1070,7 @@ function AdMockup({
   themePenalties,
   forcedTheme,
   mockupRefs,
+  renderContext,
 }: {
   variant: Variant;
   index: number;
@@ -1052,10 +1080,13 @@ function AdMockup({
   themePenalties: ThemePenalties;
   forcedTheme?: AdTheme;
   mockupRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  renderContext?: CanvasRenderContext;
 }) {
   const mockupRef = useRef<HTMLDivElement>(null);
-  const themeName = forcedTheme || pickTheme(index, themePenalties);
+  const visualStyle = renderContext?.visual_style || variant.visual_style;
+  const themeName = forcedTheme || pickTheme(index, themePenalties, visualStyle);
   const theme = THEMES[themeName];
+  const aspectRatio = renderContext?.aspectRatio;
 
   // Register this mockup's DOM ref so FigmaSendPanel can render it to PNG
   useEffect(() => {
@@ -1090,6 +1121,7 @@ function AdMockup({
             variant={variant}
             theme={theme}
             mockupRef={mockupRef}
+            aspectRatio={aspectRatio}
           />
         );
       case "quote":
@@ -1098,6 +1130,7 @@ function AdMockup({
             variant={variant}
             theme={theme}
             mockupRef={mockupRef}
+            aspectRatio={aspectRatio}
           />
         );
       case "cobrand":
@@ -1106,6 +1139,7 @@ function AdMockup({
             variant={variant}
             theme={theme}
             mockupRef={mockupRef}
+            aspectRatio={aspectRatio}
           />
         );
       default:
@@ -1114,6 +1148,7 @@ function AdMockup({
             variant={variant}
             theme={theme}
             mockupRef={mockupRef}
+            aspectRatio={aspectRatio}
           />
         );
     }
@@ -1154,16 +1189,26 @@ function AdMockup({
 
       {/* Variant header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700/30">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-mono text-cyan-400">
             {variant.variant_id}
           </span>
           <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
-            {variant.ad_type}
+            {variant.messaging_angle || variant.ad_type}
           </span>
           <span className="text-xs px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-400">
             {variant.hook_type}
           </span>
+          {variant.brand_voice && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
+              {variant.brand_voice}
+            </span>
+          )}
+          {variant.visual_style && (
+            <span className="text-xs px-1.5 py-0.5 rounded bg-pink-500/15 text-pink-400">
+              {variant.visual_style}
+            </span>
+          )}
           <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400">
             {themeName}
           </span>
@@ -1512,8 +1557,178 @@ function computeThemePenalties(entries: FeedbackEntry[]): ThemePenalties {
   return penalties;
 }
 
+/* ── Brand Voice Card (pre-prompt showcase) ───────────────────── */
+const STAGE_COLORS: Record<string, string> = {
+  "Brand Foundation": "bg-cyan-500/15 text-cyan-400",
+  "Cold — Awareness": "bg-red-500/15 text-red-400",
+  "Warm — Consideration": "bg-amber-500/15 text-amber-400",
+  "Pain-Aware — Mid-Funnel": "bg-purple-500/15 text-purple-400",
+  "Niche — Use-Case Specific": "bg-emerald-500/15 text-emerald-400",
+};
+
+function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
+  const [expanded, setExpanded] = useState(false);
+  const stageClass = STAGE_COLORS[voice.stage] ?? "bg-gray-500/15 text-gray-400";
+  const toneParts = voice.toneMix.split(" / ");
+  const hasFullGuide = !!(voice.voicePillars || voice.examples);
+
+  return (
+    <div className="rounded-lg border border-gray-700/50 bg-gray-800/60 hover:border-gray-600 transition-colors">
+      {/* Header — always visible */}
+      <button
+        onClick={() => hasFullGuide && setExpanded(!expanded)}
+        className={`w-full text-left p-3 ${hasFullGuide ? "cursor-pointer" : "cursor-default"}`}
+      >
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-white leading-tight">
+              {voice.label}
+            </h3>
+            {hasFullGuide && (
+              <span className="text-[10px] px-1 py-0.5 rounded bg-cyan-500/15 text-cyan-400 font-medium">
+                Full Guide
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap font-medium ${stageClass}`}>
+              {voice.stage}
+            </span>
+            {hasFullGuide && (
+              <svg className={`w-3.5 h-3.5 text-gray-500 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            )}
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 mb-2">{voice.desc}</p>
+        {voice.positioning && (
+          <div className="text-[10px] text-gray-500 mb-2 border-l-2 border-gray-700 pl-2">
+            <span className="text-gray-600">From:</span> {voice.positioning.from}<br />
+            <span className="text-gray-600">To:</span> <span className="text-gray-300">{voice.positioning.to}</span>
+          </div>
+        )}
+        <p className="text-[10px] text-gray-500 mb-1.5">
+          <span className="text-gray-400 font-medium">Core Energy:</span> {voice.coreEnergy}
+        </p>
+        <div className="flex flex-wrap gap-1">
+          {toneParts.map((part) => (
+            <span key={part} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700/60 text-gray-400">
+              {part.trim()}
+            </span>
+          ))}
+        </div>
+      </button>
+
+      {/* Expanded guide content */}
+      {expanded && (
+        <div className="border-t border-gray-700/50 p-3 space-y-3">
+          {/* Voice Pillars */}
+          {voice.voicePillars && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Voice Pillars</p>
+              <div className="space-y-2">
+                {voice.voicePillars.map((p) => (
+                  <div key={p.name} className="bg-gray-900/60 rounded p-2">
+                    <p className="text-xs font-medium text-white mb-1">{p.name}</p>
+                    <p className="text-[10px] text-gray-400 mb-1.5">{p.desc}</p>
+                    <div className="grid grid-cols-[auto_1fr] gap-x-1.5 text-[10px]">
+                      <span className="text-red-400/70">Instead of:</span>
+                      <span className="text-gray-500 italic line-through decoration-gray-700">{p.insteadOf}</span>
+                      <span className="text-emerald-400/70">Say:</span>
+                      <span className="text-gray-300">{p.say}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tone Spectrum */}
+          {voice.toneSpectrum && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Tone Spectrum</p>
+              <div className="space-y-1">
+                {voice.toneSpectrum.map((t) => (
+                  <div key={t.context} className="text-[10px]">
+                    <span className="text-gray-400 font-medium">{t.context}:</span>{" "}
+                    <span className="text-gray-500">{t.mix}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Examples */}
+          {voice.examples && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Examples</p>
+              <div className="space-y-1.5">
+                {voice.examples.map((e) => (
+                  <div key={e.format} className="text-[10px]">
+                    <span className="text-cyan-400/70 font-medium">{e.format}:</span>{" "}
+                    <span className="text-gray-300 italic">"{e.text}"</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Don'ts */}
+          {voice.donts && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Don'ts</p>
+              <ul className="space-y-0.5">
+                {voice.donts.map((d) => (
+                  <li key={d} className="text-[10px] text-red-400/70">{d}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Principles */}
+          {voice.principles && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Voice Principles</p>
+              <div className="space-y-1">
+                {voice.principles.map((p) => (
+                  <div key={p.name} className="text-[10px]">
+                    <span className="text-gray-300 font-medium">{p.name}:</span>{" "}
+                    <span className="text-gray-500">{p.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Taglines */}
+          {voice.taglines && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Tagline Options</p>
+              <div className="flex flex-wrap gap-1.5">
+                {voice.taglines.map((t) => (
+                  <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-gray-700/60 text-gray-300 italic">
+                    "{t}"
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Promise */}
+          {voice.promise && (
+            <div className="border-t border-gray-700/30 pt-2 mt-2">
+              <p className="text-[10px] italic text-gray-400">{voice.promise}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Grid of all variants ──────────────────────────────────────── */
-export default function AdCanvas({ variants }: AdCanvasProps) {
+export default function AdCanvas({ variants, renderContext }: AdCanvasProps) {
   const [feedbackLog, setFeedbackLog] = useState<FeedbackEntry[]>([]);
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [selectedStyle, setSelectedStyle] = useState<AdTheme | "mix" | null>(null);
@@ -1561,27 +1776,17 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
 
   if (variants.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center px-8">
-          <div className="w-16 h-16 rounded-2xl bg-gray-800 border border-gray-700/50 flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-gray-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <p className="text-sm text-gray-500">Ad mockups will appear here</p>
-          <p className="text-xs text-gray-600 mt-1">
-            Generate variants or click a fatigued campaign
+      <div className="flex flex-col h-full">
+        <div className="px-4 py-3 border-b border-gray-700/50">
+          <h2 className="text-sm font-semibold text-white">Brand Voice Guides</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {BRAND_VOICE_OPTIONS.length} voices — select a campaign to generate mockups
           </p>
+        </div>
+        <div className="flex-1 overflow-auto p-4 space-y-3">
+          {BRAND_VOICE_OPTIONS.map((voice) => (
+            <BrandVoiceCard key={voice.id} voice={voice} />
+          ))}
         </div>
       </div>
     );
@@ -1598,7 +1803,7 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-gray-700/50 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h2 className="text-sm font-semibold text-white">
             Ad Mockups ({variants.length})
           </h2>
@@ -1607,6 +1812,16 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
               ? "Mix"
               : STYLE_OPTIONS.find((s) => s.theme === selectedStyle)?.label ?? selectedStyle}
           </span>
+          {renderContext && (
+            <>
+              <span className="text-xs px-1.5 py-0.5 rounded bg-pink-500/15 text-pink-400">
+                {renderContext.visual_style}
+              </span>
+              <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+                {renderContext.ad_format} ({renderContext.dimensions.label})
+              </span>
+            </>
+          )}
         </div>
         <button
           onClick={() => setSelectedStyle(null)}
@@ -1634,6 +1849,7 @@ export default function AdCanvas({ variants }: AdCanvasProps) {
             themePenalties={themePenalties}
             forcedTheme={forcedTheme}
             mockupRefs={mockupRefs}
+            renderContext={renderContext}
           />
         ))}
       </div>

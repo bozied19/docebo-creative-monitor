@@ -1,7 +1,692 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FatigueRow } from "./health-tables";
+
+/* ══════════════════════════════════════════════════════════════════
+   UTM TAXONOMY — derived from Creative Refresh Engine UTM Key PDF
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Publishing Platform ───────────────────────────────────────── */
+interface PlatformOption {
+  id: string;
+  label: string;
+}
+
+const PLATFORM_OPTIONS: PlatformOption[] = [
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "reddit", label: "Reddit" },
+  { id: "facebook", label: "Facebook" },
+  { id: "instagram", label: "Instagram" },
+];
+
+/* ── Visual Style (7 styles from PDF) ──────────────────────────── */
+interface VisualStyleOption {
+  id: string;
+  label: string;
+  desc: string;
+  coreIdea: string;
+  swatch: string;
+  /** Maps to ad-canvas theme names for rendering */
+  themes: string[];
+}
+
+const VISUAL_STYLE_OPTIONS: VisualStyleOption[] = [
+  {
+    id: "neon-intelligence",
+    label: "Neon Intelligence",
+    desc: "High-conversion performance meets future-forward energy",
+    coreIdea: "Bold, high-contrast creative that feels like intelligence turned electric. Dark base with neon accents.",
+    swatch: "linear-gradient(135deg, #0A0A0A, #7E2EE9, #54FA77)",
+    themes: ["navy-white", "navy-green", "navy-pink", "navy-lavender"],
+  },
+  {
+    id: "human-contrast",
+    label: "Human Contrast",
+    desc: "Soft humanity vs sharp intelligence",
+    coreIdea: "Blend emotional relatability with sharp, modern design. Light neutral backgrounds, real human imagery.",
+    swatch: "linear-gradient(135deg, #F6F5F2, #EBE6DD, #7E2EE9)",
+    themes: ["beige-navy", "beige-purple", "beige-wave"],
+  },
+  {
+    id: "rebellious-editorial",
+    label: "Rebelliously Editorial",
+    desc: "Magazine meets manifesto",
+    coreIdea: "High-end editorial spread with attitude. Asymmetrical layouts, overlapping text + imagery, cropped typography.",
+    swatch: "linear-gradient(135deg, #2A2923, #FF5DD8, #E6DACB)",
+    themes: ["quote-gradient", "beige-wave"],
+  },
+  {
+    id: "data-as-power",
+    label: "Data As Power",
+    desc: "Make intelligence visible",
+    coreIdea: "Turn analytics, insights, and outcomes into visually compelling assets. Graph-inspired, modular UI blocks.",
+    swatch: "linear-gradient(135deg, #0057FF, #54FA77, #131E29)",
+    themes: ["white-purple", "navy-white"],
+  },
+  {
+    id: "digital-rebellion",
+    label: "Digital Rebellion",
+    desc: "Break the system visually",
+    coreIdea: "Glitch effects, pixel distortions, broken grids, fragmented layouts. High contrast neon clashes.",
+    swatch: "linear-gradient(135deg, #131E29, #FF5DD8, #54FA77, #0057FF)",
+    themes: ["gradient-pink", "navy-pink"],
+  },
+  {
+    id: "minimal-authority",
+    label: "Minimal Authority",
+    desc: "Confidence without noise",
+    coreIdea: "Stripped-down, ultra-clean visuals that signal premium confidence. Extreme whitespace, one strong statement.",
+    swatch: "linear-gradient(135deg, #FFFFFF, #0A0A0A)",
+    themes: ["white-purple"],
+  },
+  {
+    id: "system-ui",
+    label: "System UI Aesthetic",
+    desc: "Feels like the product is already in their hands",
+    coreIdea: "Blend product UI with storytelling. Interface mockups, layered dashboards, cursor interactions.",
+    swatch: "linear-gradient(135deg, #0033A0, #4C8DFF, #E3FFAB)",
+    themes: ["navy-white", "navy-green"],
+  },
+];
+
+/* ── Brand Voice (5 voices from PDF) ───────────────────────────── */
+export interface VoicePillar {
+  name: string;
+  desc: string;
+  insteadOf: string;
+  say: string;
+}
+
+export interface ToneContext {
+  context: string;
+  mix: string;
+}
+
+export interface VoiceExample {
+  format: string;
+  text: string;
+}
+
+export interface VoicePrinciple {
+  name: string;
+  desc: string;
+}
+
+export interface BrandVoiceOption {
+  id: string;
+  label: string;
+  stage: string;
+  coreEnergy: string;
+  desc: string;
+  toneMix: string;
+  /** Full guide fields — optional until all guides are populated */
+  positioning?: { from: string; to: string };
+  voicePillars?: VoicePillar[];
+  toneSpectrum?: ToneContext[];
+  examples?: VoiceExample[];
+  donts?: string[];
+  principles?: VoicePrinciple[];
+  taglines?: string[];
+  promise?: string;
+}
+
+export const BRAND_VOICE_OPTIONS: BrandVoiceOption[] = [
+  {
+    id: "learning-insurgent",
+    label: "The Learning Insurgent",
+    stage: "Brand Foundation",
+    coreEnergy: "Provocative movement-builder",
+    desc: "The mothership. Declares war on boring, checkbox-driven corporate training. PhD in ripped jeans.",
+    toneMix: "40% Confidently Irreverent / 30% Rebelliously Smart / 20% Addictively Human / 10% Data with Personality",
+    positioning: {
+      from: "Another LMS vendor speaking in corporate platitudes",
+      to: "The learning provocateur that makes enterprise training addictive",
+    },
+    voicePillars: [
+      {
+        name: "Rebelliously Smart",
+        desc: "We're the PhD who shows up in ripped jeans. Brilliant but never boring. We drop knowledge bombs, not jargon bombs.",
+        insteadOf: "Our comprehensive learning management solution enables organizational capability building through scalable digital transformation initiatives.",
+        say: "Your people are brilliant. Your training shouldn't insult their intelligence. Let's build learning that actually sticks.",
+      },
+      {
+        name: "Confidently Irreverent",
+        desc: "We call BS on outdated training methods. We're here to burn down the compliance checkbox mentality and build something people actually want to use.",
+        insteadOf: "Docebo provides industry-leading compliance training modules.",
+        say: "Remember death by PowerPoint? We killed it. Your compliance training just became the content your teams actually open.",
+      },
+      {
+        name: "Addictively Human",
+        desc: "We make enterprise software that doesn't feel like enterprise software. Think Netflix met your learning platform and had a brilliant baby.",
+        insteadOf: "User-friendly interface with intuitive navigation.",
+        say: "So smooth, your teams will forget they're learning. So powerful, you'll forget it's software.",
+      },
+    ],
+    toneSpectrum: [
+      { context: "Announcing features", mix: "70% Confident swagger / 20% Playful provocation / 10% Technical precision" },
+      { context: "Addressing pain points", mix: "60% Empathetic understanding / 30% Righteous indignation / 10% Solution-focused optimism" },
+      { context: "Talking ROI/results", mix: "70% Data-driven confidence / 15% Subtle flex / 15% 'Told you so' energy" },
+    ],
+    examples: [
+      { format: "Homepage Hero", text: "Your competitors are still forcing death by PowerPoint. You're about to turn learning into your unfair advantage." },
+      { format: "Product Description", text: "AI that reads the room. Analytics that predict the future. Learning that people actually finish. This isn't your dad's LMS." },
+      { format: "Customer Success Story", text: "Acme Corp went from 12% training completion to 94% in 6 months. Not because we forced it. Because their people couldn't stop clicking 'next episode.'" },
+      { format: "Social Post", text: "Hot take: If your training needs forced attendance, your training sucks. @ us." },
+      { format: "Sales Messaging", text: "Look, we could tell you about our 'synergistic learning ecosystems' but we respect you too much for that. Here's the truth: Your people will actually use this. Your metrics will actually matter. Your CEO will actually notice." },
+    ],
+    donts: [
+      "No empty corporate speak ('leverage,' 'synergy,' 'best-in-class')",
+      "No apologizing for being different",
+      "No feature lists without the 'why should I care?'",
+      "No humble-bragging. Just bragging.",
+    ],
+    principles: [
+      { name: "Make them feel something", desc: "Boredom is the enemy. Every line should spark curiosity, relief, or excitement." },
+      { name: "Show, don't tell", desc: "Don't say we're innovative. Say we turned compliance training into something people binge-watch." },
+      { name: "Enemy is the status quo", desc: "We're not fighting other LMS platforms. We're fighting boring, ineffective training everywhere." },
+      { name: "Confidence without arrogance", desc: "We know we're good. We don't need to put others down to prove it." },
+      { name: "Data with personality", desc: "Numbers tell the story, but make them memorable. '7 billion training hours wasted last year. We're here to get that time back.'" },
+    ],
+    taglines: [
+      "Learning that doesn't suck.",
+      "Make training the perk, not the punishment.",
+      "Enterprise learning. Human experience.",
+      "Finally. Learning worth finishing.",
+    ],
+    promise: "We promise to never sound like an LMS company. We promise to make enterprise learning feel less like enterprise and more like learning. We promise your people will thank you instead of avoiding you.",
+  },
+  {
+    id: "provocateur",
+    label: "The Provocateur",
+    stage: "Cold — Awareness",
+    coreEnergy: "Maximum pattern interrupt",
+    desc: "Learning Insurgent turned up to 11. Maximum swagger. Hot takes and uncomfortable truths.",
+    toneMix: "80% Confidently Irreverent / 20% Rebelliously Smart",
+    positioning: {
+      from: "A forgettable brand awareness ad that gets scrolled past in 0.3 seconds",
+      to: "The pattern-interrupt that makes a VP of L&D stop mid-scroll and think 'who the hell said that?'",
+    },
+    voicePillars: [
+      {
+        name: "Unapologetically Confrontational",
+        desc: "We name the broken thing out loud — the thing everyone in L&D knows but no vendor has the guts to say in an ad. We don't hint. We don't hedge.",
+        insteadOf: "Improve your training outcomes with our award-winning platform.",
+        say: "Your 40% completion rate isn't a training problem. It's a respect problem. You're boring your best people into leaving.",
+      },
+      {
+        name: "Enemy-Forward",
+        desc: "Every Provocateur ad has a villain — and it's never a competitor. It's the status quo. Death by PowerPoint. The compliance checkbox. The LMS that makes people dread Tuesdays.",
+        insteadOf: "Docebo is a better alternative to legacy LMS platforms.",
+        say: "Your LMS was built in 2012. Your workforce was not. Something has to give.",
+      },
+      {
+        name: "Viscerally Specific",
+        desc: "We describe the exact moment of pain — the Monday morning when no one shows up to the live training, the QBR where the CLO can't prove ROI. Specificity is what makes someone whisper 'this is about me.'",
+        insteadOf: "Address learning challenges across your organization.",
+        say: "Your new hires Google the answer because your onboarding takes 47 clicks to find it. That's not a people problem.",
+      },
+    ],
+    toneSpectrum: [
+      { context: "Awareness ads (cold audience)", mix: "80% Confrontational swagger / 15% Visceral specificity / 5% Brand resolve" },
+      { context: "Pain-focused ads", mix: "60% Enemy-forward aggression / 30% Specific pain language / 10% Implied solution" },
+      { context: "Scroll-stop hooks (first 5 words)", mix: "90% Pattern-interrupt / 10% Tribal identity callout" },
+    ],
+    examples: [
+      { format: "LinkedIn Body Text", text: "Every year, enterprises waste $300B on training nobody finishes. Not because people are lazy. Because the training is lazy. Docebo built AI that makes learning addictive — not mandatory." },
+      { format: "Creative Overlay (14 words max)", text: "Your LMS has a 40% completion rate. Your Netflix has 94%." },
+      { format: "Headline (7 words max)", text: "Training people actually finish" },
+      { format: "Social Post", text: "Hot take: If your training needs a mandatory attendance policy, your training is the problem. Not your people. @ us." },
+      { format: "Ad Hook", text: "Stop training. Start addicting." },
+    ],
+    donts: [
+      "No soft openings — if the first line doesn't provoke, rewrite it",
+      "No feature lists — this voice sells the problem, not the solution",
+      "No competitor mentions — the enemy is the status quo, not another vendor",
+      "No hedging language ('might,' 'could,' 'consider') — this voice is certain",
+      "No stock-photo energy — creative should feel like a poster, not a brochure",
+      "No asking permission to be bold — The Provocateur doesn't apologize",
+    ],
+    principles: [
+      { name: "The 1-Second Rule", desc: "If someone can't tell who this ad is for and why they should care within one second of scrolling, the ad fails." },
+      { name: "Name The Pain, Not The Product", desc: "Earn attention by articulating pain better than the prospect can. Docebo appears as the implied answer, not the headline." },
+      { name: "Make The Status Quo The Villain", desc: "We're not fighting Cornerstone or Absorb. We're fighting boredom, wasted budgets, and the 'good enough' mentality." },
+      { name: "Discomfort Before Comfort", desc: "The best Provocateur ads make the viewer slightly uncomfortable — they see themselves in the pain — before offering a way forward." },
+      { name: "Earn The Brand Search", desc: "The ultimate KPI is someone typing 'Docebo' into Google after seeing this ad. That only happens if we made them feel something." },
+    ],
+    taglines: [
+      "Your training sucks. Fix it.",
+      "Stop boring your best people.",
+      "The LMS your people won't hate.",
+      "Learning that doesn't need a mandate.",
+    ],
+    promise: "We promise to never run an ad that blends in. We promise to say the thing every L&D leader is thinking but no vendor will say out loud. We promise that every scroll-stop earns its interruption with truth, not tricks.",
+  },
+  {
+    id: "trusted-advisor",
+    label: "The Trusted Advisor",
+    stage: "Warm — Consideration",
+    coreEnergy: "Proof-led authority",
+    desc: "Same intelligence, swagger softens into earned authority. Leads with proof — data, customer outcomes, logos.",
+    toneMix: "60% Data-Driven Confidence / 25% Addictively Human / 15% Subtle Flex",
+    positioning: {
+      from: "Another vendor making promises in an ad",
+      to: "The authority who shows receipts — proof-first, jargon-never, and so confident in the data that the swagger is quiet",
+    },
+    voicePillars: [
+      {
+        name: "Proof Over Promise",
+        desc: "Every claim comes with evidence. Named customers, specific metrics, real timelines. The Trusted Advisor has earned the right to be believed because it never asks you to just trust it.",
+        insteadOf: "Docebo drives measurable business results for enterprise organizations.",
+        say: "Zoom cut onboarding time by 60%. La-Z-Boy scaled partner training to 14 countries. What would that look like for you?",
+      },
+      {
+        name: "Quiet Confidence",
+        desc: "Where The Provocateur shouts, The Trusted Advisor leans in. It sounds like the smartest person at the boardroom table — the one who speaks last, says the least, and moves the room. No exclamation points. No hype words. Just undeniable clarity.",
+        insteadOf: "We're the #1 AI-powered learning platform revolutionizing enterprise training!",
+        say: "3,800 enterprise customers. 40+ languages. One platform that connects learning to business outcomes. See why they stay.",
+      },
+      {
+        name: "Consultative Generosity",
+        desc: "The Trusted Advisor gives value before asking for anything. It teaches. It shares frameworks. It offers benchmarks the reader can use even if they never buy Docebo. This generosity is what earns the click, the download, and eventually the demo.",
+        insteadOf: "Download our whitepaper to learn more about AI in learning.",
+        say: "We analyzed 50M learning sessions to find what actually drives completion. Here's what we found — no form required.",
+      },
+    ],
+    toneSpectrum: [
+      { context: "Retargeting ads (warm audience)", mix: "70% Data-driven confidence / 20% Consultative generosity / 10% Subtle flex" },
+      { context: "Case study ads", mix: "60% Proof-led storytelling / 25% Quiet confidence / 15% Outcome specificity" },
+      { context: "Benchmark / thought leadership content", mix: "50% Generous teaching / 30% Data authority / 20% Earned swagger" },
+    ],
+    examples: [
+      { format: "LinkedIn Body Text", text: "When Zoom needed to onboard 2,000 partners across 6 regions in 90 days, they didn't lower the bar. They used Docebo's AI to personalize every learning path — by role, by region, by product line. Result: 60% faster time-to-productivity. 3x partner certification rates." },
+      { format: "Creative Overlay (14 words max)", text: "60% faster onboarding. 3x certification. One platform." },
+      { format: "Headline (7 words max)", text: "See how Zoom scales learning" },
+      { format: "Social Post", text: "We studied 50M learning sessions across 3,800 enterprise customers. The #1 predictor of training completion wasn't content quality. It was personalization. Here's the data." },
+      { format: "Ad Hook", text: "The numbers speak. We just amplify them." },
+    ],
+    donts: [
+      "No unsubstantiated claims — if you can't name the customer or cite the metric, don't run it",
+      "No hype language ('revolutionary,' 'game-changing,' 'best-in-class') — the data does the bragging",
+      "No aggressive pain language — this voice is past the pain; it's in the proof",
+      "No gating valuable content behind long forms — generosity earns trust, friction kills it",
+      "No generic 'enterprise' stats — always name a real company, a real number, a real timeline",
+      "No exclamation points — confidence doesn't yell",
+    ],
+    principles: [
+      { name: "Receipts, Not Claims", desc: "Every Trusted Advisor ad could survive a fact-check. Named customers, specific percentages, real timeframes. If it can't be verified, it can't be said." },
+      { name: "Teach Before You Sell", desc: "The ad itself should deliver value. A benchmark, a framework, an insight the reader can use today. Generosity creates reciprocity." },
+      { name: "Let The Customer Be The Hero", desc: "Docebo is the enabler, not the protagonist. Samsung's success story is about Samsung. Zoom's transformation is about Zoom. We built the stage; they performed." },
+      { name: "Assume Intelligence", desc: "This audience has been researching platforms for weeks. Don't explain what an LMS is. Meet them where they are — comparing vendors, building business cases, seeking validation." },
+      { name: "The Quiet Close", desc: "The CTA is never 'Buy Now.' It's 'See the data.' 'Read the case study.' 'Explore the platform.' Let curiosity do the closing." },
+    ],
+    taglines: [
+      "Enterprise learning. Proven at scale.",
+      "3,800 customers chose us. Here's why they stayed.",
+      "Don't take our word for it. Take their numbers.",
+      "The platform behind the proof.",
+    ],
+    promise: "We promise to never make a claim we can't back up. We promise to lead with what our customers achieved, not what our product does. We promise to be the vendor that makes a CLO look smart for choosing us — not just to their team, but to their board.",
+  },
+  {
+    id: "empathetic-challenger",
+    label: "The Empathetic Challenger",
+    stage: "Pain-Aware — Mid-Funnel",
+    coreEnergy: "Deep recognition + door to possibility",
+    desc: "Speaks to the VP who knows training is broken but feels stuck. Deep empathy then pivots to possibility.",
+    toneMix: "50% Empathetic Understanding / 30% Righteous Indignation / 20% Solution Optimism",
+    positioning: {
+      from: "A vendor that talks about your problems without understanding them",
+      to: "The voice that describes your Monday morning so accurately you check if they've been reading your Slack — then shows you the exit",
+    },
+    voicePillars: [
+      {
+        name: "Deeply Seen",
+        desc: "This voice knows the prospect's life — not just their job title. It knows they spent 3 hours last Tuesday manually pulling completion reports for a board deck that nobody read. The specificity of the empathy is what makes it land.",
+        insteadOf: "We understand the challenges facing today's L&D leaders.",
+        say: "You spent all week building that training report. Your CFO spent 30 seconds on it. We know the feeling. Let's make those 30 seconds count.",
+      },
+      {
+        name: "Righteous On Their Behalf",
+        desc: "The Empathetic Challenger is angry — but not at the prospect. It's angry at the systems, budgets, and legacy tools that have made their job harder than it needs to be. It validates the frustration without wallowing in it.",
+        insteadOf: "Legacy LMS platforms can create workflow inefficiencies.",
+        say: "You were hired to transform learning. Instead, you're fighting a platform that was built before the iPhone existed. That's not your failure. That's your tool's failure.",
+      },
+      {
+        name: "The Door, Not The Push",
+        desc: "After naming the pain with precision and validating it with warmth, this voice opens a door — but never shoves the prospect through it. The CTA feels like an invitation, not a demand. It says 'when you're ready' instead of 'act now.'",
+        insteadOf: "Request a demo today to see how Docebo solves your training challenges.",
+        say: "There's a version of your job where the data tells the story for you. Where completion rates make the board deck themselves. Whenever you're ready to see it — we'll be here.",
+      },
+    ],
+    toneSpectrum: [
+      { context: "Pain-aware ads (mid-funnel)", mix: "50% Deep empathy / 30% Righteous indignation (at the status quo) / 20% Possibility painting" },
+      { context: "Persona-specific ads", mix: "60% 'I see you' specificity / 25% Validating frustration / 15% Gentle invitation" },
+      { context: "Retargeting after engagement", mix: "40% Warm recognition / 35% Solution visualization / 25% Soft CTA" },
+    ],
+    examples: [
+      { format: "LinkedIn Body Text", text: "You didn't get into L&D to fight with spreadsheets. You got into it because you believe learning changes lives. Somewhere between the compliance deadlines and the budget freezes, that mission got buried under admin work. Docebo gives you back the part of your job you actually love — building learning experiences that matter. And the analytics to prove they do." },
+      { format: "Creative Overlay (14 words max)", text: "You were hired to transform learning. Not to babysit an LMS." },
+      { format: "Headline (7 words max)", text: "Get back to the work that matters" },
+      { format: "Social Post", text: "To every VP of L&D who's been asked 'what's the ROI of training?' and didn't have a dashboard to point to: it's not your fault. It's your platform's fault. And it's fixable." },
+      { format: "Ad Hook", text: "Your job shouldn't feel this hard." },
+    ],
+    donts: [
+      "No condescension — empathy that sounds like pity kills credibility instantly",
+      "No blame on the prospect — frustration is always directed at systems, tools, and status quo, never at the person",
+      "No urgency pressure ('limited time,' 'act now,' 'don't miss out') — this voice respects the buyer's timeline",
+      "No feature-first language — lead with the feeling, not the functionality",
+      "No generic pain ('challenges,' 'pain points,' 'inefficiencies') — name the SPECIFIC scenario",
+      "No toxic positivity — don't minimize real frustration with 'but look on the bright side!'",
+    ],
+    principles: [
+      { name: "Describe Their Monday", desc: "The most powerful empathy is specificity. Don't say 'your training could be better.' Say 'your best performer just spent 20 minutes looking for a course and gave up.'" },
+      { name: "Validate Before You Solve", desc: "Acknowledge the frustration fully before pivoting to possibility. Skipping straight to the solution feels dismissive. Sitting in the pain for a beat earns the right to offer a way out." },
+      { name: "Anger At The Right Target", desc: "The prospect isn't the problem. Their tools are. Their budget constraints are. The industry's low standards are. Direct the indignation outward — never inward at the reader." },
+      { name: "Paint The After", desc: "Don't just remove pain — paint what life looks like on the other side. The board meeting where the data speaks for itself. The team that asks for MORE training." },
+      { name: "Invitation, Not Extraction", desc: "The CTA should feel like a door opening, not a form demanding. 'See what's possible' over 'Request a demo.' 'Explore' over 'Submit.' Respect earns conversion." },
+    ],
+    taglines: [
+      "You deserve better tools than this.",
+      "L&D is hard enough. Your platform shouldn't make it harder.",
+      "Built for the leaders who believe learning matters.",
+      "The job you signed up for. Finally possible.",
+    ],
+    promise: "We promise to never pretend we don't know how hard your job is. We promise to name your frustrations with the precision of someone who's lived them. And we promise that when we show you what's possible, it won't be hype — it'll be a future you can actually see yourself in.",
+  },
+  {
+    id: "insider",
+    label: "The Insider",
+    stage: "Niche — Use-Case Specific",
+    coreEnergy: "Tribal language fluency",
+    desc: "Speaks the tribal language of a specific persona. Drops exact terminology, references specific KPIs.",
+    toneMix: "70% Rebelliously Smart / 20% Technical Precision / 10% Addictively Human",
+    positioning: {
+      from: "A platform ad that speaks to 'learning professionals' in generic terms",
+      to: "The ad that uses your exact job title, your exact KPIs, and your exact Tuesday afternoon problem — so precisely that you check the targeting settings",
+    },
+    voicePillars: [
+      {
+        name: "Tribal Fluency",
+        desc: "The Insider speaks each persona's native language. For a VP of Customer Education, it says 'time-to-value' and 'support ticket deflection.' For a Director of Partner Enablement, it says 'channel certification rates' and 'partner-sourced revenue.' The vocabulary IS the credibility.",
+        insteadOf: "Docebo helps you train your external audiences more effectively.",
+        say: "Your partners close 40% fewer deals without certification. Docebo cuts time-to-certification by half. Do the math on your channel revenue.",
+      },
+      {
+        name: "KPI-Native",
+        desc: "Every persona measures success differently. The Insider knows which dashboard they open first thing Monday morning. For Customer Success leaders, it's NRR and CSAT. For Sales Enablement, it's ramp time and quota attainment. We reference them the way a colleague would.",
+        insteadOf: "Track learning metrics that matter to your business.",
+        say: "Your NRR dropped 3 points last quarter. Your onboarding completion rate dropped 12 points the quarter before. Coincidence? Your CS team doesn't think so.",
+      },
+      {
+        name: "Day-In-The-Life Precision",
+        desc: "The Insider doesn't describe a persona's 'challenges.' It describes their 2pm on a Wednesday — the Slack message from the CRO asking why partner deal registration is down, the scramble to pull certification data from three different systems.",
+        insteadOf: "Streamline your partner training operations.",
+        say: "Your CRO just Slacked you asking why partner deal reg is down 15%. You know it's because 60% of new partners never finished certification. But you can't prove it because your data lives in three systems. Sound familiar?",
+      },
+    ],
+    toneSpectrum: [
+      { context: "Customer Education ads", mix: "70% KPI-native (NRR, CSAT, time-to-value) / 20% Tribal fluency / 10% Outcome proof" },
+      { context: "Partner Enablement ads", mix: "60% Channel revenue language / 25% Day-in-the-life specificity / 15% Competitive urgency" },
+      { context: "Sales Enablement ads", mix: "65% Ramp time and quota language / 25% CRO-pressure empathy / 10% Platform proof" },
+      { context: "Employee L&D ads", mix: "55% Skill gap and transformation language / 30% CLO-to-board narrative / 15% AI differentiation" },
+      { context: "Member Training ads", mix: "60% Certification revenue and compliance / 25% Scalability proof / 15% Learner experience" },
+    ],
+    examples: [
+      { format: "LinkedIn Body Text", text: "If you're a VP of Customer Education, you already know: your onboarding program IS your retention strategy. Every customer who doesn't complete training is 3x more likely to churn in the first year. Docebo connects your education data to Gainsight, Salesforce, and your product analytics — so you can finally show the board that your academy isn't a cost center. It's a retention engine." },
+      { format: "Creative Overlay (14 words max)", text: "Customer ed leaders: Your academy IS your retention strategy." },
+      { format: "Headline (7 words max)", text: "Connect learning to NRR" },
+      { format: "Social Post", text: "To every Director of Partner Enablement who's been asked to 'do more with less' while managing certifications across 14 countries in 6 languages: We see you. And we built this for exactly that." },
+      { format: "Ad Hook", text: "Built for how you actually work." },
+    ],
+    donts: [
+      "No generic audience language ('learning professionals,' 'business leaders,' 'organizations') — always name the SPECIFIC role",
+      "No cross-persona ads — The Insider speaks to ONE persona per ad, never two",
+      "No explaining basic concepts the persona already knows — they live this every day; don't patronize",
+      "No Docebo-first language — the persona's world comes first, Docebo enters as the answer to their specific problem",
+      "No made-up metrics — only reference KPIs the persona actually tracks in their real dashboards",
+      "No industry-generic pain — the pain must be specific to their USE CASE (customer ed vs. partner enablement vs. sales enablement vs. employee L&D vs. member training)",
+    ],
+    principles: [
+      { name: "One Persona Per Ad", desc: "The Insider never tries to speak to two audiences at once. A Customer Education ad and a Partner Enablement ad are completely different creatives, different copy, different KPIs, different pain. Specificity is the entire strategy." },
+      { name: "Speak Their Dashboard", desc: "Reference the metrics they actually report on. Not 'engagement' in the abstract — but the exact metric name their platform uses. NRR for CS leaders. Quota attainment for Sales Enablement." },
+      { name: "Describe The Slack Message", desc: "The most compelling pain isn't a business challenge — it's a notification. The Slack from the CRO. The email from the CHRO. The board deck request from the CFO. Put the reader inside a moment they've lived." },
+      { name: "Integrations Are Identity", desc: "For this audience, the tools they use define their workflow. Mentioning Gainsight, Salesforce, Workday, or their AMS by name signals 'we live in your ecosystem.' Generic 'integrates with your tools' is invisible." },
+      { name: "Show The Specific Dream", desc: "Don't paint a generic 'better future.' Paint THEIR better future. For a Customer Ed leader: 'Your quarterly deck builds itself from live data.' For a Partner Enablement VP: 'Your channel managers stop asking you for certification reports.'" },
+    ],
+    taglines: [
+      "Built for customer education leaders who measure in NRR.",
+      "Partner enablement that speaks revenue, not completions.",
+      "Sales ramp time measured in weeks, not quarters.",
+      "The learning platform that lives where you work.",
+    ],
+    promise: "We promise to never run an ad that could be for anyone. Every Insider ad is built for one persona, one use case, one set of KPIs, one version of Tuesday afternoon. If you can swap the job title and the ad still works, it's not an Insider ad.",
+  },
+];
+
+/* ── Messaging Angle (8 angles from PDF, replacing old 12 categories) ── */
+interface MessagingSubAngle {
+  name: string;
+  desc: string;
+}
+
+interface MessagingAngleOption {
+  id: string;
+  label: string;
+  subAngles: MessagingSubAngle[];
+}
+
+const MESSAGING_ANGLE_OPTIONS: MessagingAngleOption[] = [
+  {
+    id: "problem",
+    label: "Problem",
+    subAngles: [
+      { name: "Pain point agitation", desc: "Highlights a specific frustration your audience already feels" },
+      { name: "Cost of inaction", desc: "Quantifies what doing nothing is costing them" },
+      { name: "Risk/fear", desc: "Emphasizes what could go wrong without a solution (compliance, security, falling behind)" },
+    ],
+  },
+  {
+    id: "outcome",
+    label: "Outcome",
+    subAngles: [
+      { name: "ROI / efficiency gain", desc: "Leads with measurable results (e.g., 'Cut onboarding time by 60%')" },
+      { name: "Aspiration / vision", desc: "Paints a picture of the ideal future state" },
+      { name: "Competitive advantage", desc: "Positions the product as a way to outperform peers" },
+    ],
+  },
+  {
+    id: "proof",
+    label: "Proof",
+    subAngles: [
+      { name: "Social proof / authority", desc: "Leads with logos, customer names, or stats" },
+      { name: "Case study / success story", desc: "Tells a specific customer's transformation story" },
+      { name: "Industry validation", desc: "Analyst rankings, awards, G2 scores" },
+    ],
+  },
+  {
+    id: "differentiation",
+    label: "Differentiation",
+    subAngles: [
+      { name: "Us vs. them", desc: "Direct or indirect comparison to alternatives or the status quo" },
+      { name: "Category creation", desc: "Positions you as defining a new space entirely" },
+      { name: "Contrarian / myth-busting", desc: "Challenges a widely held belief" },
+    ],
+  },
+  {
+    id: "persona",
+    label: "Persona",
+    subAngles: [
+      { name: "Role-specific empathy", desc: "Speaks directly to a job title's unique challenges" },
+      { name: "Day-in-the-life", desc: "Mirrors the daily workflow frustrations of the buyer" },
+      { name: "Career / political capital", desc: "Appeals to what makes the buyer look good internally" },
+    ],
+  },
+  {
+    id: "urgency",
+    label: "Urgency",
+    subAngles: [
+      { name: "Trend-riding", desc: "Ties the message to a current event or macro trend" },
+      { name: "Seasonal / planning cycle", desc: "Aligns with budget season, Q1 planning, etc." },
+      { name: "Limited offer", desc: "Scarcity-based (events, pilots, early access)" },
+    ],
+  },
+  {
+    id: "education",
+    label: "Education",
+    subAngles: [
+      { name: "Thought leadership", desc: "Leads with an insight or framework, not a pitch" },
+      { name: "How-to / tactical", desc: "Offers genuinely useful advice that naturally leads to the product" },
+      { name: "Data / research", desc: "Leads with a surprising stat from original research" },
+    ],
+  },
+  {
+    id: "emotional",
+    label: "Emotional",
+    subAngles: [
+      { name: "Belonging / community", desc: "'Join 10,000 modern finance teams'" },
+      { name: "Frustration / humor", desc: "Uses relatable memes or sarcasm about broken workflows" },
+      { name: "Pride / craft", desc: "Appeals to professionals who take their work seriously" },
+    ],
+  },
+];
+
+/* ── Hook Type (12 types from PDF, replacing old 5) ────────────── */
+interface HookTypeOption {
+  id: string;
+  label: string;
+  examples: string[];
+}
+
+const HOOK_TYPE_OPTIONS: HookTypeOption[] = [
+  {
+    id: "question",
+    label: "Question",
+    examples: ["Rhetorical question", "Diagnostic question", "Challenge question", "Curiosity question"],
+  },
+  {
+    id: "statement",
+    label: "Statement",
+    examples: ["Bold claim", "Contrarian take", "Hot take / spicy opinion", "Prediction", "Confession / vulnerability"],
+  },
+  {
+    id: "data-stat",
+    label: "Data / Stat",
+    examples: ["Surprising statistic", "Benchmark comparison", "Cost / loss quantification", "Speed / scale metric"],
+  },
+  {
+    id: "story-native",
+    label: "Story / Native",
+    examples: ["Customer origin story", "Founder story", "Before/after snapshot", "Failure story", "Day-in-the-life vignette"],
+  },
+  {
+    id: "pattern-interrupt",
+    label: "Pattern Interrupt",
+    examples: ["Unexpected visual", "Breaking the fourth wall", "Absurdist / humor", "Self-aware ad", "Anti-ad"],
+  },
+  {
+    id: "social-proof",
+    label: "Social Proof",
+    examples: ["Name drop", "Logo bar", "Quote / testimonial lead", "Crowd signal", "Peer comparison"],
+  },
+  {
+    id: "list-framework",
+    label: "List / Framework",
+    examples: ["Numbered list", "Playbook / blueprint", "Checklist", "Tier / ranking", "Mistake list"],
+  },
+  {
+    id: "comparison-versus",
+    label: "Comparison / Versus",
+    examples: ["This vs. that", "Old way vs. new way", "With vs. without", "Expectation vs. reality"],
+  },
+  {
+    id: "command-cta",
+    label: "Command / Direct CTA",
+    examples: ["Imperative opener", "Invitation", "Dare / challenge", "Time-bound nudge"],
+  },
+  {
+    id: "identity-persona",
+    label: "Identity / Persona",
+    examples: ["Role callout", "Tribe signal", "Aspirational identity", "Anti-persona", "Stage-specific"],
+  },
+  {
+    id: "curiosity-gap",
+    label: "Curiosity Gap",
+    examples: ["Incomplete reveal", "Teaser", "Insider knowledge", "Counterintuitive setup"],
+  },
+  {
+    id: "timeliness",
+    label: "Timeliness / News",
+    examples: ["Trend hook", "Regulation / policy hook", "Event tie-in", "Breaking news format"],
+  },
+];
+
+/* ── Ad Format (6 formats from PDF) ────────────────────────────── */
+interface AdFormatOption {
+  id: string;
+  label: string;
+  desc: string;
+  /** Primary recommended dimensions */
+  dimensions: { width: number; height: number; label: string };
+  /** Aspect ratio as CSS value */
+  aspectRatio: string;
+  specs: string;
+}
+
+const AD_FORMAT_OPTIONS: AdFormatOption[] = [
+  {
+    id: "banner",
+    label: "Banner",
+    desc: "Single static image ad. The workhorse for brand awareness.",
+    dimensions: { width: 1200, height: 1200, label: "1200×1200 (1:1)" },
+    aspectRatio: "1 / 1",
+    specs: "Intro: 150 chars. Headline: 70 chars max. Safe zone: center 1000×450px on horizontal.",
+  },
+  {
+    id: "dynamic-word-gif",
+    label: "Dynamic Word / GIF",
+    desc: "Animated GIF or rotating text. Pattern interrupt that stops mid-scroll.",
+    dimensions: { width: 1080, height: 1080, label: "1080×1080 (1:1)" },
+    aspectRatio: "1 / 1",
+    specs: "Motion: 3–6 seconds looping. One element changes, everything else holds steady.",
+  },
+  {
+    id: "document",
+    label: "Document",
+    desc: "Multi-page swipeable content. Design each page like a social card.",
+    dimensions: { width: 1080, height: 1080, label: "1080×1080 (1:1)" },
+    aspectRatio: "1 / 1",
+    specs: "5–10 pages sweet spot. Page 1 = hook. Pages 2-4 = insight. Final = CTA. No headline/CTA button on ad itself.",
+  },
+  {
+    id: "carousel",
+    label: "Carousel",
+    desc: "Multi-card swipeable ad. Sequential storytelling with natural narrative momentum.",
+    dimensions: { width: 1080, height: 1080, label: "1080×1080 (1:1)" },
+    aspectRatio: "1 / 1",
+    specs: "2–10 cards (5–6 sweet spot). Card headline: 45 chars. Design at 2x (2160×2160). CTA on last card only.",
+  },
+  {
+    id: "article-newsletter",
+    label: "Article / Newsletter",
+    desc: "Sponsored LinkedIn-native article or newsletter. The long game.",
+    dimensions: { width: 1200, height: 644, label: "1200×644 (1.91:1)" },
+    aspectRatio: "1.91 / 1",
+    specs: "Cover image: 1920×1080 or 1200×644. Intro text: 150 chars. CTA: 'Read' or 'Subscribe'.",
+  },
+  {
+    id: "thought-leader",
+    label: "Thought Leader",
+    desc: "Boosted organic post from an employee's profile. Most authentic format on LinkedIn.",
+    dimensions: { width: 1200, height: 1200, label: "1200×1200 (1:1)" },
+    aspectRatio: "1 / 1",
+    specs: "Source: existing organic post. Non-editable creative. Best for brand awareness that doesn't feel like it.",
+  },
+];
+
+/* ══════════════════════════════════════════════════════════════════
+   VARIANT INTERFACE — structured UTM fields
+   ══════════════════════════════════════════════════════════════════ */
 
 export interface Variant {
   variant_id: string;
@@ -10,8 +695,21 @@ export interface Variant {
   creative_overlay: string;
   visual_direction: string;
   cta_text: string;
-  ad_type: string;
+  /** Messaging angle from the 8-angle taxonomy */
+  messaging_angle: string;
+  /** Messaging sub-angle (e.g. "Pain point agitation") */
+  messaging_sub_angle: string;
+  /** Hook type from the 12-type taxonomy */
   hook_type: string;
+  /** Brand voice used for this variant */
+  brand_voice: string;
+  /** Visual style from the 7-style taxonomy */
+  visual_style: string;
+  /** Publishing platform */
+  publishing_platform: string;
+  /** Ad format from the 6-format taxonomy */
+  ad_format: string;
+  /** Composed UTM tag: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id] */
   utm_content_tag: string;
   gemini_image_prompt: string;
   full_ad_mockup_description: string;
@@ -21,14 +719,25 @@ export interface Variant {
     differentiation: number;
     terminology: number;
   };
+  /** Legacy compat — keep ad_type derived from messaging_angle */
+  ad_type?: string;
+}
+
+/** Props passed to the canvas for format-aware rendering */
+export interface CanvasRenderContext {
+  ad_format: string;
+  visual_style: string;
+  publishing_platform: string;
+  aspectRatio: string;
+  dimensions: { width: number; height: number; label: string };
 }
 
 interface RefreshEngineProps {
   selectedCampaign: FatigueRow | null;
-  onVariantsGenerated: (variants: Variant[]) => void;
+  onVariantsGenerated: (variants: Variant[], renderContext: CanvasRenderContext) => void;
 }
 
-/* ── Persona options (single-select) ─────────────────────────── */
+/* ── Persona options (unchanged) ───────────────────────────────── */
 const PERSONA_OPTIONS = [
   { id: "brand", label: "Brand", desc: "Big bold statements. Broad appeal across all Docebo audiences." },
   { id: "ld-leader", label: "L&D Leader", desc: "CLO, VP/Director of L&D. Learning ROI, workforce readiness, vendor consolidation." },
@@ -44,182 +753,7 @@ const PERSONA_OPTIONS = [
   { id: "operations", label: "Operations", desc: "COO, Head of Ops. Scalability, frontline readiness, time-to-productivity." },
 ];
 
-/* ── Messaging hooks: 12 thematic categories ─────────────────── */
-interface MessagingHook {
-  headline: string;
-  detail: string;
-}
-
-interface MessagingCategory {
-  id: string;
-  label: string;
-  hooks: MessagingHook[];
-}
-
-const MESSAGING_CATEGORIES: MessagingCategory[] = [
-  {
-    id: "ai-first",
-    label: "AI-First Differentiation",
-    hooks: [
-      { headline: "AI-powered learning, not bolted on", detail: "Docebo's early and deep integration of AI features like AI Authoring and Virtual Coach creates a competitive moat." },
-      { headline: "Build courses in seconds, not weeks", detail: "Docebo lets organizations create content in minutes with virtual coaching, plus an AI copilot for smarter search and admin support." },
-      { headline: "Your AI copilot for learning", detail: "Position Harmony AI as the always-on admin assistant that eliminates busywork." },
-    ],
-  },
-  {
-    id: "multi-audience",
-    label: "Multi-Audience / Extended Enterprise",
-    hooks: [
-      { headline: "One platform, every audience", detail: "Seamlessly manage employees, customers, partners, and more in a centralized platform." },
-      { headline: "Stop paying for three LMSs", detail: "Consolidation hook targeting enterprises juggling separate tools for internal, customer, and partner training." },
-      { headline: "From employees to ecosystems", detail: "For organizations prioritizing customer education, partner enablement, and global scalability." },
-    ],
-  },
-  {
-    id: "customer-ed-revenue",
-    label: "Customer Education as Revenue Driver",
-    hooks: [
-      { headline: "Educated customers don't churn", detail: "Training programs reduce churn by accelerating onboarding, increasing adoption, and decreasing support dependency." },
-      { headline: "Turn your academy into a profit center", detail: "Docebo lets organizations turn customer education into a revenue driver through ecommerce capabilities." },
-      { headline: "Scale without scaling your CS team", detail: "\"Without Docebo, our CSMs would go back to having the same conversations five times a day.\"" },
-    ],
-  },
-  {
-    id: "partner-enablement",
-    label: "Partner Enablement & Channel Revenue",
-    hooks: [
-      { headline: "From onboarding to revenue, faster", detail: "Take partners from awareness to revenue with unified training across products, regions, and partner tiers." },
-      { headline: "Make every partner your MVP", detail: "Increase product knowledge and brand loyalty — make every partner a most valued player." },
-      { headline: "Certify, track, and scale your channel", detail: "Automate certification, renewal, and compliance so you can focus on strategy instead of chasing spreadsheets." },
-    ],
-  },
-  {
-    id: "sales-enablement",
-    label: "Sales Enablement",
-    hooks: [
-      { headline: "Stop the 440-hour content hunt", detail: "Sales reps spend an average of 440 hours each year searching for the right content to share with prospects." },
-      { headline: "Bridge the sales-marketing gap", detail: "The backbone of successful B2B sales enablement is alignment between sales and marketing teams." },
-      { headline: "Knowledge that sticks", detail: "B2B sales reps forget 70% of information within a week of training. Continuous learning is critical." },
-    ],
-  },
-  {
-    id: "roi",
-    label: "Measurable Business Impact / ROI",
-    hooks: [
-      { headline: "Connect learning to revenue", detail: "Integrate with CRM or HRIS to see direct relationships between training and seller performance." },
-      { headline: "Prove training ROI, don't guess", detail: "$1.5M saved (KCF Technologies), 119% ROI (PowerDMS), -80% admin time (Booking.com)." },
-      { headline: "Data-driven L&D", detail: "Pre-built dashboards, custom report builders, and BI integrations that correlate training data with business outcomes." },
-    ],
-  },
-  {
-    id: "global-scale",
-    label: "Global Scale & Enterprise Readiness",
-    hooks: [
-      { headline: "Go global in a click", detail: "Train customers, partners, and employees from a single platform, then translate and go global." },
-      { headline: "50+ languages, one platform", detail: "Support more than 50 languages to help localize learning programs." },
-      { headline: "FedRAMP authorized for government", detail: "FedRAMP Moderate Authorization achieved May 2025, unlocking the $2.7B U.S. federal market." },
-    ],
-  },
-  {
-    id: "integrations",
-    label: "Integration Ecosystem",
-    hooks: [
-      { headline: "Fits your stack, not the other way around", detail: "Access to over 400 third-party tools through Docebo Integrations." },
-      { headline: "Learning that lives where work happens", detail: "Integrations with Salesforce, HubSpot, Marketo, Intercom, and BI tools." },
-      { headline: "CRM + LMS = pipeline intelligence", detail: "Connect with Marketo to create leads from registrations and build custom workflows." },
-    ],
-  },
-  {
-    id: "ease-of-use",
-    label: "Ease of Use & Speed to Value",
-    hooks: [
-      { headline: "It just works", detail: "\"Once it's set up, I don't have to do anything. It just works.\"" },
-      { headline: "Endlessly customizable", detail: "\"The amount of customization that you can do within the platform is endless.\" — Booking.com" },
-      { headline: "Beautiful, branded learning experiences", detail: "Branded environments, SSO, and mobile-friendly design make training simple to access." },
-    ],
-  },
-  {
-    id: "skills",
-    label: "Skills Intelligence & Talent Development",
-    hooks: [
-      { headline: "See real capability, not just completions", detail: "Skills intelligence helps see real capability, move talent faster, and keep learning focused." },
-      { headline: "Close skill gaps before they cost you", detail: "Positioning learning as a strategic workforce planning tool, not just compliance." },
-    ],
-  },
-  {
-    id: "social",
-    label: "Social & Community Learning",
-    hooks: [
-      { headline: "Learning is better together", detail: "Q&A, personalized discussions, and real-time messaging transform the platform into a dynamic community." },
-      { headline: "Tap your in-house experts", detail: "Peer-to-peer knowledge sharing, SME access, and collaborative learning features." },
-    ],
-  },
-  {
-    id: "competitive-advantage",
-    label: "Learning as Competitive Advantage",
-    hooks: [
-      { headline: "Make learning your competitive advantage", detail: "Personalized and automated experiences that turn learning and retention into competitive advantages." },
-      { headline: "The companies that learn fastest, win", detail: "Aspirational hook for C-suite buyers." },
-      { headline: "Future-proof your learning program", detail: "Expand learning use cases and future-proof your learning program for mid-market and up." },
-    ],
-  },
-];
-
-/* ── Ad Style options (mapped to ad-canvas themes) ───────────── */
-interface AdStyleOption {
-  id: string;
-  label: string;
-  desc: string;
-  themes: string[];
-  swatch: string; // CSS gradient/color for preview
-}
-
-const AD_STYLE_OPTIONS: AdStyleOption[] = [
-  {
-    id: "navy-bold",
-    label: "Navy Bold",
-    desc: "Navy background, white/neon headlines, gradient corners",
-    themes: ["navy-white", "navy-green", "navy-pink", "navy-lavender"],
-    swatch: "linear-gradient(135deg, #0033A0, #06065D)",
-  },
-  {
-    id: "gradient-neon",
-    label: "Gradient Neon",
-    desc: "Blue-to-purple gradient, neon pink accents, cinematic",
-    themes: ["gradient-pink"],
-    swatch: "linear-gradient(135deg, #0057FF, #7E2EE9, #B627C6)",
-  },
-  {
-    id: "marble-clean",
-    label: "Marble Clean",
-    desc: "Warm beige, navy/purple text, editorial feel",
-    themes: ["beige-navy", "beige-purple", "beige-wave"],
-    swatch: "linear-gradient(135deg, #E6DACB, #D4C9BA)",
-  },
-  {
-    id: "white-minimal",
-    label: "White Minimal",
-    desc: "White background, blue-purple accents, clean",
-    themes: ["white-purple"],
-    swatch: "#FFFFFF",
-  },
-  {
-    id: "co-brand",
-    label: "Co-Brand",
-    desc: "Partner logo placement, lime banner, dual branding",
-    themes: ["cobrand-navy-green", "cobrand-beige"],
-    swatch: "linear-gradient(135deg, #0033A0 50%, #E3FFAB 50%)",
-  },
-  {
-    id: "quote",
-    label: "Quote / Testimonial",
-    desc: "Customer proof layout, attribution, gradient bg",
-    themes: ["quote-gradient"],
-    swatch: "linear-gradient(165deg, #0057FF, #7E2EE9, #B627C6)",
-  },
-];
-
-/* ── Scoring standards (shown with prompt) ───────────────────── */
+/* ── Scoring standards ─────────────────────────────────────────── */
 const SCORING_STANDARDS = [
   { key: "voice_compliance", label: "Voice", desc: "Docebo 'Learning Insurgent' tone — would this make a Cornerstone ad writer uncomfortable?" },
   { key: "visual_brand_fit", label: "Brand Fit", desc: "Uses Docebo signature elements: navy/purple, neon accents, floating UI overlays" },
@@ -227,14 +761,19 @@ const SCORING_STANDARDS = [
   { key: "terminology", label: "Terminology", desc: "Uses persona-specific language, avoids banned words (leverage, synergy, etc.)" },
 ];
 
-/* ── Auto-prompt builder ─────────────────────────────────────── */
+/* ── Auto-prompt builder (updated for UTM taxonomy) ────────────── */
 function buildAutoPrompt(
   persona: (typeof PERSONA_OPTIONS)[number],
-  category: MessagingCategory,
-  hookIndex: number,
+  angle: MessagingAngleOption,
+  subAngleIndex: number,
+  hookType: HookTypeOption,
+  brandVoice: BrandVoiceOption,
+  visualStyle: VisualStyleOption,
+  adFormat: AdFormatOption,
+  platform: PlatformOption,
   campaign: FatigueRow | null,
 ): string {
-  const hook = category.hooks[hookIndex];
+  const subAngle = angle.subAngles[subAngleIndex];
   const lines: string[] = [];
 
   if (campaign) {
@@ -247,26 +786,63 @@ function buildAutoPrompt(
   }
 
   lines.push(
-    `Target Persona: ${persona.label}`,
-    `${persona.desc}`,
+    `═══ UTM DIMENSIONS ═══`,
+    `Publishing Platform: ${platform.label}`,
+    `Visual Style: ${visualStyle.label} — ${visualStyle.coreIdea}`,
+    `Brand Voice: ${brandVoice.label} (${brandVoice.stage}) — ${brandVoice.toneMix}`,
+    `Messaging Angle: ${angle.label} → ${subAngle.name}`,
+    `  Context: ${subAngle.desc}`,
+    `Hook Type: ${hookType.label} (e.g., ${hookType.examples.slice(0, 3).join(", ")})`,
+    `Ad Format: ${adFormat.label} — ${adFormat.desc}`,
+    `  Specs: ${adFormat.specs}`,
+    `  Dimensions: ${adFormat.dimensions.label}`,
     "",
-    `Messaging Theme: ${category.label}`,
-    `Lead Hook: "${hook.headline}"`,
-    `Context: ${hook.detail}`,
+    `═══ TARGET PERSONA ═══`,
+    `${persona.label}: ${persona.desc}`,
     "",
-    `Generate 5 ad variants using this messaging angle. Each variant should:`,
-    `- Lead with the "${hook.headline}" hook or a close variation`,
+    `═══ BRAND VOICE GUIDE: ${brandVoice.label.toUpperCase()} ═══`,
+    ...(brandVoice.positioning
+      ? [`From: ${brandVoice.positioning.from}`, `To: ${brandVoice.positioning.to}`, ``]
+      : [`Tone mix: ${brandVoice.toneMix}`, ``]),
+    ...(brandVoice.voicePillars
+      ? brandVoice.voicePillars.flatMap((p) => [
+          `Voice Pillar — ${p.name}: ${p.desc}`,
+          `  Instead of: "${p.insteadOf}"`,
+          `  Say: "${p.say}"`,
+        ])
+      : []),
+    ...(brandVoice.toneSpectrum
+      ? [``, `Tone Spectrum:`, ...brandVoice.toneSpectrum.map((t) => `  ${t.context}: ${t.mix}`)]
+      : []),
+    ...(brandVoice.examples
+      ? [``, `Voice Examples:`, ...brandVoice.examples.map((e) => `  ${e.format}: "${e.text}"`)]
+      : []),
+    ...(brandVoice.donts
+      ? [``, `Voice Don'ts:`, ...brandVoice.donts.map((d) => `  - ${d}`)]
+      : []),
+    ...(brandVoice.principles
+      ? [``, `Voice Principles:`, ...brandVoice.principles.map((p) => `  - ${p.name}: ${p.desc}`)]
+      : []),
+    ...(brandVoice.promise ? [``, `Brand Promise: ${brandVoice.promise}`] : []),
+    ``,
+    `═══ GENERATION INSTRUCTIONS ═══`,
+    `Generate 5 ad variants using these exact UTM dimensions. Each variant must:`,
+    `- Use the "${brandVoice.label}" brand voice with tone mix: ${brandVoice.toneMix}`,
+    `- Apply the "${visualStyle.label}" visual style in visual_direction and gemini_image_prompt`,
+    `- Lead with the "${angle.label} → ${subAngle.name}" messaging angle`,
+    `- Each variant uses a DIFFERENT hook_type from the 12-type taxonomy`,
+    `- Target the "${platform.label}" platform — adapt copy length, tone, and visual direction accordingly`,
+    `- Follow "${adFormat.label}" format specs: ${adFormat.specs}`,
+    `- Compose utm_content_tag as: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id]`,
     `- Speak directly to the ${persona.label} persona's pain points and language`,
-    `- Use Docebo's "Learning Insurgent" brand voice`,
-    `- Include a different hook_type per variant (question / statistic / provocative / direct callout / story opener)`,
-    `- Self-score each variant on voice_compliance, visual_brand_fit, differentiation, and terminology (min 7/10 each)`,
+    `- Self-score each variant (min 7/10 each dimension)`,
   );
 
   return lines.join("\n");
 }
 
-/* ── Flow steps ──────────────────────────────────────────────── */
-type FlowStep = "select" | "prompt" | "styles" | "generating" | "results";
+/* ── Flow steps ──────────────────────────────────────────────────── */
+type FlowStep = "select" | "configure" | "prompt" | "styles" | "generating" | "results";
 
 export default function RefreshEngine({
   selectedCampaign,
@@ -275,17 +851,20 @@ export default function RefreshEngine({
   // Flow state
   const [step, setStep] = useState<FlowStep>("select");
 
-  // Selection state
+  // Selection state — Step 1: Persona + Messaging Angle
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedHookIndex, setSelectedHookIndex] = useState<number>(0);
+  const [selectedAngle, setSelectedAngle] = useState<string | null>(null);
+  const [selectedSubAngleIndex, setSelectedSubAngleIndex] = useState<number>(0);
+
+  // Configuration state — Step 2: Platform, Voice, Hook, Format, Visual Style
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
+  const [selectedHookType, setSelectedHookType] = useState<string | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
+  const [selectedVisualStyle, setSelectedVisualStyle] = useState<string | null>(null);
 
   // Prompt state
   const [editablePrompt, setEditablePrompt] = useState("");
-
-  // Style state
-  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
-  const [isMixMode, setIsMixMode] = useState(false);
 
   // Generation state
   const [loading, setLoading] = useState(false);
@@ -293,46 +872,38 @@ export default function RefreshEngine({
   const [rawOutput, setRawOutput] = useState<string | null>(null);
   const [generatedVariants, setGeneratedVariants] = useState<Variant[] | null>(null);
 
+  // Auto-default platform from campaign
+  useEffect(() => {
+    if (selectedCampaign?.platform && !selectedPlatform) {
+      const plat = selectedCampaign.platform.toLowerCase();
+      const match = PLATFORM_OPTIONS.find(
+        (p) => plat.includes(p.id) || p.id.includes(plat)
+      );
+      if (match) setSelectedPlatform(match.id);
+    }
+  }, [selectedCampaign, selectedPlatform]);
+
   /* ── Derived data ─────────────────────────────────────────── */
   const persona = PERSONA_OPTIONS.find((p) => p.id === selectedPersona);
-  const category = MESSAGING_CATEGORIES.find((c) => c.id === selectedCategory);
-  const canGeneratePrompt = selectedPersona && selectedCategory;
+  const angle = MESSAGING_ANGLE_OPTIONS.find((a) => a.id === selectedAngle);
+  const platform = PLATFORM_OPTIONS.find((p) => p.id === selectedPlatform);
+  const voice = BRAND_VOICE_OPTIONS.find((v) => v.id === selectedVoice);
+  const hookType = HOOK_TYPE_OPTIONS.find((h) => h.id === selectedHookType);
+  const adFormat = AD_FORMAT_OPTIONS.find((f) => f.id === selectedFormat);
+  const visualStyle = VISUAL_STYLE_OPTIONS.find((s) => s.id === selectedVisualStyle);
 
-  /* ── Auto-generate prompt when both selections are made ──── */
+  const canProceedToConfig = selectedPersona && selectedAngle;
+  const canGeneratePrompt = platform && voice && hookType && adFormat && visualStyle;
+
+  /* ── Auto-generate prompt when all selections are made ──── */
   function handleGeneratePrompt() {
-    if (!persona || !category) return;
-    const prompt = buildAutoPrompt(persona, category, selectedHookIndex, selectedCampaign);
+    if (!persona || !angle || !platform || !voice || !hookType || !adFormat || !visualStyle) return;
+    const prompt = buildAutoPrompt(
+      persona, angle, selectedSubAngleIndex, hookType, voice, visualStyle, adFormat, platform, selectedCampaign,
+    );
     setEditablePrompt(prompt);
     setStep("prompt");
   }
-
-  /* ── Style selection logic ────────────────────────────────── */
-  function handleStyleToggle(styleId: string) {
-    if (styleId === "mix") {
-      setIsMixMode(true);
-      setSelectedStyles([]);
-      return;
-    }
-    if (isMixMode) {
-      setSelectedStyles((prev) =>
-        prev.includes(styleId)
-          ? prev.filter((s) => s !== styleId)
-          : prev.length < 3 ? [...prev, styleId] : prev
-      );
-    } else {
-      setIsMixMode(false);
-      setSelectedStyles([styleId]);
-    }
-  }
-
-  function handleSelectSingleStyle(styleId: string) {
-    setIsMixMode(false);
-    setSelectedStyles([styleId]);
-  }
-
-  const canProceedFromStyles = isMixMode
-    ? selectedStyles.length >= 2
-    : selectedStyles.length === 1;
 
   /* ── Generate variants ────────────────────────────────────── */
   async function handleGenerate() {
@@ -346,8 +917,13 @@ export default function RefreshEngine({
       const body: Record<string, unknown> = {
         prompt: editablePrompt,
         persona: selectedPersona,
-        messaging_hook: selectedCategory,
-        ad_styles: isMixMode ? selectedStyles : selectedStyles,
+        messaging_angle: selectedAngle,
+        messaging_sub_angle: angle?.subAngles[selectedSubAngleIndex]?.name,
+        hook_type: selectedHookType,
+        brand_voice: selectedVoice,
+        visual_style: selectedVisualStyle,
+        ad_format: selectedFormat,
+        publishing_platform: selectedPlatform,
         campaign_context: selectedCampaign || undefined,
       };
 
@@ -365,7 +941,14 @@ export default function RefreshEngine({
 
       if (data.variants) {
         setGeneratedVariants(data.variants);
-        onVariantsGenerated(data.variants);
+        const fmt = AD_FORMAT_OPTIONS.find((f) => f.id === selectedFormat)!;
+        onVariantsGenerated(data.variants, {
+          ad_format: selectedFormat!,
+          visual_style: selectedVisualStyle!,
+          publishing_platform: selectedPlatform!,
+          aspectRatio: fmt.aspectRatio,
+          dimensions: fmt.dimensions,
+        });
         setStep("results");
       } else if (data.raw_text) {
         setRawOutput(data.raw_text);
@@ -383,11 +966,14 @@ export default function RefreshEngine({
   function handleReset() {
     setStep("select");
     setSelectedPersona(null);
-    setSelectedCategory(null);
-    setSelectedHookIndex(0);
+    setSelectedAngle(null);
+    setSelectedSubAngleIndex(0);
+    setSelectedPlatform(null);
+    setSelectedVoice(null);
+    setSelectedHookType(null);
+    setSelectedFormat(null);
+    setSelectedVisualStyle(null);
     setEditablePrompt("");
-    setSelectedStyles([]);
-    setIsMixMode(false);
     setError(null);
     setRawOutput(null);
     setGeneratedVariants(null);
@@ -395,9 +981,9 @@ export default function RefreshEngine({
 
   /* ── Step indicator ───────────────────────────────────────── */
   const steps: { key: FlowStep; label: string }[] = [
-    { key: "select", label: "Select" },
+    { key: "select", label: "Persona" },
+    { key: "configure", label: "UTM" },
     { key: "prompt", label: "Prompt" },
-    { key: "styles", label: "Styles" },
     { key: "generating", label: "Generate" },
   ];
 
@@ -410,7 +996,7 @@ export default function RefreshEngine({
           Creative Refresh Engine
         </h2>
         <p className="text-xs text-gray-500 mt-0.5">
-          Docebo &quot;The Learning Insurgent&quot; voice
+          UTM-driven creative generation
         </p>
 
         {/* Step indicator */}
@@ -459,10 +1045,10 @@ export default function RefreshEngine({
         </div>
       )}
 
-      {/* ═══ STEP 1: SELECT PERSONA + MESSAGING HOOK ═══ */}
+      {/* ═══ STEP 1: SELECT PERSONA + MESSAGING ANGLE ═══ */}
       {step === "select" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-4">
-          {/* Persona picker (single select) */}
+          {/* Persona picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-medium text-gray-400">
@@ -515,26 +1101,24 @@ export default function RefreshEngine({
             </div>
           </div>
 
-          {/* Messaging Hook picker (single select category, then hook) */}
+          {/* Messaging Angle picker (replaces old 12 messaging categories) */}
           <div>
             <p className="text-xs font-medium text-gray-400 mb-2">
-              2. Messaging Hook
+              2. Messaging Angle
             </p>
-
-            {/* Category list */}
             <div className="space-y-1">
-              {MESSAGING_CATEGORIES.map((cat) => {
-                const isExpanded = selectedCategory === cat.id;
+              {MESSAGING_ANGLE_OPTIONS.map((a) => {
+                const isExpanded = selectedAngle === a.id;
                 return (
-                  <div key={cat.id}>
+                  <div key={a.id}>
                     <button
                       onClick={() => {
                         if (isExpanded) {
-                          setSelectedCategory(null);
-                          setSelectedHookIndex(0);
+                          setSelectedAngle(null);
+                          setSelectedSubAngleIndex(0);
                         } else {
-                          setSelectedCategory(cat.id);
-                          setSelectedHookIndex(0);
+                          setSelectedAngle(a.id);
+                          setSelectedSubAngleIndex(0);
                         }
                       }}
                       className={`w-full text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
@@ -545,34 +1129,34 @@ export default function RefreshEngine({
                     >
                       <div className="flex items-center justify-between">
                         <p className={`text-xs font-medium ${isExpanded ? "text-cyan-300" : "text-gray-300"}`}>
-                          {cat.label}
+                          {a.label}
                         </p>
                         <span className={`text-[10px] ${isExpanded ? "text-cyan-400" : "text-gray-600"}`}>
-                          {cat.hooks.length} hooks {isExpanded ? "▼" : "▶"}
+                          {a.subAngles.length} angles {isExpanded ? "▼" : "▶"}
                         </span>
                       </div>
                     </button>
 
-                    {/* Expanded hooks */}
+                    {/* Sub-angles */}
                     {isExpanded && (
                       <div className="ml-3 mt-1 space-y-1">
-                        {cat.hooks.map((hook, hi) => {
-                          const hookActive = selectedHookIndex === hi;
+                        {a.subAngles.map((sub, si) => {
+                          const subActive = selectedSubAngleIndex === si;
                           return (
                             <button
-                              key={hi}
-                              onClick={() => setSelectedHookIndex(hi)}
+                              key={si}
+                              onClick={() => setSelectedSubAngleIndex(si)}
                               className={`w-full text-left px-2.5 py-1.5 rounded border transition-all cursor-pointer ${
-                                hookActive
+                                subActive
                                   ? "border-cyan-500/40 bg-cyan-500/10"
                                   : "border-gray-700/30 bg-gray-800/20 hover:bg-gray-800/40"
                               }`}
                             >
-                              <p className={`text-[11px] font-medium ${hookActive ? "text-cyan-300" : "text-gray-300"}`}>
-                                &ldquo;{hook.headline}&rdquo;
+                              <p className={`text-[11px] font-medium ${subActive ? "text-cyan-300" : "text-gray-300"}`}>
+                                {sub.name}
                               </p>
                               <p className="text-[10px] text-gray-500 mt-0.5 leading-snug">
-                                {hook.detail}
+                                {sub.desc}
                               </p>
                             </button>
                           );
@@ -587,7 +1171,169 @@ export default function RefreshEngine({
         </div>
       )}
 
-      {/* ═══ STEP 2: PROMPT PREVIEW & EDIT ═══ */}
+      {/* ═══ STEP 2: UTM CONFIGURATION (Platform, Voice, Hook, Format, Visual Style) ═══ */}
+      {step === "configure" && (
+        <div className="flex-1 overflow-auto px-4 py-3 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-gray-400">UTM Dimensions</p>
+            <button
+              onClick={() => setStep("select")}
+              className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+            >
+              ← Back
+            </button>
+          </div>
+
+          {/* Platform */}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Publishing Platform</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {PLATFORM_OPTIONS.map((p) => {
+                const active = selectedPlatform === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedPlatform(active ? null : p.id)}
+                    className={`px-2 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                      active
+                        ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300"
+                        : "border-gray-700/50 bg-gray-800/30 text-gray-400 hover:border-gray-600"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Brand Voice */}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Brand Voice</p>
+            <div className="space-y-1">
+              {BRAND_VOICE_OPTIONS.map((v) => {
+                const active = selectedVoice === v.id;
+                return (
+                  <button
+                    key={v.id}
+                    onClick={() => setSelectedVoice(active ? null : v.id)}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
+                      active
+                        ? "border-purple-500/50 bg-purple-500/10"
+                        : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className={`text-xs font-medium ${active ? "text-purple-300" : "text-gray-300"}`}>
+                        {v.label}
+                      </p>
+                      <span className={`text-[10px] ${active ? "text-purple-400" : "text-gray-600"}`}>
+                        {v.stage}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{v.coreEnergy}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Hook Type */}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Hook Type</p>
+            <div className="grid grid-cols-2 gap-1">
+              {HOOK_TYPE_OPTIONS.map((h) => {
+                const active = selectedHookType === h.id;
+                return (
+                  <button
+                    key={h.id}
+                    onClick={() => setSelectedHookType(active ? null : h.id)}
+                    className={`text-left px-2 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                      active
+                        ? "border-cyan-500/50 bg-cyan-500/10"
+                        : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600"
+                    }`}
+                  >
+                    <p className={`text-[11px] font-medium ${active ? "text-cyan-300" : "text-gray-300"}`}>
+                      {h.label}
+                    </p>
+                    <p className="text-[9px] text-gray-600 mt-0.5 truncate">
+                      {h.examples[0]}, {h.examples[1]}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Ad Format */}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Ad Format</p>
+            <div className="space-y-1">
+              {AD_FORMAT_OPTIONS.map((f) => {
+                const active = selectedFormat === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => setSelectedFormat(active ? null : f.id)}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
+                      active
+                        ? "border-emerald-500/50 bg-emerald-500/10"
+                        : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className={`text-xs font-medium ${active ? "text-emerald-300" : "text-gray-300"}`}>
+                        {f.label}
+                      </p>
+                      <span className={`text-[10px] font-mono ${active ? "text-emerald-400" : "text-gray-600"}`}>
+                        {f.dimensions.label}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{f.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Visual Style */}
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Visual Style</p>
+            <div className="space-y-1">
+              {VISUAL_STYLE_OPTIONS.map((s) => {
+                const active = selectedVisualStyle === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedVisualStyle(active ? null : s.id)}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
+                      active
+                        ? "border-pink-500/50 bg-pink-500/10"
+                        : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-md border border-gray-600/50 shrink-0"
+                        style={{ background: s.swatch }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-medium ${active ? "text-pink-300" : "text-gray-300"}`}>
+                          {s.label}
+                        </p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">{s.desc}</p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ STEP 3: PROMPT PREVIEW & EDIT ═══ */}
       {step === "prompt" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
@@ -595,7 +1341,7 @@ export default function RefreshEngine({
               Auto-Generated Prompt
             </p>
             <button
-              onClick={() => setStep("select")}
+              onClick={() => setStep("configure")}
               className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
             >
               ← Back
@@ -606,7 +1352,7 @@ export default function RefreshEngine({
           <textarea
             value={editablePrompt}
             onChange={(e) => setEditablePrompt(e.target.value)}
-            rows={12}
+            rows={14}
             className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-gray-200 font-mono leading-relaxed focus:outline-none focus:border-cyan-500/50 resize-none"
           />
 
@@ -631,137 +1377,18 @@ export default function RefreshEngine({
 
           {/* Selection summary */}
           <div className="rounded-lg bg-gray-800/30 border border-gray-700/30 p-2">
-            <div className="flex flex-wrap gap-2 text-[10px]">
-              <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
-                {persona?.label}
-              </span>
-              <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400">
-                {category?.label}
-              </span>
+            <div className="flex flex-wrap gap-1.5 text-[10px]">
+              <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400">{platform?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">{persona?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-400">{visualStyle?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">{adFormat?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">{voice?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">{hookType?.label}</span>
               <span className="px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-400">
-                &ldquo;{category?.hooks[selectedHookIndex]?.headline}&rdquo;
+                {angle?.label} → {angle?.subAngles[selectedSubAngleIndex]?.name}
               </span>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ═══ STEP 3: AD STYLE SELECTION ═══ */}
-      {step === "styles" && (
-        <div className="flex-1 overflow-auto px-4 py-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-gray-400">
-              Ad Styles (5 variants)
-            </p>
-            <button
-              onClick={() => setStep("prompt")}
-              className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
-            >
-              ← Back
-            </button>
-          </div>
-
-          {/* Mix mode toggle */}
-          <button
-            onClick={() => {
-              if (isMixMode) {
-                setIsMixMode(false);
-                setSelectedStyles([]);
-              } else {
-                setIsMixMode(true);
-                setSelectedStyles([]);
-              }
-            }}
-            className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all cursor-pointer ${
-              isMixMode
-                ? "border-purple-500/50 bg-purple-500/15"
-                : "border-dashed border-gray-600 bg-gray-800/30 hover:border-gray-500"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-xs font-medium ${isMixMode ? "text-purple-300" : "text-gray-300"}`}>
-                  Mix Styles
-                </p>
-                <p className="text-[10px] text-gray-500 mt-0.5">
-                  {isMixMode
-                    ? `Select 2-3 styles (${selectedStyles.length} selected)`
-                    : "Distribute 5 variants across multiple styles"
-                  }
-                </p>
-              </div>
-              <div className="flex gap-0.5">
-                {AD_STYLE_OPTIONS.slice(0, 3).map((s) => (
-                  <div
-                    key={s.id}
-                    className="w-3 h-3 rounded-sm"
-                    style={{ background: s.swatch }}
-                  />
-                ))}
-              </div>
-            </div>
-          </button>
-
-          {/* Style options */}
-          <div className="space-y-1.5">
-            {AD_STYLE_OPTIONS.map((style) => {
-              const isSelected = selectedStyles.includes(style.id);
-              const isDisabled = isMixMode && selectedStyles.length >= 3 && !isSelected;
-              return (
-                <button
-                  key={style.id}
-                  onClick={() => {
-                    if (isDisabled) return;
-                    if (isMixMode) {
-                      handleStyleToggle(style.id);
-                    } else {
-                      handleSelectSingleStyle(style.id);
-                    }
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all ${
-                    isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
-                  } ${
-                    isSelected
-                      ? "border-cyan-500/50 bg-cyan-500/10 shadow-[0_0_8px_rgba(6,182,212,0.1)]"
-                      : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600 hover:bg-gray-800/60"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-8 h-8 rounded-md border border-gray-600/50 shrink-0"
-                      style={{ background: style.swatch }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-medium ${isSelected ? "text-cyan-300" : "text-gray-300"}`}>
-                        {style.label}
-                      </p>
-                      <p className="text-[10px] text-gray-500 mt-0.5">
-                        {style.desc}
-                      </p>
-                    </div>
-                    {isMixMode && (
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                        isSelected
-                          ? "border-cyan-400 bg-cyan-500/20"
-                          : "border-gray-600"
-                      }`}>
-                        {isSelected && (
-                          <span className="text-[10px] text-cyan-300">✓</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Mix mode count hint */}
-          {isMixMode && selectedStyles.length > 0 && selectedStyles.length < 2 && (
-            <p className="text-[10px] text-amber-400/70">
-              Select at least 2 styles for mix mode
-            </p>
-          )}
         </div>
       )}
 
@@ -771,12 +1398,12 @@ export default function RefreshEngine({
           <div className="text-center">
             <div className="w-10 h-10 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-gray-400">Generating 5 creative variants...</p>
-            <p className="text-xs text-gray-600 mt-1">
-              {isMixMode
-                ? `Across ${selectedStyles.length} styles: ${selectedStyles.map((s) => AD_STYLE_OPTIONS.find((o) => o.id === s)?.label).join(", ")}`
-                : `Style: ${AD_STYLE_OPTIONS.find((o) => o.id === selectedStyles[0])?.label}`
-              }
-            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5 justify-center text-[10px]">
+              <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400">{platform?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-400">{visualStyle?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">{adFormat?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">{voice?.label}</span>
+            </div>
             <div className="mt-3 space-y-0.5">
               {SCORING_STANDARDS.map((s) => (
                 <p key={s.key} className="text-[10px] text-gray-600 font-mono">
@@ -791,14 +1418,12 @@ export default function RefreshEngine({
       {/* ═══ STEP 5: RESULTS ═══ */}
       {step === "results" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-3">
-          {/* Error */}
           {error && (
             <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
               {error}
             </div>
           )}
 
-          {/* Raw output fallback */}
           {rawOutput && (
             <div>
               <p className="text-xs text-gray-500 mb-2">Raw output (JSON parsing failed):</p>
@@ -808,7 +1433,6 @@ export default function RefreshEngine({
             </div>
           )}
 
-          {/* Generated variants */}
           {generatedVariants && (
             <>
               <div className="flex items-center justify-between">
@@ -831,12 +1455,18 @@ export default function RefreshEngine({
                     <span className="text-xs font-mono text-cyan-400">
                       {v.variant_id}
                     </span>
-                    <div className="flex gap-2">
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
-                        {v.ad_type}
+                    <div className="flex gap-1.5 flex-wrap">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
+                        {v.messaging_angle || v.ad_type}
                       </span>
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
                         {v.hook_type}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                        {v.brand_voice}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-400">
+                        {v.visual_style}
                       </span>
                     </div>
                   </div>
@@ -868,39 +1498,43 @@ export default function RefreshEngine({
       <div className="p-4 border-t border-gray-700/50">
         {step === "select" && (
           <button
+            onClick={() => setStep("configure")}
+            disabled={!canProceedToConfig}
+            className="w-full px-4 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            {canProceedToConfig
+              ? "Configure UTM Dimensions →"
+              : "Select persona & messaging angle"
+            }
+          </button>
+        )}
+
+        {step === "configure" && (
+          <button
             onClick={handleGeneratePrompt}
             disabled={!canGeneratePrompt}
             className="w-full px-4 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             {canGeneratePrompt
               ? "Generate Prompt →"
-              : "Select persona & messaging hook"
+              : `Select: ${[
+                  !selectedPlatform && "platform",
+                  !selectedVoice && "voice",
+                  !selectedHookType && "hook",
+                  !selectedFormat && "format",
+                  !selectedVisualStyle && "visual style",
+                ].filter(Boolean).join(", ")}`
             }
           </button>
         )}
 
         {step === "prompt" && (
           <button
-            onClick={() => setStep("styles")}
-            disabled={!editablePrompt.trim()}
-            className="w-full px-4 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Approve Prompt → Select Styles
-          </button>
-        )}
-
-        {step === "styles" && (
-          <button
             onClick={handleGenerate}
-            disabled={!canProceedFromStyles}
+            disabled={!editablePrompt.trim()}
             className="w-full px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            {canProceedFromStyles
-              ? `Generate 5 Variants${isMixMode ? ` (${selectedStyles.length} styles)` : ""}`
-              : isMixMode
-                ? "Select 2-3 styles"
-                : "Select an ad style"
-            }
+            Generate 5 Variants
           </button>
         )}
 
