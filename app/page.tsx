@@ -8,6 +8,7 @@ import HealthTables, {
 } from "@/components/creative/health-tables";
 import RefreshEngine, {
   type Variant,
+  type CanvasRenderContext,
 } from "@/components/creative/refresh-engine";
 import AdCanvas from "@/components/creative/ad-canvas";
 
@@ -20,6 +21,7 @@ export default function CreativeMonitor() {
 
   const [selectedCampaign, setSelectedCampaign] = useState<FatigueRow | null>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [renderContext, setRenderContext] = useState<CanvasRenderContext | undefined>(undefined);
 
   const loadHealth = useCallback(async () => {
     setHealthLoading(true);
@@ -47,8 +49,9 @@ export default function CreativeMonitor() {
     setSelectedCampaign(row);
   }
 
-  function handleVariantsGenerated(newVariants: Variant[]) {
+  function handleVariantsGenerated(newVariants: Variant[], ctx: CanvasRenderContext) {
     setVariants(newVariants);
+    setRenderContext(ctx);
   }
 
   return (
@@ -152,7 +155,7 @@ export default function CreativeMonitor() {
 
         {/* Right: Ad Canvas */}
         <div className="overflow-hidden flex flex-col">
-          <AdCanvas variants={variants} />
+          <AdCanvas variants={variants} renderContext={renderContext} />
         </div>
       </div>
     </div>

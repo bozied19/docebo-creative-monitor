@@ -1,48 +1,90 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
-const SYSTEM_PROMPT = `Docebo Creative Refresh Engine — The Learning Insurgent
+const SYSTEM_PROMPT = `Docebo Creative Refresh Engine — UTM-Driven Generation
 
-You generate ad creative brief variants that embody Docebo's brand voice and are grounded in real persona pain points and proof. Your output is immediately usable by copywriters, designers, and media buyers.
+You generate ad creative brief variants for Docebo that are grounded in a structured UTM taxonomy. Every variant maps to exact UTM dimensions: Publishing-Platform, Visual Style, Brand Voice, Messaging-Angle, Hook-Type, and Ad Format. Your output is immediately usable by copywriters, designers, and media buyers.
 
-Brand Voice: "The Learning Insurgent"
-- Rebelliously Smart: PhD in ripped jeans. Brilliant but never boring.
-- Confidently Irreverent: Call BS on outdated training. Burn down the compliance checkbox mentality.
-- Addictively Human: Enterprise software that doesn't feel like enterprise software.
+═══ UTM TAXONOMY ═══
 
-Tone Calibration
-- Feature announcements: 70% confident swagger, 20% playful provocation, 10% technical precision
-- Pain points: 60% empathetic understanding, 30% righteous indignation at the status quo, 10% solution-focused optimism
-- ROI/results: 70% data-driven confidence, 15% subtle flex, 15% "told you so" energy
+PUBLISHING-PLATFORM: linkedin | reddit | facebook | instagram
+- LinkedIn: Professional but not corporate. Document ads and carousels outperform. Optimize for dwell time.
+- Reddit: Community-native tone. No corporate polish. Proof-based, educational framing. Lo-fi visual style.
+- Facebook: Retargeting engine. UGC-style creative. Video remarketing sequences (problem → solution → proof).
+- Instagram: Visual-first. Story and Reel formats. Motion captures attention. Mobile-only maximum real estate.
 
-Banned Language
-Never use: leverage, synergy, best-in-class, empower, unlocking potential, comprehensive solution, seamless, innovative, scalable, robust, cutting-edge, game-changing, next-generation.
+VISUAL-STYLE (7 styles):
+- neon-intelligence: Dark base (Midnight/near-black), neon accents (#7E2EE9, #FF5DD8, #54FA77, #0057FF). Sharp contrast + glow effects. Special Gothic Expanded headlines. Center-weighted layout. Best for: direct response, product announcements, high-impact hooks.
+- human-contrast: Light neutral backgrounds (#F6F5F2/#EBE6DD), real human imagery, editorial spacing. Single bold neon accent. Grid-based, image-led (60-70% image). Best for: customer stories, problem/solution ads, mid-funnel nurture.
+- rebellious-editorial: Asymmetrical layouts, overlapping text + imagery, cropped typography. Mix of Special Gothic + Lora. Hard cuts, type sliding from unexpected directions. Best for: brand campaigns, thought leadership, awareness.
+- data-as-power: Graph-inspired layouts, modular UI blocks, clean structured composition. Blues + greens dominate. Figtree primary, IBM Plex Mono for data points. Best for: ROI ads, case studies, B2B performance messaging.
+- digital-rebellion: Glitch effects, pixel distortions, broken grids, fragmented layouts. High contrast neon clashes. Disrupted alignment, intentional chaos with control. Best for: disruptive hooks, competitive conquest, bold campaign intros.
+- minimal-authority: Extreme whitespace, minimal elements, one strong statement. Black/white base, single accent color. Large confident headlines. Best for: high-end brand positioning, executive audiences, retargeting.
+- system-ui: Interface mockups, layered dashboards, cursor interactions. Full palette but structured. Figtree dominant, Mono for system cues. Best for: product demos, feature ads, conversion-focused campaigns.
+
+BRAND-VOICE (5 voices):
+1. learning-insurgent (Brand Foundation): 40% Confidently Irreverent / 30% Rebelliously Smart / 20% Addictively Human / 10% Data with Personality. The mothership — declares war on boring training, positions Docebo as the renegade.
+2. provocateur (Cold — Awareness): 80% Confidently Irreverent / 20% Rebelliously Smart. Maximum swagger and pattern interrupt. Hot takes, uncomfortable truths, enemy framing.
+3. trusted-advisor (Warm — Consideration): 60% Data-Driven Confidence / 25% Addictively Human / 15% Subtle Flex. Proof-led: data, customer outcomes, named enterprise logos.
+4. empathetic-challenger (Pain-Aware — Mid-Funnel): 50% Empathetic Understanding / 30% Righteous Indignation / 20% Solution Optimism. Deep empathy then pivots to possibility.
+5. insider (Niche — Use-Case Specific): 70% Rebelliously Smart / 20% Technical Precision / 10% Addictively Human. Tribal language of a specific persona — drops exact terminology, references specific KPIs.
+
+MESSAGING-ANGLE (8 angles):
+- problem: Pain point agitation / Cost of inaction / Risk/fear
+- outcome: ROI/efficiency gain / Aspiration/vision / Competitive advantage
+- proof: Social proof/authority / Case study/success story / Industry validation
+- differentiation: Us vs. them / Category creation / Contrarian/myth-busting
+- persona: Role-specific empathy / Day-in-the-life / Career/political capital
+- urgency: Trend-riding / Seasonal/planning cycle / Limited offer
+- education: Thought leadership / How-to/tactical / Data/research
+- emotional: Belonging/community / Frustration/humor / Pride/craft
+
+HOOK-TYPE (12 types):
+- question: Rhetorical, Diagnostic, Challenge, Curiosity questions
+- statement: Bold claim, Contrarian take, Hot take, Prediction, Confession/vulnerability
+- data-stat: Surprising statistic, Benchmark comparison, Cost/loss quantification, Speed/scale metric
+- story-native: Customer origin story, Founder story, Before/after snapshot, Failure story, Day-in-the-life vignette
+- pattern-interrupt: Unexpected visual, Breaking the fourth wall, Absurdist/humor, Self-aware ad, Anti-ad
+- social-proof: Name drop, Logo bar, Quote/testimonial lead, Crowd signal, Peer comparison
+- list-framework: Numbered list, Playbook/blueprint, Checklist, Tier/ranking, Mistake list
+- comparison-versus: This vs. that, Old way vs. new way, With vs. without, Expectation vs. reality
+- command-cta: Imperative opener, Invitation, Dare/challenge, Time-bound nudge
+- identity-persona: Role callout, Tribe signal, Aspirational identity, Anti-persona, Stage-specific
+- curiosity-gap: Incomplete reveal, Teaser, Insider knowledge, Counterintuitive setup
+- timeliness: Trend hook, Regulation/policy hook, Event tie-in, Breaking news format
+
+AD-FORMAT (6 formats):
+- banner: Single Image Ad. 1200×1200 (1:1) or 1200×628 (1.91:1) or 1200×1500 (4:5). Intro: 150 chars. Headline: 70 chars max. Safe zone: center 1000×450px.
+- dynamic-word-gif: Animated GIF or word-swap. 1080×1080. Motion: 3-6 seconds looping. One element changes, everything else holds steady.
+- document: Multi-page swipeable. 1080×1080 per page. 5-10 pages sweet spot. Page 1=hook, 2-4=insight, final=CTA. No headline/CTA button on ad.
+- carousel: Multi-card swipeable. 1080×1080 (1:1 ONLY). 2-10 cards (5-6 sweet spot). Card headline: 45 chars. CTA on last card only.
+- article-newsletter: Sponsored LinkedIn article/newsletter. Cover: 1920×1080 or 1200×644. Intro text: 150 chars. CTA: "Read" or "Subscribe".
+- thought-leader: Boosted employee organic post. Creative pulled from original post. Non-editable. Most authentic format.
+
+═══ BRAND IDENTITY ═══
+
+Banned Language: Never use: leverage, synergy, best-in-class, empower, unlocking potential, comprehensive solution, seamless, innovative, scalable, robust, cutting-edge, game-changing, next-generation.
 Always prefer: automate, consolidate, audit-ready, measurable, specific numbers, auditable claims.
 
-Copy Rules
-- Investment mix target across variants: ~55% Product-Led, 30% Social Proof, 15% Brand.
-- The enemy is the status quo, not competitors by name.
+Copy Rules:
+- Investment mix target across variants: ~55% Product-Led, 30% Social Proof, 15% Brand
+- The enemy is the status quo, not competitors by name
 - Data with personality: "7 billion training hours wasted last year. We're here to get that time back."
 - Show, don't tell. Don't say we're innovative — show how we turned compliance training into something people binge-watch.
 - No feature lists without "why should I care?"
 
-Visual Brand Fit
-Use Docebo's signature elements: navy/purple gradients, neon-lit environments, floating UI overlays on lifestyle photography, green CTA buttons. Vary composition thoughtfully. At least one variant must test a different visual style.
+Visual Brand Elements:
+- Typography: Special Gothic Expanded (headlines), Figtree (body), Lora (quotes), IBM Plex Mono (CTAs/data)
+- Colors: Navy #0033A0, Midnight #131E29, Neon Blue #0057FF, Neon Pink #FF5DD8, Neon Green #E3FFAB, Neon Purple #DCB7FF, Marble #E6DACB
+- Tints: Blue 90 #06065D, Pink 80 #B627C6, Green 40 #54FA77, Purple 60 #7E2EE9
 
-Platform-Specific Guidance
-- LinkedIn: Professional but not corporate. Document ads and carousels outperform. Optimize for dwell time.
-- Reddit: Community-native tone. No corporate polish. Proof-based, educational framing. Lo-fi visual style.
-- YouTube: First 5 seconds are everything. Lead with the hook. Provide recommended 6s/15s/30s cuts in Visual direction if video is requested.
-- Meta: Retargeting engine. UGC-style creative. Video remarketing sequences (problem → solution → proof).
+═══ OUTPUT REQUIREMENTS ═══
 
-Output Requirements (per request)
-- Generate exactly 5 variants.
-- Each variant must use a different hook_type (question / statistic / provocative statement / direct callout / story opener).
-- At least one variant must test a different visual style than the others.
-- Reference the target persona's specific pain points by name.
-- If ad_styles are specified, distribute variants across those styles in the visual_direction and full_ad_mockup_description.
-
-Accepted hook types: question / statistic / provocative statement / direct callout / story opener
+Generate exactly 5 variants. Each variant MUST use:
+- The specified brand_voice, visual_style, messaging_angle, publishing_platform, and ad_format from the request
+- A DIFFERENT hook_type for each variant (pick 5 of the 12 hook types)
+- The target persona's specific pain points and language
+- Compose utm_content_tag as: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id]
 
 Output Format (per variant) — YOU MUST USE THIS EXACT JSON FORMAT:
 Return a JSON array of variant objects. Each variant object has these fields:
@@ -50,13 +92,18 @@ Return a JSON array of variant objects. Each variant object has these fields:
   "variant_id": "v1",
   "intro_text": "30–50 words, platform-appropriate",
   "headline": "7 words max",
-  "creative_overlay": "14 words max (fit 1000x450px safe zone)",
-  "visual_direction": "Specific guidance for designer",
+  "creative_overlay": "14 words max (fit safe zone)",
+  "visual_direction": "Specific guidance for designer matching the visual_style",
   "cta_text": "CTA button text",
-  "ad_type": "pain | benefit | proof | brand | thought-leader",
-  "hook_type": "question | statistic | provocative statement | direct callout | story opener",
-  "utm_content_tag": "[visual-style][ad-format][message-angle][persona][use-case]_[variant-id]",
-  "gemini_image_prompt": "Detailed image generation prompt with dimensions, colors, typography, composition",
+  "messaging_angle": "problem | outcome | proof | differentiation | persona | urgency | education | emotional",
+  "messaging_sub_angle": "Specific sub-angle name (e.g. Pain point agitation)",
+  "hook_type": "question | statement | data-stat | story-native | pattern-interrupt | social-proof | list-framework | comparison-versus | command-cta | identity-persona | curiosity-gap | timeliness",
+  "brand_voice": "learning-insurgent | provocateur | trusted-advisor | empathetic-challenger | insider",
+  "visual_style": "neon-intelligence | human-contrast | rebellious-editorial | data-as-power | digital-rebellion | minimal-authority | system-ui",
+  "publishing_platform": "linkedin | reddit | facebook | instagram",
+  "ad_format": "banner | dynamic-word-gif | document | carousel | article-newsletter | thought-leader",
+  "utm_content_tag": "[visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id]",
+  "gemini_image_prompt": "Detailed image generation prompt with dimensions, colors, typography, composition matching the visual_style",
   "full_ad_mockup_description": "Complete visual description of the finished ad",
   "self_score": {
     "voice_compliance": 8,
@@ -66,29 +113,40 @@ Return a JSON array of variant objects. Each variant object has these fields:
   }
 }
 
-Self-Scoring Rules
+Self-Scoring Rules:
 - If any dimension scores below 7, automatically regenerate that variant until it reaches 7+ across all dimensions.
-- Voice compliance test: Would this make a Cornerstone ad writer uncomfortable? Good.
+- Voice compliance test: Does the copy match the specified brand_voice tone mix?
 - Differentiation test: Could any competitor run this ad? If yes, score it below 5 and rewrite.
-- Visual brand fit test: Uses Docebo's signature elements unless this is the designated visual-style test variant.
+- Visual brand fit test: Does the visual_direction match the specified visual_style characteristics?
 
 CRITICAL: Your response must be ONLY a valid JSON array of variant objects. No markdown, no explanation, no preamble. Just the JSON array.`;
 
-function generateMockVariants(prompt: string, platform?: string): object[] {
-  const plat = platform || (prompt.toLowerCase().includes("reddit") ? "reddit" : prompt.toLowerCase().includes("youtube") ? "youtube" : "linkedin");
+function generateMockVariants(_prompt: string, platform?: string, visualStyle?: string, brandVoice?: string, adFormat?: string, messagingAngle?: string, _hookType?: string, persona?: string): object[] {
+  const plat = platform || "linkedin";
+  const vs = visualStyle || "neon-intelligence";
+  const bv = brandVoice || "provocateur";
+  const af = adFormat || "banner";
+  const ma = messagingAngle || "problem";
+  const p = persona || "ld-leader";
+
   const variants = [
     {
       variant_id: "v1",
       intro_text: "Your L&D team just spent 6 months building a training program nobody will finish. Meanwhile, companies using Docebo saw 94% completion rates. The difference? They stopped building courses and started building experiences.",
       headline: "Training Nobody Finishes Costs Millions",
       creative_overlay: "94% completion rates. Zero begging required.",
-      visual_direction: "Split composition: left side shows a dusty, abandoned LMS dashboard in muted grays. Right side shows Docebo's UI with vibrant engagement metrics. Navy-to-purple gradient background with neon green data points floating between the two sides.",
+      visual_direction: `${vs === "neon-intelligence" ? "Dark navy (#0A0A0A) background with electric purple (#7E2EE9) headline glow. Neon green (#54FA77) stat accent. Subtle animated grid at very low opacity." : "Split composition matching " + vs + " style guidelines."}`,
       cta_text: "See How They Did It",
-      ad_type: "proof",
-      hook_type: "statistic",
-      utm_content_tag: `gradient-split_banner-ad_completion-proof_ld-leader_engagement_v1`,
-      gemini_image_prompt: `Create a 1200x627 professional ad image. Left-right split composition. Left side: faded, grayscale mockup of an old LMS with 12% completion shown. Right side: vibrant Docebo UI showing 94% completion with confetti. Background: gradient from #0033A0 (navy) to #6B21A8 (purple). Headline "Training Nobody Finishes Costs Millions" in white bold sans-serif, top-center. Overlay text "94% completion rates. Zero begging required." in lighter weight below. Green (#00D4AA) CTA pill button bottom-right reading "See How They Did It". Docebo logo small white bottom-left. No stock photography.`,
-      full_ad_mockup_description: "The ad appears in LinkedIn feed with intro text about L&D teams above a gradient navy-to-purple image. The image shows a dramatic before/after split of LMS dashboards. The headline below reads 'Training Nobody Finishes Costs Millions' with docebo.com link. CTA button says 'See How They Did It'.",
+      messaging_angle: ma,
+      messaging_sub_angle: "Pain point agitation",
+      hook_type: "data-stat",
+      brand_voice: bv,
+      visual_style: vs,
+      publishing_platform: plat,
+      ad_format: af,
+      utm_content_tag: `${vs}_${af}_${ma}_data-stat_${bv}_${p}_v1`,
+      gemini_image_prompt: `Create a 1200x1200 professional ad image. ${vs === "neon-intelligence" ? "Full black (#0A0A0A) background. Subtle animated grid very low opacity. Headline 'Training Nobody Finishes Costs Millions' in glowing electric purple (#7E2EE9). Secondary stat '94%' in neon green (#54FA77). Green CTA pill bottom-right." : "Match " + vs + " visual characteristics."} Docebo logo white bottom-left. Special Gothic Expanded font for headline.`,
+      full_ad_mockup_description: `The ad appears in ${plat} feed. ${vs} visual style applied. Headline reads 'Training Nobody Finishes Costs Millions'. CTA: 'See How They Did It'.`,
       self_score: { voice_compliance: 9, visual_brand_fit: 9, differentiation: 8, terminology: 9 },
     },
     {
@@ -96,13 +154,18 @@ function generateMockVariants(prompt: string, platform?: string): object[] {
       intro_text: "Hot take: Your compliance training is a checkbox exercise, and everyone — including your auditors — knows it. What if you could make it something people actually remember? Docebo customers turned mandatory training into measurable behavior change.",
       headline: "Compliance Training People Actually Remember",
       creative_overlay: "From checkbox to behavior change in 90 days.",
-      visual_direction: "Dark, moody aesthetic with a single neon green checkbox being dramatically crossed out. Docebo UI elements float in the background with real compliance metrics. Bold typography on dark navy background.",
+      visual_direction: `${vs === "digital-rebellion" ? "Glitched LMS UI screens breaking apart. Neon green error overlays. Chaotic but readable center headline." : "Apply " + vs + " visual characteristics with bold, provocative energy."}`,
       cta_text: "Burn The Checkbox",
-      ad_type: "pain",
-      hook_type: "provocative statement",
-      utm_content_tag: `dark-neon_banner-ad_compliance-pain_compliance-leader_checkbox_v2`,
-      gemini_image_prompt: `Create a 1200x627 ad image with dark navy (#0033A0) background. Center: a large neon green (#00D4AA) checkbox being dramatically X'd out with a red slash. Floating UI elements showing compliance dashboards with real metrics (98% audit-ready, 3.2x engagement). Headline "Compliance Training People Actually Remember" in white bold, upper area. Overlay "From checkbox to behavior change in 90 days." below in semi-transparent white. Green pill CTA "Burn The Checkbox" bottom-center. Docebo logo white, bottom-right. Cinematic lighting, no corporate clip art.`,
-      full_ad_mockup_description: "Bold provocative ad with a destroyed checkbox visual. The intro text challenges the status quo of compliance. Below the dark moody image, the headline reads 'Compliance Training People Actually Remember' with a green CTA button.",
+      messaging_angle: ma,
+      messaging_sub_angle: "Cost of inaction",
+      hook_type: "statement",
+      brand_voice: bv,
+      visual_style: vs,
+      publishing_platform: plat,
+      ad_format: af,
+      utm_content_tag: `${vs}_${af}_${ma}_statement_${bv}_${p}_v2`,
+      gemini_image_prompt: `Create a 1200x1200 ad. Apply ${vs} visual style. Bold typography. Headline "Compliance Training People Actually Remember" prominent. Overlay "From checkbox to behavior change in 90 days." Green CTA pill "Burn The Checkbox". Docebo logo. Special Gothic Expanded font.`,
+      full_ad_mockup_description: `Bold provocative ad using ${vs} style. Headline challenges compliance status quo. CTA button reads 'Burn The Checkbox'.`,
       self_score: { voice_compliance: 10, visual_brand_fit: 8, differentiation: 9, terminology: 9 },
     },
     {
@@ -110,13 +173,18 @@ function generateMockVariants(prompt: string, platform?: string): object[] {
       intro_text: "We asked 200 CLOs what keeps them up at night. The #1 answer wasn't budget cuts or headcount. It was this: 'I can't prove our training actually changed anything.' Docebo's analytics changed that for Walmart, Pret, and 3,800+ companies.",
       headline: "Prove Training Actually Changed Something",
       creative_overlay: "From gut feeling to auditable proof. 3,800+ companies.",
-      visual_direction: "Clean, data-forward design. White/light elements on navy background. Three floating metric cards showing real customer outcomes. Professional but not sterile — subtle neon green accents and a slight camera-tilt to the composition.",
+      visual_direction: `Apply ${vs} visual style. Clean, data-forward composition. Three floating metric cards showing real customer outcomes.`,
       cta_text: "Get Measurable Results",
-      ad_type: "benefit",
-      hook_type: "story opener",
-      utm_content_tag: `data-forward_banner-ad_proof-benefit_clo_analytics_v3`,
-      gemini_image_prompt: `Create a 1200x627 ad. Clean, modern design on #0033A0 navy background. Three floating white card elements showing metrics: "94% Completion", "3.2x ROI", "Audit-Ready in Days". Cards have subtle shadows and neon green (#00D4AA) accent borders. Headline "Prove Training Actually Changed Something" in white bold sans-serif, left-aligned upper portion. Overlay text "From gut feeling to auditable proof. 3,800+ companies." below. Green pill CTA "Get Measurable Results" lower-left. Docebo logo white, bottom-right. Slight 2-degree tilt on the card arrangement for dynamism.`,
-      full_ad_mockup_description: "A clean, data-rich ad with floating metric cards on navy. The story-opener intro text about CLOs appears above. The headline 'Prove Training Actually Changed Something' and CTA 'Get Measurable Results' appear below the image in LinkedIn format.",
+      messaging_angle: ma,
+      messaging_sub_angle: "Risk/fear",
+      hook_type: "story-native",
+      brand_voice: bv,
+      visual_style: vs,
+      publishing_platform: plat,
+      ad_format: af,
+      utm_content_tag: `${vs}_${af}_${ma}_story-native_${bv}_${p}_v3`,
+      gemini_image_prompt: `Create a 1200x1200 ad. ${vs} visual style. Three floating white card elements showing metrics: "94% Completion", "3.2x ROI", "Audit-Ready in Days". Headline "Prove Training Actually Changed Something". Green CTA "Get Measurable Results". Docebo logo.`,
+      full_ad_mockup_description: `A data-rich ad using ${vs} style with floating metric cards. Story-opener intro about CLOs. CTA: 'Get Measurable Results'.`,
       self_score: { voice_compliance: 8, visual_brand_fit: 9, differentiation: 8, terminology: 10 },
     },
     {
@@ -124,14 +192,38 @@ function generateMockVariants(prompt: string, platform?: string): object[] {
       intro_text: "Unpopular opinion: The reason your employees hate training isn't the content — it's the delivery. We consolidated 4 tools into 1 platform and watched engagement go from 'mandatory eye-roll' to 'wait, this is actually useful.'",
       headline: "They Hate The Delivery Not Content",
       creative_overlay: "4 tools → 1 platform. Engagement went through the roof.",
-      visual_direction: plat === "reddit" ? "Lo-fi, community-native style. Screenshot-style mockup of a Reddit comment thread with upvotes. Minimal branding. Educational, proof-based framing. No corporate polish." : "UGC-style testimonial format. Phone screen showing a real employee reaction. Casual, authentic feel. Docebo UI visible in the background but not hero'd.",
+      visual_direction: `${plat === "reddit" ? "Lo-fi, community-native style. Screenshot-style mockup. Minimal branding. Educational, proof-based framing." : "Apply " + vs + " visual style. UGC-style testimonial feel."}`,
       cta_text: "See The Platform",
-      ad_type: "thought-leader",
-      hook_type: "direct callout",
-      utm_content_tag: `${plat === "reddit" ? "lofi-reddit" : "ugc-style"}_banner-ad_consolidation-thought_ld-leader_delivery_v4`,
-      gemini_image_prompt: `Create a ${plat === "reddit" ? "1080x1080 square" : "1200x627"} ad. ${plat === "reddit" ? "Lo-fi style mimicking educational Reddit content. Light background, minimal design. Show a simple before/after: 4 app icons crossed out vs 1 Docebo icon. Hand-drawn arrow style." : "UGC-style with phone screen mockup showing Docebo learner dashboard. Warm, authentic lighting."} Headline "They Hate The Delivery Not Content" prominent. Overlay "4 tools → 1 platform. Engagement went through the roof." Green CTA pill "See The Platform". Docebo logo subtle, bottom corner.`,
-      full_ad_mockup_description: `A ${plat === "reddit" ? "community-native, lo-fi" : "UGC-style authentic"} ad that leads with a hot take. The visual shows tool consolidation. The headline and CTA drive to platform demo.`,
+      messaging_angle: ma,
+      messaging_sub_angle: "Pain point agitation",
+      hook_type: "comparison-versus",
+      brand_voice: bv,
+      visual_style: vs,
+      publishing_platform: plat,
+      ad_format: af,
+      utm_content_tag: `${vs}_${af}_${ma}_comparison-versus_${bv}_${p}_v4`,
+      gemini_image_prompt: `Create a ${plat === "reddit" ? "1080x1080 lo-fi style" : "1200x1200 " + vs + " style"} ad. Before/after: 4 app icons crossed out vs 1 Docebo icon. Headline "They Hate The Delivery Not Content". Green CTA "See The Platform". Docebo logo subtle.`,
+      full_ad_mockup_description: `A ${plat === "reddit" ? "community-native, lo-fi" : vs + " styled"} ad that leads with a hot take about tool consolidation.`,
       self_score: { voice_compliance: 9, visual_brand_fit: 7, differentiation: 9, terminology: 8 },
+    },
+    {
+      variant_id: "v5",
+      intro_text: "Every quarter, 47% of L&D leaders report to the board with 'completion rates' as their top metric. Meanwhile, the board is asking about revenue impact. Docebo bridges that gap with analytics that connect learning to business outcomes.",
+      headline: "Stop Reporting Vanity Metrics To Board",
+      creative_overlay: "Connect learning to revenue. Not just completions.",
+      visual_direction: `Apply ${vs} visual style. Executive-level aesthetic. Clean data visualization showing the gap between completion metrics and business impact.`,
+      cta_text: "See Real Metrics",
+      messaging_angle: ma,
+      messaging_sub_angle: "Pain point agitation",
+      hook_type: "question",
+      brand_voice: bv,
+      visual_style: vs,
+      publishing_platform: plat,
+      ad_format: af,
+      utm_content_tag: `${vs}_${af}_${ma}_question_${bv}_${p}_v5`,
+      gemini_image_prompt: `Create a 1200x1200 ad. ${vs} visual style. Executive aesthetic. Data viz showing gap between "completion rate" and "revenue impact". Headline "Stop Reporting Vanity Metrics To Board". Green CTA "See Real Metrics". Docebo logo. Special Gothic Expanded.`,
+      full_ad_mockup_description: `Executive-targeted ad using ${vs} style. Challenges vanity metrics. CTA drives to analytics dashboard.`,
+      self_score: { voice_compliance: 8, visual_brand_fit: 8, differentiation: 8, terminology: 9 },
     },
   ];
   return variants;
@@ -147,7 +239,6 @@ async function buildFeedbackContext(): Promise<string> {
 
     if (!entries || entries.length === 0) return "";
 
-    // Build a concise rendering-learnings block
     const lines: string[] = [
       "\n\nRendering Feedback Loop — Learnings from past mockup reviews:",
       `Total feedback entries: ${entries.length}`,
@@ -162,7 +253,6 @@ async function buildFeedbackContext(): Promise<string> {
       }
     }
 
-    // Extract unique notes as direct user guidance
     const recentNotes = entries
       .filter((e: { note: string }) => e.note)
       .slice(-10)
@@ -189,7 +279,18 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   try {
-    const { prompt, campaign_context, messaging_angles, messaging_hook, persona, ad_styles } = await req.json();
+    const {
+      prompt,
+      campaign_context,
+      messaging_angle,
+      messaging_sub_angle,
+      hook_type,
+      brand_voice,
+      visual_style,
+      ad_format,
+      publishing_platform,
+      persona,
+    } = await req.json();
 
     if (!prompt) {
       return NextResponse.json(
@@ -203,7 +304,9 @@ export async function POST(req: NextRequest) {
 
     // Mock mode when no API key
     if (!apiKey) {
-      const mockVariants = generateMockVariants(prompt, campaign_context?.platform);
+      const mockVariants = generateMockVariants(
+        prompt, publishing_platform, visual_style, brand_voice, ad_format, messaging_angle, hook_type, persona,
+      );
       return NextResponse.json({ variants: mockVariants, raw_text: null, mock: true });
     }
 
@@ -228,25 +331,29 @@ export async function POST(req: NextRequest) {
       userMessage += `\n\nTarget Persona Direction: ${PERSONA_CONTEXT[persona]}\nWrite every variant as if this persona will see it in their feed. Use their language, hit their pain points, and reference outcomes they actually measure. Do not use generic learning language unless the persona uses it.`;
     }
 
-    if (messaging_angles && messaging_angles.length > 0) {
-      userMessage += `\n\nMessaging Angle Direction: Focus these variants on the following angles: ${messaging_angles.join(", ")}. Each variant should lean heavily into one of these angles as its primary creative strategy. Match the hook_type and ad_type to the selected angles. Make every word count — these angles were chosen to produce award-winning creative.`;
+    // Inject UTM dimension overrides
+    if (messaging_angle) {
+      userMessage += `\n\nMessaging Angle: ${messaging_angle}${messaging_sub_angle ? ` → ${messaging_sub_angle}` : ""}. All 5 variants must use this messaging angle. Vary the sub-angle across variants.`;
     }
 
-    if (messaging_hook) {
-      userMessage += `\n\nMessaging Hook Category: ${messaging_hook}. The user has already provided a detailed prompt above with the specific hook and persona context. Follow that prompt closely.`;
+    if (hook_type) {
+      userMessage += `\n\nPrimary Hook Type: ${hook_type}. Use this as the lead hook for at least 2 variants. Distribute remaining variants across other hook types.`;
     }
 
-    if (ad_styles && ad_styles.length > 0) {
-      const AD_STYLE_VISUAL_MAP: Record<string, string> = {
-        "navy-bold": "Navy (#0033A0) background with white/neon headlines. Gradient corner accents. Signature Docebo navy look.",
-        "gradient-neon": "Blue-to-purple gradient background (#0057FF → #7E2EE9 → #B627C6). Neon pink accents. Cinematic, high-energy.",
-        "marble-clean": "Warm beige/marble (#E6DACB) background. Navy or purple text. Clean, editorial feel. Diagonal accent shapes.",
-        "white-minimal": "White background with blue-purple accent elements. Clean, minimal, high contrast text.",
-        "co-brand": "Partner co-brand layout with lime (#E3FFAB) banner area for partner logo. Navy or beige base.",
-        "quote": "Testimonial/quote layout on gradient background. Large quotation marks, customer attribution, proof-forward.",
-      };
-      const styleDescs = ad_styles.map((s: string) => AD_STYLE_VISUAL_MAP[s] || s).join("\n- ");
-      userMessage += `\n\nAd Visual Styles — distribute the 5 variants across these styles:\n- ${styleDescs}\nEach variant's visual_direction and full_ad_mockup_description must specify which style it uses. Distribute roughly evenly across the selected styles.`;
+    if (brand_voice) {
+      userMessage += `\n\nBrand Voice: ${brand_voice}. All 5 variants must use this voice. Match the tone mix precisely.`;
+    }
+
+    if (visual_style) {
+      userMessage += `\n\nVisual Style: ${visual_style}. All visual_direction and gemini_image_prompt fields must match this style's characteristics.`;
+    }
+
+    if (ad_format) {
+      userMessage += `\n\nAd Format: ${ad_format}. Follow the format specs exactly. Adjust dimensions, copy length, and CTA placement per format requirements.`;
+    }
+
+    if (publishing_platform) {
+      userMessage += `\n\nPublishing Platform: ${publishing_platform}. Adapt tone, copy length, visual style, and creative direction for this platform.`;
     }
 
     if (campaign_context) {
@@ -285,6 +392,34 @@ This campaign needs a creative refresh. ${userMessage}`;
       variants = JSON.parse(cleaned);
     } catch {
       return NextResponse.json({ raw_text: text, variants: null });
+    }
+
+    // Post-process: enforce structured UTM fields and compose utm_content_tag
+    // This guarantees correct tags even when Claude formats them inconsistently
+    if (Array.isArray(variants)) {
+      for (const v of variants) {
+        // Backfill structured fields from request params if Claude omitted them
+        v.publishing_platform = v.publishing_platform || publishing_platform || "linkedin";
+        v.visual_style = v.visual_style || visual_style || "neon-intelligence";
+        v.brand_voice = v.brand_voice || brand_voice || "learning-insurgent";
+        v.messaging_angle = v.messaging_angle || messaging_angle || v.ad_type || "problem";
+        v.ad_format = v.ad_format || ad_format || "banner";
+        v.hook_type = v.hook_type || "question";
+        v.messaging_sub_angle = v.messaging_sub_angle || messaging_sub_angle || "";
+
+        // Compose utm_content_tag from structured fields
+        // Format: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id]
+        const p = persona || "brand";
+        v.utm_content_tag = [
+          v.visual_style,
+          v.ad_format,
+          v.messaging_angle,
+          v.hook_type,
+          v.brand_voice,
+          p,
+          v.variant_id,
+        ].join("_");
+      }
     }
 
     return NextResponse.json({ variants, raw_text: null });
