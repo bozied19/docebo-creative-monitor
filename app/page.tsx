@@ -57,19 +57,19 @@ export default function CreativeMonitor() {
   return (
     <div className="h-screen flex flex-col">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-gray-700/50 bg-gray-900/80 backdrop-blur shrink-0">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-docebo-border bg-docebo-midnight/90 backdrop-blur shrink-0">
         <div className="flex items-center gap-3">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: "#00D4AA" }}
+            style={{ backgroundColor: "#0057FF" }}
           >
-            <span className="text-white font-bold text-sm">d</span>
+            <span className="text-white font-bold text-sm font-headline">d</span>
           </div>
           <div>
-            <h1 className="text-base font-semibold text-white">
+            <h1 className="text-base font-semibold text-white font-headline">
               Creative Health Monitor
             </h1>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-docebo-muted">
               PostHog fatigue data + Creative Refresh Engine
             </p>
           </div>
@@ -83,19 +83,19 @@ export default function CreativeMonitor() {
           <button
             onClick={loadHealth}
             disabled={healthLoading}
-            className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 disabled:opacity-50 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-lg bg-docebo-card border border-docebo-border text-docebo-muted hover:text-white hover:border-docebo-blue/50 disabled:opacity-50 transition-colors"
           >
             {healthLoading ? "Refreshing..." : "Refresh Data"}
           </button>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <div className="flex items-center gap-1.5 text-xs text-docebo-muted">
+            <span className="w-2 h-2 rounded-full bg-docebo-bright-green" />
             PostHog Live
           </div>
         </div>
       </header>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-4 gap-px bg-gray-700/30 border-b border-gray-700/50 shrink-0">
+      <div className="grid grid-cols-4 gap-px bg-docebo-border/30 border-b border-docebo-border shrink-0">
         {[
           {
             label: "Total Campaigns",
@@ -105,7 +105,7 @@ export default function CreativeMonitor() {
           {
             label: "Healthy",
             value: fatigue.filter((r) => r.status === "HEALTHY").length,
-            color: "text-emerald-400",
+            color: "text-docebo-bright-green",
           },
           {
             label: "Watch List",
@@ -117,17 +117,17 @@ export default function CreativeMonitor() {
             value: fatigue.filter(
               (r) => r.status === "PAUSE" || r.status === "REFRESH"
             ).length,
-            color: "text-red-400",
+            color: "text-docebo-pink",
           },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-gray-900 px-4 py-2.5 text-center"
+            className="bg-docebo-midnight px-4 py-2.5 text-center"
           >
             <p className={`text-xl font-bold font-mono ${stat.color}`}>
               {healthLoading ? "—" : stat.value}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
+            <p className="text-xs text-docebo-muted mt-0.5">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -135,7 +135,7 @@ export default function CreativeMonitor() {
       {/* Three-panel layout */}
       <div className="flex-1 grid grid-cols-[1fr_380px_1fr] min-h-0">
         {/* Left: Health Tables */}
-        <div className="border-r border-gray-700/50 overflow-hidden flex flex-col">
+        <div className="border-r border-docebo-border overflow-hidden flex flex-col">
           <HealthTables
             fatigue={fatigue}
             qualified={qualified}
@@ -146,7 +146,7 @@ export default function CreativeMonitor() {
         </div>
 
         {/* Center: Refresh Engine */}
-        <div className="border-r border-gray-700/50 overflow-hidden flex flex-col">
+        <div className="border-r border-docebo-border overflow-hidden flex flex-col">
           <RefreshEngine
             selectedCampaign={selectedCampaign}
             onVariantsGenerated={handleVariantsGenerated}

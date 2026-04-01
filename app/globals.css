@@ -1,20 +1,39 @@
 @import "tailwindcss";
 
 @theme {
+  /* ── Docebo Primary Palette ─────────────────────── */
+  --color-docebo-marble: #2A2923;
+  --color-docebo-blue: #0057FF;
+  --color-docebo-pink: #FF5DD8;
+  --color-docebo-neon-green: #E3FFAB;
+  --color-docebo-purple: #DCB7FF;
+  --color-docebo-beige: #E6DACB;
+  --color-docebo-deep-blue: #06065D;
+  --color-docebo-magenta: #B627C6;
+  --color-docebo-bright-green: #54FA77;
+  --color-docebo-electric-purple: #7E2EE9;
+
+  /* ── Docebo Secondary Palette ───────────────────── */
   --color-docebo-navy: #0033A0;
-  --color-docebo-purple: #6B21A8;
-  --color-docebo-green: #00D4AA;
-  --color-docebo-dark: #0a0e1a;
-  --color-docebo-card: #111827;
-  --color-docebo-border: #1f2937;
-  --color-docebo-muted: #6b7280;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-docebo-light-blue: #4C8DFF;
+  --color-docebo-midnight: #131E29;
+
+  /* ── UI Surface Tokens (derived from palette) ───── */
+  --color-docebo-dark: #131E29;
+  --color-docebo-card: #1a2636;
+  --color-docebo-border: #243040;
+  --color-docebo-muted: #7a8a9e;
+
+  /* ── Typography ─────────────────────────────────── */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-headline: "Special Gothic Expanded", "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-quote: "Lora", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
 body {
   background: var(--color-docebo-dark);
-  color: #e5e7eb;
+  color: #d1dae6;
   font-family: var(--font-sans);
 }
 
@@ -27,11 +46,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: var(--color-docebo-border);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: var(--color-docebo-muted);
 }
 
 /* Status pulse */

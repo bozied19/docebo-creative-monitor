@@ -277,11 +277,11 @@ function StylePicker({
 }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-gray-700/50">
-        <h2 className="text-sm font-semibold text-white">
-          Choose a Rendering Style
+      <div className="px-4 py-3 border-b border-docebo-border">
+        <h2 className="text-sm font-semibold text-white font-headline">
+          Choose a rendering style
         </h2>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-docebo-muted mt-0.5">
           Select how your mockups should look
         </p>
       </div>
@@ -290,7 +290,7 @@ function StylePicker({
         {/* Mix option — always first */}
         <button
           onClick={() => onSelect("mix")}
-          className="w-full text-left rounded-lg border-2 border-dashed border-cyan-500/40 bg-cyan-500/5 hover:border-cyan-400/60 hover:bg-cyan-500/10 transition-all cursor-pointer p-3"
+          className="w-full text-left rounded-lg border-2 border-dashed border-docebo-blue/40 bg-docebo-blue/5 hover:border-docebo-blue/60 hover:bg-docebo-blue/10 transition-all cursor-pointer p-3"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden flex">
@@ -299,10 +299,10 @@ function StylePicker({
               ))}
             </div>
             <div>
-              <p className="text-sm font-semibold text-cyan-300">
+              <p className="text-sm font-semibold text-docebo-light-blue">
                 Show me a mix
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-docebo-muted mt-0.5">
                 3+ different styles across your variants
               </p>
             </div>
@@ -317,7 +317,7 @@ function StylePicker({
               <button
                 key={theme}
                 onClick={() => onSelect(theme)}
-                className="text-left rounded-lg border border-gray-700/50 bg-gray-800/30 hover:border-gray-500/50 hover:bg-gray-800/60 transition-all cursor-pointer p-2.5 group"
+                className="text-left rounded-lg border border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60 transition-all cursor-pointer p-2.5 group"
               >
                 {/* Color swatch */}
                 <div
@@ -343,10 +343,10 @@ function StylePicker({
                     {cfg.layout}
                   </span>
                 </div>
-                <p className="text-xs font-medium text-gray-200 group-hover:text-white transition-colors">
+                <p className="text-xs font-medium text-white/80 group-hover:text-white transition-colors">
                   {label}
                 </p>
-                <p className="text-[10px] text-gray-600 mt-0.5 leading-snug">
+                <p className="text-[10px] text-docebo-muted/60 mt-0.5 leading-snug">
                   {desc}
                 </p>
               </button>
@@ -384,12 +384,12 @@ function pickTheme(index: number, penalties: ThemePenalties = {}, visualStyle?: 
 function ScoreBadge({ label, value }: { label: string; value: number }) {
   const color =
     value >= 9
-      ? "text-emerald-400"
+      ? "text-docebo-bright-green"
       : value >= 7
-        ? "text-cyan-400"
+        ? "text-docebo-blue"
         : "text-amber-400";
   return (
-    <span className="text-xs text-gray-500">
+    <span className="text-xs text-docebo-muted">
       {label}: <span className={`font-mono ${color}`}>{value}</span>
     </span>
   );
@@ -990,10 +990,10 @@ function FeedbackPanel({
 
   if (!isOpen) {
     return (
-      <div className="px-3 py-2 border-t border-gray-700/30">
+      <div className="px-3 py-2 border-t border-docebo-border/30">
         <button
           onClick={() => setIsOpen(true)}
-          className="text-xs text-gray-500 hover:text-amber-400 transition-colors cursor-pointer flex items-center gap-1.5"
+          className="text-xs text-docebo-muted hover:text-docebo-pink transition-colors cursor-pointer flex items-center gap-1.5"
         >
           <span>💬</span> Add feedback for rendering engine
         </button>
@@ -1002,20 +1002,20 @@ function FeedbackPanel({
   }
 
   return (
-    <div className="px-3 py-3 border-t border-gray-700/30 bg-gray-800/50">
+    <div className="px-3 py-3 border-t border-docebo-border/30 bg-docebo-card/50">
       {submitted ? (
-        <div className="flex items-center gap-2 text-xs text-emerald-400">
+        <div className="flex items-center gap-2 text-xs text-docebo-bright-green">
           <span>✓</span> Feedback saved — active in generation loop + theme ranking
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-300">
+            <span className="text-xs font-medium text-white/80">
               Rendering feedback
             </span>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-xs text-gray-600 hover:text-gray-400 cursor-pointer"
+              className="text-xs text-docebo-muted/50 hover:text-docebo-muted cursor-pointer"
             >
               ✕
             </button>
@@ -1029,8 +1029,8 @@ function FeedbackPanel({
                 onClick={() => toggleTag(tag.label)}
                 className={`text-xs px-2 py-1 rounded-full border transition-colors cursor-pointer ${
                   selectedTags.includes(tag.label)
-                    ? "border-amber-500/50 bg-amber-500/15 text-amber-300"
-                    : "border-gray-700 bg-gray-800 text-gray-500 hover:border-gray-600 hover:text-gray-400"
+                    ? "border-docebo-pink/50 bg-docebo-pink/15 text-docebo-pink"
+                    : "border-docebo-border bg-docebo-card text-docebo-muted hover:border-docebo-muted/40 hover:text-white/70"
                 }`}
               >
                 {tag.icon} {tag.label}
@@ -1044,13 +1044,13 @@ function FeedbackPanel({
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g. Navy text on dark purple background is unreadable — avoid this combo for long headlines"
             rows={2}
-            className="w-full text-xs bg-gray-900/60 border border-gray-700/50 rounded px-2 py-1.5 text-gray-300 placeholder-gray-600 resize-none focus:outline-none focus:border-gray-500 mb-2"
+            className="w-full text-xs bg-docebo-midnight/60 border border-docebo-border rounded px-2 py-1.5 text-white/80 placeholder-docebo-muted/40 resize-none focus:outline-none focus:border-docebo-blue/50 mb-2"
           />
 
           <button
             onClick={handleSubmit}
             disabled={selectedTags.length === 0 && !note.trim()}
-            className="text-xs px-3 py-1 rounded bg-amber-600 text-white hover:bg-amber-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="text-xs px-3 py-1 rounded bg-docebo-blue text-white hover:bg-docebo-light-blue disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Save feedback
           </button>
@@ -1155,21 +1155,21 @@ function AdMockup({
   };
 
   return (
-    <div className={`rounded-lg border overflow-hidden transition-colors ${approved ? "border-emerald-500/50 bg-emerald-500/5" : "border-gray-700/50 bg-gray-800/30"}`}>
+    <div className={`rounded-lg border overflow-hidden transition-colors ${approved ? "border-docebo-bright-green/50 bg-docebo-bright-green/5" : "border-docebo-border bg-docebo-card/30"}`}>
       {/* Approve bar */}
-      <div className={`flex items-center justify-between px-3 py-1.5 ${approved ? "bg-emerald-500/15" : "bg-gray-700/20"}`}>
+      <div className={`flex items-center justify-between px-3 py-1.5 ${approved ? "bg-docebo-bright-green/15" : "bg-docebo-card/40"}`}>
         <button
           onClick={onToggleApprove}
           className={`flex items-center gap-2 text-xs font-medium px-2 py-1 rounded transition-colors cursor-pointer ${
             approved
-              ? "text-emerald-300"
-              : "text-gray-500 hover:text-gray-300"
+              ? "text-docebo-bright-green"
+              : "text-docebo-muted hover:text-white"
           }`}
         >
           <span className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
             approved
-              ? "bg-emerald-500 border-emerald-500 text-white"
-              : "border-gray-500 hover:border-gray-300"
+              ? "bg-docebo-bright-green border-docebo-bright-green text-docebo-midnight"
+              : "border-docebo-muted hover:border-white/50"
           }`}>
             {approved && (
               <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -1181,35 +1181,35 @@ function AdMockup({
         </button>
         <button
           onClick={handleDownload}
-          className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white transition-colors cursor-pointer"
+          className="text-xs px-2 py-1 rounded bg-docebo-card text-docebo-muted hover:bg-docebo-border hover:text-white transition-colors cursor-pointer"
         >
           ↓ PNG
         </button>
       </div>
 
       {/* Variant header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700/30">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-docebo-border/30">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-mono text-cyan-400">
+          <span className="text-xs font-mono text-docebo-blue">
             {variant.variant_id}
           </span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-docebo-electric-purple/20 text-docebo-purple">
             {variant.messaging_angle || variant.ad_type}
           </span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-400">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-docebo-card text-docebo-muted">
             {variant.hook_type}
           </span>
           {variant.brand_voice && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-docebo-magenta/15 text-docebo-purple">
               {variant.brand_voice}
             </span>
           )}
           {variant.visual_style && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-pink-500/15 text-pink-400">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-docebo-pink/15 text-docebo-pink">
               {variant.visual_style}
             </span>
           )}
-          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-docebo-navy/15 text-docebo-light-blue">
             {themeName}
           </span>
         </div>
@@ -1217,7 +1217,7 @@ function AdMockup({
 
       {/* LinkedIn-style intro text */}
       <div className="px-3 pt-3">
-        <p className="text-xs text-gray-400 leading-relaxed">
+        <p className="text-xs text-docebo-muted leading-relaxed">
           {variant.intro_text}
         </p>
       </div>
@@ -1231,12 +1231,12 @@ function AdMockup({
           <p className="text-sm font-semibold text-white">
             {variant.headline}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">docebo.com</p>
+          <p className="text-xs text-docebo-muted mt-0.5">docebo.com</p>
         </div>
       </div>
 
       {/* Scores */}
-      <div className="px-3 py-2 border-t border-gray-700/30 flex items-center gap-3 flex-wrap">
+      <div className="px-3 py-2 border-t border-docebo-border/30 flex items-center gap-3 flex-wrap">
         <ScoreBadge label="Voice" value={variant.self_score.voice_compliance} />
         <ScoreBadge label="Brand" value={variant.self_score.visual_brand_fit} />
         <ScoreBadge label="Diff" value={variant.self_score.differentiation} />
@@ -1244,32 +1244,32 @@ function AdMockup({
       </div>
 
       {/* UTM tag */}
-      <div className="px-3 py-2 border-t border-gray-700/30">
-        <p className="text-xs text-gray-600 font-mono break-all">
+      <div className="px-3 py-2 border-t border-docebo-border/30">
+        <p className="text-xs text-docebo-muted/50 font-mono break-all">
           utm: {variant.utm_content_tag}
         </p>
       </div>
 
       {/* Collapsible details */}
-      <details className="px-3 py-2 border-t border-gray-700/30">
-        <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-300">
+      <details className="px-3 py-2 border-t border-docebo-border/30">
+        <summary className="text-xs text-docebo-muted cursor-pointer hover:text-white">
           Visual direction & image prompt
         </summary>
         <div className="mt-2 space-y-2">
-          <p className="text-xs text-gray-400">{variant.visual_direction}</p>
-          <div className="bg-gray-900/50 rounded p-2">
-            <p className="text-xs text-gray-500 mb-1 font-medium">
+          <p className="text-xs text-docebo-muted">{variant.visual_direction}</p>
+          <div className="bg-docebo-midnight/50 rounded p-2">
+            <p className="text-xs text-docebo-muted mb-1 font-medium">
               Gemini Image Prompt:
             </p>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-white/60 leading-relaxed">
               {variant.gemini_image_prompt}
             </p>
           </div>
-          <div className="bg-gray-900/50 rounded p-2">
-            <p className="text-xs text-gray-500 mb-1 font-medium">
+          <div className="bg-docebo-midnight/50 rounded p-2">
+            <p className="text-xs text-docebo-muted mb-1 font-medium">
               Full Mockup Description:
             </p>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-white/60 leading-relaxed">
               {variant.full_ad_mockup_description}
             </p>
           </div>
@@ -1298,25 +1298,25 @@ function FeedbackLog({ entries, penalties }: { entries: FeedbackEntry[]; penalti
     .sort(([, a], [, b]) => a - b);
 
   return (
-    <details className="mx-4 mb-3 rounded-lg border border-amber-500/20 bg-amber-500/5 overflow-hidden">
-      <summary className="px-3 py-2 text-xs font-medium text-amber-400 cursor-pointer hover:text-amber-300 flex items-center gap-1.5">
+    <details className="mx-4 mb-3 rounded-lg border border-docebo-pink/20 bg-docebo-pink/5 overflow-hidden">
+      <summary className="px-3 py-2 text-xs font-medium text-docebo-pink cursor-pointer hover:text-docebo-pink/80 flex items-center gap-1.5">
         <span>📋</span> Rendering feedback loop ({entries.length}{" "}
         {entries.length === 1 ? "note" : "notes"}) — active
-        <span className="ml-auto text-emerald-400/70 text-[10px] font-normal">
+        <span className="ml-auto text-docebo-bright-green/70 text-[10px] font-normal">
           feeding generation + theme ranking
         </span>
       </summary>
       {/* Loop status */}
       {(demotedThemes.length > 0 || promotedThemes.length > 0) && (
-        <div className="px-3 py-2 border-b border-amber-500/10 bg-gray-900/40">
-          <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Feedback loop effects</p>
+        <div className="px-3 py-2 border-b border-docebo-pink/10 bg-docebo-midnight/40">
+          <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1 font-mono">Feedback loop effects</p>
           {demotedThemes.length > 0 && (
-            <p className="text-xs text-red-400/80">
+            <p className="text-xs text-docebo-pink/80">
               Demoted: {demotedThemes.map(([t, p]) => `${t} (−${p})`).join(", ")}
             </p>
           )}
           {promotedThemes.length > 0 && (
-            <p className="text-xs text-emerald-400/80">
+            <p className="text-xs text-docebo-bright-green/80">
               Promoted: {promotedThemes.map(([t, p]) => `${t} (+${Math.abs(p)})`).join(", ")}
             </p>
           )}
@@ -1326,21 +1326,21 @@ function FeedbackLog({ entries, penalties }: { entries: FeedbackEntry[]; penalti
         {entries.map((entry, i) => (
           <div
             key={i}
-            className="text-xs border-t border-amber-500/10 pt-2 first:border-0 first:pt-0"
+            className="text-xs border-t border-docebo-pink/10 pt-2 first:border-0 first:pt-0"
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-cyan-400">
+              <span className="font-mono text-docebo-blue">
                 {entry.variant_id}
               </span>
-              <span className="text-gray-600">•</span>
-              <span className="text-blue-400">{entry.theme}</span>
+              <span className="text-docebo-muted/40">•</span>
+              <span className="text-docebo-light-blue">{entry.theme}</span>
             </div>
             {entry.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-1">
                 {entry.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 text-xs"
+                    className="px-1.5 py-0.5 rounded-full bg-docebo-pink/15 text-docebo-pink text-xs"
                   >
                     {tag}
                   </span>
@@ -1348,7 +1348,7 @@ function FeedbackLog({ entries, penalties }: { entries: FeedbackEntry[]; penalti
               </div>
             )}
             {entry.note && (
-              <p className="text-gray-400 italic">&ldquo;{entry.note}&rdquo;</p>
+              <p className="text-docebo-muted italic">&ldquo;{entry.note}&rdquo;</p>
             )}
           </div>
         ))}
@@ -1457,10 +1457,10 @@ function FigmaSendPanel({
   };
 
   return (
-    <div className="mx-4 mb-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+    <div className="mx-4 mb-3 rounded-lg border border-docebo-bright-green/30 bg-docebo-bright-green/5 p-3">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-emerald-400 text-sm">✓</span>
-        <span className="text-xs font-medium text-emerald-300">
+        <span className="text-docebo-bright-green text-sm">✓</span>
+        <span className="text-xs font-medium text-docebo-bright-green">
           {count} variant{count > 1 ? "s" : ""} approved
         </span>
       </div>
@@ -1469,7 +1469,7 @@ function FigmaSendPanel({
       <button
         onClick={handleExportZip}
         disabled={exporting}
-        className="w-full text-xs px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-center gap-2 mb-2"
+        className="w-full text-xs px-3 py-2 rounded bg-docebo-bright-green text-docebo-midnight font-semibold hover:bg-docebo-neon-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center justify-center gap-2 mb-2"
       >
         {exporting ? (
           <>
@@ -1482,14 +1482,14 @@ function FigmaSendPanel({
       </button>
 
       {result?.zipReady && (
-        <p className="text-[10px] text-emerald-400/70 mb-2">
+        <p className="text-[10px] text-docebo-bright-green/70 mb-2">
           ZIP downloaded — drag PNGs into your Figma file
         </p>
       )}
 
       {/* Optional: also post brief as Figma comment */}
       <details className="group">
-        <summary className="text-[10px] text-gray-500 cursor-pointer hover:text-gray-400 mb-1">
+        <summary className="text-[10px] text-docebo-muted cursor-pointer hover:text-white/70 mb-1">
           Also post brief as Figma comment (optional)
         </summary>
         <div className="flex gap-2 mt-1">
@@ -1498,12 +1498,12 @@ function FigmaSendPanel({
             value={figmaUrl}
             onChange={(e) => setFigmaUrl(e.target.value)}
             placeholder="Paste Figma file URL..."
-            className="flex-1 text-xs bg-gray-900/60 border border-gray-700/50 rounded px-2 py-1.5 text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/50"
+            className="flex-1 text-xs bg-docebo-midnight/60 border border-docebo-border rounded px-2 py-1.5 text-white/80 placeholder-docebo-muted/40 focus:outline-none focus:border-docebo-blue/50"
           />
           <button
             onClick={handleSendComment}
             disabled={!figmaUrl.trim() || sending}
-            className="text-xs px-3 py-1.5 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5"
+            className="text-xs px-3 py-1.5 rounded bg-docebo-card text-docebo-muted hover:bg-docebo-border hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5"
           >
             {sending ? (
               <>
@@ -1518,13 +1518,13 @@ function FigmaSendPanel({
       </details>
 
       {result?.success && (
-        <div className="mt-2 flex items-center gap-2 text-xs text-emerald-400">
+        <div className="mt-2 flex items-center gap-2 text-xs text-docebo-bright-green">
           <span>✓</span> Brief posted as comment —{" "}
           <a
             href={result.figma_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-emerald-300"
+            className="underline hover:text-docebo-neon-green"
           >
             Open in Figma
           </a>
@@ -1559,21 +1559,21 @@ function computeThemePenalties(entries: FeedbackEntry[]): ThemePenalties {
 
 /* ── Brand Voice Card (pre-prompt showcase) ───────────────────── */
 const STAGE_COLORS: Record<string, string> = {
-  "Brand Foundation": "bg-cyan-500/15 text-cyan-400",
-  "Cold — Awareness": "bg-red-500/15 text-red-400",
-  "Warm — Consideration": "bg-amber-500/15 text-amber-400",
-  "Pain-Aware — Mid-Funnel": "bg-purple-500/15 text-purple-400",
-  "Niche — Use-Case Specific": "bg-emerald-500/15 text-emerald-400",
+  "Brand Foundation": "bg-docebo-blue/15 text-docebo-light-blue",
+  "Cold — Awareness": "bg-docebo-pink/15 text-docebo-pink",
+  "Warm — Consideration": "bg-docebo-neon-green/15 text-docebo-neon-green",
+  "Pain-Aware — Mid-Funnel": "bg-docebo-electric-purple/15 text-docebo-purple",
+  "Niche — Use-Case Specific": "bg-docebo-bright-green/15 text-docebo-bright-green",
 };
 
 function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
   const [expanded, setExpanded] = useState(false);
-  const stageClass = STAGE_COLORS[voice.stage] ?? "bg-gray-500/15 text-gray-400";
+  const stageClass = STAGE_COLORS[voice.stage] ?? "bg-docebo-card text-docebo-muted";
   const toneParts = voice.toneMix.split(" / ");
   const hasFullGuide = !!(voice.voicePillars || voice.examples);
 
   return (
-    <div className="rounded-lg border border-gray-700/50 bg-gray-800/60 hover:border-gray-600 transition-colors">
+    <div className="rounded-lg border border-docebo-border bg-docebo-card/60 hover:border-docebo-muted/40 transition-colors">
       {/* Header — always visible */}
       <button
         onClick={() => hasFullGuide && setExpanded(!expanded)}
@@ -1585,7 +1585,7 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
               {voice.label}
             </h3>
             {hasFullGuide && (
-              <span className="text-[10px] px-1 py-0.5 rounded bg-cyan-500/15 text-cyan-400 font-medium">
+              <span className="text-[10px] px-1 py-0.5 rounded bg-docebo-blue/15 text-docebo-blue font-medium">
                 Full Guide
               </span>
             )}
@@ -1595,25 +1595,25 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
               {voice.stage}
             </span>
             {hasFullGuide && (
-              <svg className={`w-3.5 h-3.5 text-gray-500 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className={`w-3.5 h-3.5 text-docebo-muted transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             )}
           </div>
         </div>
-        <p className="text-xs text-gray-400 mb-2">{voice.desc}</p>
+        <p className="text-xs text-docebo-muted mb-2">{voice.desc}</p>
         {voice.positioning && (
-          <div className="text-[10px] text-gray-500 mb-2 border-l-2 border-gray-700 pl-2">
-            <span className="text-gray-600">From:</span> {voice.positioning.from}<br />
-            <span className="text-gray-600">To:</span> <span className="text-gray-300">{voice.positioning.to}</span>
+          <div className="text-[10px] text-docebo-muted mb-2 border-l-2 border-docebo-border pl-2">
+            <span className="text-docebo-muted/50">From:</span> {voice.positioning.from}<br />
+            <span className="text-docebo-muted/50">To:</span> <span className="text-white/80">{voice.positioning.to}</span>
           </div>
         )}
-        <p className="text-[10px] text-gray-500 mb-1.5">
-          <span className="text-gray-400 font-medium">Core Energy:</span> {voice.coreEnergy}
+        <p className="text-[10px] text-docebo-muted mb-1.5">
+          <span className="text-white/70 font-medium">Core Energy:</span> {voice.coreEnergy}
         </p>
         <div className="flex flex-wrap gap-1">
           {toneParts.map((part) => (
-            <span key={part} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700/60 text-gray-400">
+            <span key={part} className="text-[10px] px-1.5 py-0.5 rounded bg-docebo-card text-docebo-muted">
               {part.trim()}
             </span>
           ))}
@@ -1622,21 +1622,21 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
 
       {/* Expanded guide content */}
       {expanded && (
-        <div className="border-t border-gray-700/50 p-3 space-y-3">
+        <div className="border-t border-docebo-border p-3 space-y-3">
           {/* Voice Pillars */}
           {voice.voicePillars && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Voice Pillars</p>
+              <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Voice Pillars</p>
               <div className="space-y-2">
                 {voice.voicePillars.map((p) => (
-                  <div key={p.name} className="bg-gray-900/60 rounded p-2">
+                  <div key={p.name} className="bg-docebo-midnight/60 rounded p-2">
                     <p className="text-xs font-medium text-white mb-1">{p.name}</p>
-                    <p className="text-[10px] text-gray-400 mb-1.5">{p.desc}</p>
+                    <p className="text-[10px] text-docebo-muted mb-1.5">{p.desc}</p>
                     <div className="grid grid-cols-[auto_1fr] gap-x-1.5 text-[10px]">
-                      <span className="text-red-400/70">Instead of:</span>
-                      <span className="text-gray-500 italic line-through decoration-gray-700">{p.insteadOf}</span>
-                      <span className="text-emerald-400/70">Say:</span>
-                      <span className="text-gray-300">{p.say}</span>
+                      <span className="text-docebo-pink/70">Instead of:</span>
+                      <span className="text-docebo-muted italic line-through decoration-docebo-border">{p.insteadOf}</span>
+                      <span className="text-docebo-bright-green/70">Say:</span>
+                      <span className="text-white/80">{p.say}</span>
                     </div>
                   </div>
                 ))}
@@ -1647,12 +1647,12 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
           {/* Tone Spectrum */}
           {voice.toneSpectrum && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Tone Spectrum</p>
+              <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Tone Spectrum</p>
               <div className="space-y-1">
                 {voice.toneSpectrum.map((t) => (
                   <div key={t.context} className="text-[10px]">
-                    <span className="text-gray-400 font-medium">{t.context}:</span>{" "}
-                    <span className="text-gray-500">{t.mix}</span>
+                    <span className="text-white/70 font-medium">{t.context}:</span>{" "}
+                    <span className="text-docebo-muted">{t.mix}</span>
                   </div>
                 ))}
               </div>
@@ -1662,12 +1662,12 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
           {/* Examples */}
           {voice.examples && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Examples</p>
+              <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Examples</p>
               <div className="space-y-1.5">
                 {voice.examples.map((e) => (
                   <div key={e.format} className="text-[10px]">
-                    <span className="text-cyan-400/70 font-medium">{e.format}:</span>{" "}
-                    <span className="text-gray-300 italic">"{e.text}"</span>
+                    <span className="text-docebo-blue/70 font-medium">{e.format}:</span>{" "}
+                    <span className="text-white/80 italic">"{e.text}"</span>
                   </div>
                 ))}
               </div>
@@ -1677,10 +1677,10 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
           {/* Don'ts */}
           {voice.donts && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Don'ts</p>
+              <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Don'ts</p>
               <ul className="space-y-0.5">
                 {voice.donts.map((d) => (
-                  <li key={d} className="text-[10px] text-red-400/70">{d}</li>
+                  <li key={d} className="text-[10px] text-docebo-pink/70">{d}</li>
                 ))}
               </ul>
             </div>
@@ -1689,12 +1689,12 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
           {/* Principles */}
           {voice.principles && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Voice Principles</p>
+              <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Voice Principles</p>
               <div className="space-y-1">
                 {voice.principles.map((p) => (
                   <div key={p.name} className="text-[10px]">
-                    <span className="text-gray-300 font-medium">{p.name}:</span>{" "}
-                    <span className="text-gray-500">{p.desc}</span>
+                    <span className="text-white/80 font-medium">{p.name}:</span>{" "}
+                    <span className="text-docebo-muted">{p.desc}</span>
                   </div>
                 ))}
               </div>
@@ -1704,10 +1704,10 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
           {/* Taglines */}
           {voice.taglines && (
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Tagline Options</p>
+              <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Tagline Options</p>
               <div className="flex flex-wrap gap-1.5">
                 {voice.taglines.map((t) => (
-                  <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-gray-700/60 text-gray-300 italic">
+                  <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-docebo-card text-white/80 italic">
                     "{t}"
                   </span>
                 ))}
@@ -1717,8 +1717,8 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
 
           {/* Promise */}
           {voice.promise && (
-            <div className="border-t border-gray-700/30 pt-2 mt-2">
-              <p className="text-[10px] italic text-gray-400">{voice.promise}</p>
+            <div className="border-t border-docebo-border/30 pt-2 mt-2">
+              <p className="text-[10px] italic text-docebo-muted">{voice.promise}</p>
             </div>
           )}
         </div>
@@ -1777,9 +1777,9 @@ export default function AdCanvas({ variants, renderContext }: AdCanvasProps) {
   if (variants.length === 0) {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-700/50">
-          <h2 className="text-sm font-semibold text-white">Brand Voice Guides</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+        <div className="px-4 py-3 border-b border-docebo-border">
+          <h2 className="text-sm font-semibold text-white font-headline">Brand voice guides</h2>
+          <p className="text-xs text-docebo-muted mt-0.5">
             {BRAND_VOICE_OPTIONS.length} voices — select a campaign to generate mockups
           </p>
         </div>
@@ -1802,22 +1802,22 @@ export default function AdCanvas({ variants, renderContext }: AdCanvasProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-gray-700/50 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-docebo-border flex items-center justify-between">
         <div className="flex items-center gap-2 flex-wrap">
-          <h2 className="text-sm font-semibold text-white">
-            Ad Mockups ({variants.length})
+          <h2 className="text-sm font-semibold text-white font-headline">
+            Ad mockups ({variants.length})
           </h2>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-400 font-mono">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-docebo-blue/15 text-docebo-blue font-mono">
             {selectedStyle === "mix"
               ? "Mix"
               : STYLE_OPTIONS.find((s) => s.theme === selectedStyle)?.label ?? selectedStyle}
           </span>
           {renderContext && (
             <>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-pink-500/15 text-pink-400">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-docebo-pink/15 text-docebo-pink">
                 {renderContext.visual_style}
               </span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-docebo-bright-green/15 text-docebo-bright-green">
                 {renderContext.ad_format} ({renderContext.dimensions.label})
               </span>
             </>
@@ -1825,7 +1825,7 @@ export default function AdCanvas({ variants, renderContext }: AdCanvasProps) {
         </div>
         <button
           onClick={() => setSelectedStyle(null)}
-          className="text-xs text-gray-500 hover:text-cyan-400 transition-colors cursor-pointer"
+          className="text-xs text-docebo-muted hover:text-docebo-blue transition-colors cursor-pointer"
         >
           Change style
         </button>

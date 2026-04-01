@@ -987,12 +987,12 @@ export default function RefreshEngine({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-700/50">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-green-400 pulse-glow" />
+      <div className="px-4 py-3 border-b border-docebo-border">
+        <h2 className="text-lg font-semibold text-white font-headline flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-docebo-bright-green pulse-glow" />
           Creative Refresh Engine
         </h2>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-docebo-muted mt-0.5">
           AI-powered creative generation
         </p>
 
@@ -1005,15 +1005,15 @@ export default function RefreshEngine({
             return (
               <div key={s.key} className="flex items-center gap-1">
                 {i > 0 && (
-                  <div className={`w-4 h-px ${isDone ? "bg-cyan-500/50" : "bg-gray-700/50"}`} />
+                  <div className={`w-4 h-px ${isDone ? "bg-docebo-blue/50" : "bg-docebo-border"}`} />
                 )}
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded ${
                     isActive
-                      ? "bg-cyan-500/20 text-cyan-300"
+                      ? "bg-docebo-blue/20 text-docebo-light-blue"
                       : isDone
-                        ? "bg-gray-700/50 text-gray-400"
-                        : "text-gray-600"
+                        ? "bg-docebo-card text-docebo-muted"
+                        : "text-docebo-muted/50"
                   }`}
                 >
                   {s.label}
@@ -1026,16 +1026,16 @@ export default function RefreshEngine({
 
       {/* Campaign context banner */}
       {selectedCampaign && (
-        <div className="mx-4 mt-3 px-3 py-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-xs">
+        <div className="mx-4 mt-3 px-3 py-2 rounded-lg bg-docebo-pink/8 border border-docebo-pink/20 text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-orange-400 font-medium">
+            <span className="text-docebo-pink font-medium">
               Refreshing: {selectedCampaign.campaign_name.slice(0, 50)}...
             </span>
-            <span className="text-orange-300 font-mono">
+            <span className="text-docebo-pink/80 font-mono">
               {selectedCampaign.status} ({selectedCampaign.fatigue_score})
             </span>
           </div>
-          <p className="text-orange-300/60 mt-1">
+          <p className="text-docebo-pink/50 mt-1">
             {selectedCampaign.platform} | CTR dropped from{" "}
             {selectedCampaign.baseline_ctr}% to {selectedCampaign.current_ctr}%
           </p>
@@ -1045,18 +1045,18 @@ export default function RefreshEngine({
       {/* ═══ STEP 1: CHOOSE YOUR AD INGREDIENTS ═══ */}
       {step === "select" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-4">
-          <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Choose Your Ad Ingredients</p>
+          <p className="text-xs font-semibold text-white/80 uppercase tracking-wider font-mono">Choose your ad ingredients</p>
 
           {/* Persona picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-gray-400">
+              <p className="text-xs font-medium text-docebo-muted">
                 Target Persona
               </p>
               {selectedPersona && (
                 <button
                   onClick={() => setSelectedPersona(null)}
-                  className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+                  className="text-[10px] text-docebo-muted/50 hover:text-docebo-muted transition-colors"
                 >
                   Clear
                 </button>
@@ -1072,26 +1072,26 @@ export default function RefreshEngine({
                     onClick={() => setSelectedPersona(active ? null : p.id)}
                     className={`text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
                       isBrand && !active
-                        ? "col-span-2 border-dashed border-purple-500/30 bg-purple-500/5 hover:border-purple-400/50 hover:bg-purple-500/10"
+                        ? "col-span-2 border-dashed border-docebo-electric-purple/30 bg-docebo-electric-purple/5 hover:border-docebo-electric-purple/50 hover:bg-docebo-electric-purple/10"
                         : ""
                     } ${
                       active
                         ? isBrand
-                          ? "col-span-2 border-purple-500/50 bg-purple-500/15 shadow-[0_0_8px_rgba(168,85,247,0.15)]"
-                          : "border-cyan-500/50 bg-cyan-500/15 shadow-[0_0_8px_rgba(6,182,212,0.15)]"
+                          ? "col-span-2 border-docebo-electric-purple/50 bg-docebo-electric-purple/15 shadow-[0_0_8px_rgba(126,46,233,0.15)]"
+                          : "border-docebo-blue/50 bg-docebo-blue/15 shadow-[0_0_8px_rgba(0,87,255,0.15)]"
                         : !isBrand
-                          ? "border-gray-700/50 bg-gray-800/30 hover:border-gray-600 hover:bg-gray-800/60"
+                          ? "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60"
                           : ""
                     }`}
                   >
                     <p className={`text-xs font-medium ${
                       active
-                        ? isBrand ? "text-purple-300" : "text-cyan-300"
-                        : "text-gray-300"
+                        ? isBrand ? "text-docebo-purple" : "text-docebo-light-blue"
+                        : "text-white/80"
                     }`}>
                       {p.label}
                     </p>
-                    <p className="text-[10px] text-gray-500 mt-0.5 leading-snug">
+                    <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
                       {p.desc}
                     </p>
                   </button>
@@ -1100,9 +1100,9 @@ export default function RefreshEngine({
             </div>
           </div>
 
-          {/* Messaging Angle picker (replaces old 12 messaging categories) */}
+          {/* Messaging Angle picker */}
           <div>
-            <p className="text-xs font-medium text-gray-400 mb-2">
+            <p className="text-xs font-medium text-docebo-muted mb-2">
               Messaging Angle
             </p>
             <div className="space-y-1">
@@ -1122,15 +1122,15 @@ export default function RefreshEngine({
                       }}
                       className={`w-full text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
                         isExpanded
-                          ? "border-cyan-500/50 bg-cyan-500/10"
-                          : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600 hover:bg-gray-800/60"
+                          ? "border-docebo-blue/50 bg-docebo-blue/10"
+                          : "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <p className={`text-xs font-medium ${isExpanded ? "text-cyan-300" : "text-gray-300"}`}>
+                        <p className={`text-xs font-medium ${isExpanded ? "text-docebo-light-blue" : "text-white/80"}`}>
                           {a.label}
                         </p>
-                        <span className={`text-[10px] ${isExpanded ? "text-cyan-400" : "text-gray-600"}`}>
+                        <span className={`text-[10px] ${isExpanded ? "text-docebo-blue" : "text-docebo-muted/50"}`}>
                           {a.subAngles.length} angles {isExpanded ? "▼" : "▶"}
                         </span>
                       </div>
@@ -1147,14 +1147,14 @@ export default function RefreshEngine({
                               onClick={() => setSelectedSubAngleIndex(si)}
                               className={`w-full text-left px-2.5 py-1.5 rounded border transition-all cursor-pointer ${
                                 subActive
-                                  ? "border-cyan-500/40 bg-cyan-500/10"
-                                  : "border-gray-700/30 bg-gray-800/20 hover:bg-gray-800/40"
+                                  ? "border-docebo-blue/40 bg-docebo-blue/10"
+                                  : "border-docebo-border/30 bg-docebo-card/20 hover:bg-docebo-card/40"
                               }`}
                             >
-                              <p className={`text-[11px] font-medium ${subActive ? "text-cyan-300" : "text-gray-300"}`}>
+                              <p className={`text-[11px] font-medium ${subActive ? "text-docebo-light-blue" : "text-white/80"}`}>
                                 {sub.name}
                               </p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-snug">
+                              <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
                                 {sub.desc}
                               </p>
                             </button>
@@ -1170,7 +1170,7 @@ export default function RefreshEngine({
 
           {/* Platform */}
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Publishing Platform</p>
+            <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Publishing Platform</p>
             <div className="grid grid-cols-4 gap-1.5">
               {PLATFORM_OPTIONS.map((p) => {
                 const active = selectedPlatform === p.id;
@@ -1180,8 +1180,8 @@ export default function RefreshEngine({
                     onClick={() => setSelectedPlatform(active ? null : p.id)}
                     className={`px-2 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
                       active
-                        ? "border-cyan-500/50 bg-cyan-500/15 text-cyan-300"
-                        : "border-gray-700/50 bg-gray-800/30 text-gray-400 hover:border-gray-600"
+                        ? "border-docebo-blue/50 bg-docebo-blue/15 text-docebo-light-blue"
+                        : "border-docebo-border bg-docebo-card/30 text-docebo-muted hover:border-docebo-muted/40"
                     }`}
                   >
                     {p.label}
@@ -1193,7 +1193,7 @@ export default function RefreshEngine({
 
           {/* Brand Voice */}
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Brand Voice</p>
+            <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Brand Voice</p>
             <div className="space-y-1">
               {BRAND_VOICE_OPTIONS.map((v) => {
                 const active = selectedVoice === v.id;
@@ -1203,19 +1203,19 @@ export default function RefreshEngine({
                     onClick={() => setSelectedVoice(active ? null : v.id)}
                     className={`w-full text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
                       active
-                        ? "border-purple-500/50 bg-purple-500/10"
-                        : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600"
+                        ? "border-docebo-electric-purple/50 bg-docebo-electric-purple/10"
+                        : "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <p className={`text-xs font-medium ${active ? "text-purple-300" : "text-gray-300"}`}>
+                      <p className={`text-xs font-medium ${active ? "text-docebo-purple" : "text-white/80"}`}>
                         {v.label}
                       </p>
-                      <span className={`text-[10px] ${active ? "text-purple-400" : "text-gray-600"}`}>
+                      <span className={`text-[10px] ${active ? "text-docebo-electric-purple" : "text-docebo-muted/50"}`}>
                         {v.stage}
                       </span>
                     </div>
-                    <p className="text-[10px] text-gray-500 mt-0.5">{v.coreEnergy}</p>
+                    <p className="text-[10px] text-docebo-muted mt-0.5">{v.coreEnergy}</p>
                   </button>
                 );
               })}
@@ -1224,7 +1224,7 @@ export default function RefreshEngine({
 
           {/* Hook Type */}
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Hook Type</p>
+            <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Hook Type</p>
             <div className="grid grid-cols-2 gap-1">
               {HOOK_TYPE_OPTIONS.map((h) => {
                 const active = selectedHookType === h.id;
@@ -1234,14 +1234,14 @@ export default function RefreshEngine({
                     onClick={() => setSelectedHookType(active ? null : h.id)}
                     className={`text-left px-2 py-1.5 rounded-lg border transition-all cursor-pointer ${
                       active
-                        ? "border-cyan-500/50 bg-cyan-500/10"
-                        : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600"
+                        ? "border-docebo-blue/50 bg-docebo-blue/10"
+                        : "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40"
                     }`}
                   >
-                    <p className={`text-[11px] font-medium ${active ? "text-cyan-300" : "text-gray-300"}`}>
+                    <p className={`text-[11px] font-medium ${active ? "text-docebo-light-blue" : "text-white/80"}`}>
                       {h.label}
                     </p>
-                    <p className="text-[9px] text-gray-600 mt-0.5 truncate">
+                    <p className="text-[9px] text-docebo-muted/50 mt-0.5 truncate">
                       {h.examples[0]}, {h.examples[1]}
                     </p>
                   </button>
@@ -1252,7 +1252,7 @@ export default function RefreshEngine({
 
           {/* Ad Format */}
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Ad Format</p>
+            <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Ad Format</p>
             <div className="space-y-1">
               {AD_FORMAT_OPTIONS.map((f) => {
                 const active = selectedFormat === f.id;
@@ -1262,19 +1262,19 @@ export default function RefreshEngine({
                     onClick={() => setSelectedFormat(active ? null : f.id)}
                     className={`w-full text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
                       active
-                        ? "border-emerald-500/50 bg-emerald-500/10"
-                        : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600"
+                        ? "border-docebo-bright-green/50 bg-docebo-bright-green/10"
+                        : "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <p className={`text-xs font-medium ${active ? "text-emerald-300" : "text-gray-300"}`}>
+                      <p className={`text-xs font-medium ${active ? "text-docebo-neon-green" : "text-white/80"}`}>
                         {f.label}
                       </p>
-                      <span className={`text-[10px] font-mono ${active ? "text-emerald-400" : "text-gray-600"}`}>
+                      <span className={`text-[10px] font-mono ${active ? "text-docebo-bright-green" : "text-docebo-muted/50"}`}>
                         {f.dimensions.label}
                       </span>
                     </div>
-                    <p className="text-[10px] text-gray-500 mt-0.5">{f.desc}</p>
+                    <p className="text-[10px] text-docebo-muted mt-0.5">{f.desc}</p>
                   </button>
                 );
               })}
@@ -1283,7 +1283,7 @@ export default function RefreshEngine({
 
           {/* Visual Style */}
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Visual Style</p>
+            <p className="text-[10px] uppercase tracking-wider text-docebo-muted mb-1.5 font-mono">Visual Style</p>
             <div className="space-y-1">
               {VISUAL_STYLE_OPTIONS.map((s) => {
                 const active = selectedVisualStyle === s.id;
@@ -1293,20 +1293,20 @@ export default function RefreshEngine({
                     onClick={() => setSelectedVisualStyle(active ? null : s.id)}
                     className={`w-full text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
                       active
-                        ? "border-pink-500/50 bg-pink-500/10"
-                        : "border-gray-700/50 bg-gray-800/30 hover:border-gray-600"
+                        ? "border-docebo-pink/50 bg-docebo-pink/10"
+                        : "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-8 h-8 rounded-md border border-gray-600/50 shrink-0"
+                        className="w-8 h-8 rounded-md border border-docebo-border shrink-0"
                         style={{ background: s.swatch }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className={`text-xs font-medium ${active ? "text-pink-300" : "text-gray-300"}`}>
+                        <p className={`text-xs font-medium ${active ? "text-docebo-pink" : "text-white/80"}`}>
                           {s.label}
                         </p>
-                        <p className="text-[10px] text-gray-500 mt-0.5">{s.desc}</p>
+                        <p className="text-[10px] text-docebo-muted mt-0.5">{s.desc}</p>
                       </div>
                     </div>
                   </button>
@@ -1321,12 +1321,12 @@ export default function RefreshEngine({
       {step === "prompt" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-gray-400">
-              Auto-Generated Prompt
+            <p className="text-xs font-medium text-docebo-muted">
+              Auto-generated prompt
             </p>
             <button
               onClick={() => setStep("select")}
-              className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
+              className="text-[10px] text-docebo-muted/50 hover:text-docebo-muted transition-colors"
             >
               ← Back
             </button>
@@ -1337,21 +1337,21 @@ export default function RefreshEngine({
             value={editablePrompt}
             onChange={(e) => setEditablePrompt(e.target.value)}
             rows={14}
-            className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-xs text-gray-200 font-mono leading-relaxed focus:outline-none focus:border-cyan-500/50 resize-none"
+            className="w-full px-3 py-2 rounded-lg bg-docebo-card border border-docebo-border text-xs text-white/80 font-mono leading-relaxed focus:outline-none focus:border-docebo-blue/50 resize-none"
           />
 
           {/* Scoring standards */}
-          <div className="rounded-lg bg-gray-800/50 border border-gray-700/50 p-3">
-            <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
-              Scoring Standards (each variant scored 1-10, minimum 7)
+          <div className="rounded-lg bg-docebo-card/50 border border-docebo-border p-3">
+            <p className="text-[10px] font-medium text-docebo-muted uppercase tracking-wider mb-2 font-mono">
+              Scoring standards (each variant scored 1-10, minimum 7)
             </p>
             <div className="space-y-1.5">
               {SCORING_STANDARDS.map((s) => (
                 <div key={s.key} className="flex items-start gap-2">
-                  <span className="text-[10px] font-mono text-cyan-400 w-20 shrink-0 pt-0.5">
+                  <span className="text-[10px] font-mono text-docebo-blue w-20 shrink-0 pt-0.5">
                     {s.label}
                   </span>
-                  <span className="text-[10px] text-gray-500 leading-snug">
+                  <span className="text-[10px] text-docebo-muted leading-snug">
                     {s.desc}
                   </span>
                 </div>
@@ -1360,15 +1360,15 @@ export default function RefreshEngine({
           </div>
 
           {/* Selection summary */}
-          <div className="rounded-lg bg-gray-800/30 border border-gray-700/30 p-2">
+          <div className="rounded-lg bg-docebo-card/30 border border-docebo-border/30 p-2">
             <div className="flex flex-wrap gap-1.5 text-[10px]">
-              <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400">{platform?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">{persona?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-400">{visualStyle?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">{adFormat?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">{voice?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">{hookType?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-400">
+              <span className="px-1.5 py-0.5 rounded bg-docebo-blue/20 text-docebo-light-blue">{platform?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-electric-purple/20 text-docebo-purple">{persona?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-pink/20 text-docebo-pink">{visualStyle?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-bright-green/15 text-docebo-bright-green">{adFormat?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-magenta/15 text-docebo-purple">{voice?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-navy/20 text-docebo-light-blue">{hookType?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-card text-docebo-muted">
                 {angle?.label} → {angle?.subAngles[selectedSubAngleIndex]?.name}
               </span>
             </div>
@@ -1380,17 +1380,17 @@ export default function RefreshEngine({
       {step === "generating" && loading && (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-10 h-10 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-sm text-gray-400">Generating 5 creative variants...</p>
+            <div className="w-10 h-10 border-2 border-docebo-blue border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-sm text-docebo-muted">Generating 5 creative variants...</p>
             <div className="mt-2 flex flex-wrap gap-1.5 justify-center text-[10px]">
-              <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400">{platform?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-400">{visualStyle?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">{adFormat?.label}</span>
-              <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">{voice?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-blue/20 text-docebo-light-blue">{platform?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-pink/20 text-docebo-pink">{visualStyle?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-bright-green/15 text-docebo-bright-green">{adFormat?.label}</span>
+              <span className="px-1.5 py-0.5 rounded bg-docebo-electric-purple/15 text-docebo-purple">{voice?.label}</span>
             </div>
             <div className="mt-3 space-y-0.5">
               {SCORING_STANDARDS.map((s) => (
-                <p key={s.key} className="text-[10px] text-gray-600 font-mono">
+                <p key={s.key} className="text-[10px] text-docebo-muted/50 font-mono">
                   {s.label}: scoring...
                 </p>
               ))}
@@ -1410,8 +1410,8 @@ export default function RefreshEngine({
 
           {rawOutput && (
             <div>
-              <p className="text-xs text-gray-500 mb-2">Raw output (JSON parsing failed):</p>
-              <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-gray-800/50 rounded-lg p-3 border border-gray-700/50">
+              <p className="text-xs text-docebo-muted mb-2">Raw output (JSON parsing failed):</p>
+              <pre className="text-xs text-white/80 whitespace-pre-wrap bg-docebo-card/50 rounded-lg p-3 border border-docebo-border">
                 {rawOutput}
               </pre>
             </div>
@@ -1420,12 +1420,12 @@ export default function RefreshEngine({
           {generatedVariants && (
             <>
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-docebo-muted">
                   {generatedVariants.length} variants generated
                 </p>
                 <button
                   onClick={handleReset}
-                  className="text-xs text-cyan-400 hover:text-cyan-300"
+                  className="text-xs text-docebo-blue hover:text-docebo-light-blue"
                 >
                   New request
                 </button>
@@ -1433,42 +1433,42 @@ export default function RefreshEngine({
               {generatedVariants.map((v, i) => (
                 <div
                   key={v.variant_id || i}
-                  className="rounded-lg bg-gray-800/50 border border-gray-700/50 p-3 space-y-2"
+                  className="rounded-lg bg-docebo-card/50 border border-docebo-border p-3 space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono text-cyan-400">
+                    <span className="text-xs font-mono text-docebo-blue">
                       {v.variant_id}
                     </span>
                     <div className="flex gap-1.5 flex-wrap">
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-docebo-electric-purple/20 text-docebo-purple">
                         {v.messaging_angle || v.ad_type}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-docebo-navy/20 text-docebo-light-blue">
                         {v.hook_type}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-docebo-magenta/15 text-docebo-purple">
                         {v.brand_voice}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-400">
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-docebo-pink/15 text-docebo-pink">
                         {v.visual_style}
                       </span>
                     </div>
                   </div>
                   <h3 className="text-white font-semibold">{v.headline}</h3>
-                  <p className="text-sm text-gray-300">{v.creative_overlay}</p>
-                  <p className="text-xs text-gray-500">{v.intro_text}</p>
-                  <div className="flex items-center gap-3 pt-1 border-t border-gray-700/30">
-                    <span className="text-xs text-gray-500">
-                      Voice: <span className="text-emerald-400 font-mono">{v.self_score.voice_compliance}</span>
+                  <p className="text-sm text-white/70">{v.creative_overlay}</p>
+                  <p className="text-xs text-docebo-muted">{v.intro_text}</p>
+                  <div className="flex items-center gap-3 pt-1 border-t border-docebo-border/30">
+                    <span className="text-xs text-docebo-muted">
+                      Voice: <span className="text-docebo-bright-green font-mono">{v.self_score.voice_compliance}</span>
                     </span>
-                    <span className="text-xs text-gray-500">
-                      Brand: <span className="text-emerald-400 font-mono">{v.self_score.visual_brand_fit}</span>
+                    <span className="text-xs text-docebo-muted">
+                      Brand: <span className="text-docebo-bright-green font-mono">{v.self_score.visual_brand_fit}</span>
                     </span>
-                    <span className="text-xs text-gray-500">
-                      Diff: <span className="text-emerald-400 font-mono">{v.self_score.differentiation}</span>
+                    <span className="text-xs text-docebo-muted">
+                      Diff: <span className="text-docebo-bright-green font-mono">{v.self_score.differentiation}</span>
                     </span>
-                    <span className="text-xs text-gray-500">
-                      Term: <span className="text-emerald-400 font-mono">{v.self_score.terminology}</span>
+                    <span className="text-xs text-docebo-muted">
+                      Term: <span className="text-docebo-bright-green font-mono">{v.self_score.terminology}</span>
                     </span>
                   </div>
                 </div>
@@ -1479,15 +1479,15 @@ export default function RefreshEngine({
       )}
 
       {/* ═══ BOTTOM ACTION BAR ═══ */}
-      <div className="p-4 border-t border-gray-700/50">
+      <div className="p-4 border-t border-docebo-border">
         {step === "select" && (
           <button
             onClick={handleGeneratePrompt}
             disabled={!canGeneratePrompt}
-            className="w-full px-4 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-4 py-2.5 rounded-lg bg-docebo-blue text-white text-sm font-medium hover:bg-docebo-light-blue disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             {canGeneratePrompt
-              ? "Generate Prompt →"
+              ? "Generate prompt →"
               : `Select: ${[
                   !selectedPersona && "persona",
                   !selectedAngle && "messaging angle",
@@ -1505,18 +1505,18 @@ export default function RefreshEngine({
           <button
             onClick={handleGenerate}
             disabled={!editablePrompt.trim()}
-            className="w-full px-4 py-2.5 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-4 py-2.5 rounded-lg bg-docebo-bright-green text-docebo-midnight text-sm font-semibold hover:bg-docebo-neon-green disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
-            Generate 5 Variants
+            Generate 5 variants
           </button>
         )}
 
         {step === "results" && !error && !generatedVariants && !rawOutput && (
           <button
             onClick={handleReset}
-            className="w-full px-4 py-2.5 rounded-lg bg-gray-700 text-white text-sm font-medium hover:bg-gray-600 transition-colors"
+            className="w-full px-4 py-2.5 rounded-lg bg-docebo-card text-white text-sm font-medium hover:bg-docebo-border transition-colors"
           >
-            Start Over
+            Start over
           </button>
         )}
       </div>
