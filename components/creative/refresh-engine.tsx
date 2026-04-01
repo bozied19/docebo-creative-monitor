@@ -842,7 +842,7 @@ function buildAutoPrompt(
 }
 
 /* ── Flow steps ──────────────────────────────────────────────────── */
-type FlowStep = "select" | "configure" | "prompt" | "styles" | "generating" | "results";
+type FlowStep = "select" | "prompt" | "styles" | "generating" | "results";
 
 export default function RefreshEngine({
   selectedCampaign,
@@ -851,12 +851,11 @@ export default function RefreshEngine({
   // Flow state
   const [step, setStep] = useState<FlowStep>("select");
 
-  // Selection state — Step 1: Persona + Messaging Angle
+  // Selection state — Ad Ingredients (all selections in one step)
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
   const [selectedAngle, setSelectedAngle] = useState<string | null>(null);
   const [selectedSubAngleIndex, setSelectedSubAngleIndex] = useState<number>(0);
 
-  // Configuration state — Step 2: Platform, Voice, Hook, Format, Visual Style
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
   const [selectedHookType, setSelectedHookType] = useState<string | null>(null);
@@ -892,8 +891,7 @@ export default function RefreshEngine({
   const adFormat = AD_FORMAT_OPTIONS.find((f) => f.id === selectedFormat);
   const visualStyle = VISUAL_STYLE_OPTIONS.find((s) => s.id === selectedVisualStyle);
 
-  const canProceedToConfig = selectedPersona && selectedAngle;
-  const canGeneratePrompt = platform && voice && hookType && adFormat && visualStyle;
+  const canGeneratePrompt = selectedPersona && selectedAngle && platform && voice && hookType && adFormat && visualStyle;
 
   /* ── Auto-generate prompt when all selections are made ──── */
   function handleGeneratePrompt() {
@@ -981,8 +979,7 @@ export default function RefreshEngine({
 
   /* ── Step indicator ───────────────────────────────────────── */
   const steps: { key: FlowStep; label: string }[] = [
-    { key: "select", label: "Persona" },
-    { key: "configure", label: "UTM" },
+    { key: "select", label: "Ad Ingredients" },
     { key: "prompt", label: "Prompt" },
     { key: "generating", label: "Generate" },
   ];
@@ -996,7 +993,7 @@ export default function RefreshEngine({
           Creative Refresh Engine
         </h2>
         <p className="text-xs text-gray-500 mt-0.5">
-          UTM-driven creative generation
+          AI-powered creative generation
         </p>
 
         {/* Step indicator */}
@@ -1045,14 +1042,16 @@ export default function RefreshEngine({
         </div>
       )}
 
-      {/* ═══ STEP 1: SELECT PERSONA + MESSAGING ANGLE ═══ */}
+      {/* ═══ STEP 1: CHOOSE YOUR AD INGREDIENTS ═══ */}
       {step === "select" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-4">
+          <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Choose Your Ad Ingredients</p>
+
           {/* Persona picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-medium text-gray-400">
-                1. Target Persona
+                Target Persona
               </p>
               {selectedPersona && (
                 <button
@@ -1104,7 +1103,7 @@ export default function RefreshEngine({
           {/* Messaging Angle picker (replaces old 12 messaging categories) */}
           <div>
             <p className="text-xs font-medium text-gray-400 mb-2">
-              2. Messaging Angle
+              Messaging Angle
             </p>
             <div className="space-y-1">
               {MESSAGING_ANGLE_OPTIONS.map((a) => {
@@ -1167,21 +1166,6 @@ export default function RefreshEngine({
                 );
               })}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═══ STEP 2: UTM CONFIGURATION (Platform, Voice, Hook, Format, Visual Style) ═══ */}
-      {step === "configure" && (
-        <div className="flex-1 overflow-auto px-4 py-3 space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-gray-400">UTM Dimensions</p>
-            <button
-              onClick={() => setStep("select")}
-              className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
-            >
-              ← Back
-            </button>
           </div>
 
           {/* Platform */}
@@ -1341,7 +1325,7 @@ export default function RefreshEngine({
               Auto-Generated Prompt
             </p>
             <button
-              onClick={() => setStep("configure")}
+              onClick={() => setStep("select")}
               className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors"
             >
               ← Back
@@ -1498,19 +1482,6 @@ export default function RefreshEngine({
       <div className="p-4 border-t border-gray-700/50">
         {step === "select" && (
           <button
-            onClick={() => setStep("configure")}
-            disabled={!canProceedToConfig}
-            className="w-full px-4 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            {canProceedToConfig
-              ? "Configure UTM Dimensions →"
-              : "Select persona & messaging angle"
-            }
-          </button>
-        )}
-
-        {step === "configure" && (
-          <button
             onClick={handleGeneratePrompt}
             disabled={!canGeneratePrompt}
             className="w-full px-4 py-2.5 rounded-lg bg-cyan-600 text-white text-sm font-medium hover:bg-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -1518,6 +1489,8 @@ export default function RefreshEngine({
             {canGeneratePrompt
               ? "Generate Prompt →"
               : `Select: ${[
+                  !selectedPersona && "persona",
+                  !selectedAngle && "messaging angle",
                   !selectedPlatform && "platform",
                   !selectedVoice && "voice",
                   !selectedHookType && "hook",
