@@ -91,8 +91,8 @@ Return a JSON array of variant objects. Each variant object has these fields:
 {
   "variant_id": "v1",
   "intro_text": "30–50 words, platform-appropriate",
-  "headline": "7 words max",
-  "creative_overlay": "14 words max (fit safe zone)",
+  "headline": "7 words max — this is the BELOW-IMAGE feed headline (LinkedIn feed chrome). It must be DIFFERENT from creative_overlay. Think of it as a complementary hook or CTA-style line that entices the click AFTER the reader has seen the in-image text.",
+  "creative_overlay": "14 words max (fit safe zone) — this is the PRIMARY IN-IMAGE text, the dominant visual headline rendered large inside the ad creative. It must be DIFFERENT from headline. Never duplicate or paraphrase the headline here.",
   "visual_direction": "Specific guidance for designer matching the visual_style",
   "cta_text": "CTA button text",
   "messaging_angle": "problem | outcome | proof | differentiation | persona | urgency | education | emotional",

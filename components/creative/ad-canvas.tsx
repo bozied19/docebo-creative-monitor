@@ -407,10 +407,10 @@ function StandardMockup({
   mockupRef: React.RefObject<HTMLDivElement | null>;
   aspectRatio?: string;
 }) {
-  const headlineWords = variant.headline.split(" ");
-  const splitAt = Math.max(1, headlineWords.length - 2);
-  const headlinePrimary = headlineWords.slice(0, splitAt).join(" ");
-  const headlineAccent = headlineWords.slice(splitAt).join(" ");
+  const overlayWords = variant.creative_overlay.split(" ");
+  const splitAt = Math.max(1, overlayWords.length - 2);
+  const headlinePrimary = overlayWords.slice(0, splitAt).join(" ");
+  const headlineAccent = overlayWords.slice(splitAt).join(" ");
 
   return (
     <div
@@ -537,7 +537,7 @@ function StandardMockup({
               maxWidth: "90%",
             }}
           >
-            {variant.creative_overlay}
+            {variant.headline}
           </p>
         </div>
 
@@ -663,7 +663,7 @@ function WaveMockup({
           docebo
         </span>
 
-        {/* Headline */}
+        {/* Headline — uses creative_overlay as the dominant in-image text */}
         <h2
           style={{
             color: "#0033A0",
@@ -676,10 +676,10 @@ function WaveMockup({
             margin: 0,
           }}
         >
-          {variant.headline}
+          {variant.creative_overlay}
         </h2>
 
-        {/* Subtitle */}
+        {/* Subtitle — uses headline as complementary subtext */}
         <p
           style={{
             color: "#0033A0",
@@ -691,7 +691,7 @@ function WaveMockup({
             maxWidth: "80%",
           }}
         >
-          {variant.creative_overlay}
+          {variant.headline}
         </p>
       </div>
     </div>
@@ -902,7 +902,7 @@ function CoBrandMockup({
         </span>
       </div>
 
-      {/* Headline */}
+      {/* Headline — uses creative_overlay as the dominant in-image text */}
       <div
         className="absolute"
         style={{
@@ -925,7 +925,7 @@ function CoBrandMockup({
             margin: 0,
           }}
         >
-          {variant.headline}
+          {variant.creative_overlay}
         </h2>
       </div>
 
