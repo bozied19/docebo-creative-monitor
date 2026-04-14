@@ -525,20 +525,6 @@ function StandardMockup({
               {headlineAccent}
             </h2>
           )}
-
-          <p
-            style={{
-              color: theme.subColor,
-              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-              fontWeight: 400,
-              fontSize: "clamp(12px, 2.5vw, 20px)",
-              lineHeight: 1.4,
-              marginTop: "6%",
-              maxWidth: "90%",
-            }}
-          >
-            {variant.headline}
-          </p>
         </div>
 
         {/* Bottom row */}
@@ -678,21 +664,6 @@ function WaveMockup({
         >
           {variant.creative_overlay}
         </h2>
-
-        {/* Subtitle — uses headline as complementary subtext */}
-        <p
-          style={{
-            color: "#0033A0",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 400,
-            fontSize: "clamp(13px, 2.8vw, 22px)",
-            lineHeight: 1.35,
-            marginTop: "5%",
-            maxWidth: "80%",
-          }}
-        >
-          {variant.headline}
-        </p>
       </div>
     </div>
   );
