@@ -136,9 +136,11 @@ export default function CreativeMonitor() {
         ))}
       </div>
 
-      {/* Three-panel layout — stacks on mobile, 3 cols on lg+ */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_380px_1fr] lg:min-h-0">
-        {/* Left: Health Tables */}
+      {/* Three-panel layout — stacks on mobile, 3 cols on lg+
+          Center is primary (lighter surface). Left/right sit on the
+          darker midnight background so the eye lands on center. */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_420px_1fr] lg:min-h-0">
+        {/* Left: Health Tables (supporting — entry point) */}
         <div className="border-b lg:border-b-0 lg:border-r border-docebo-border overflow-hidden flex flex-col">
           <HealthTables
             fatigue={fatigue}
@@ -149,15 +151,15 @@ export default function CreativeMonitor() {
           />
         </div>
 
-        {/* Center: Refresh Engine */}
-        <div className="border-b lg:border-b-0 lg:border-r border-docebo-border overflow-hidden flex flex-col">
+        {/* Center: Refresh Engine (primary action — elevated surface) */}
+        <div className="border-b lg:border-b-0 lg:border-r border-docebo-border bg-docebo-card/40 overflow-hidden flex flex-col">
           <RefreshEngine
             selectedCampaign={selectedCampaign}
             onVariantsGenerated={handleVariantsGenerated}
           />
         </div>
 
-        {/* Right: Ad Canvas */}
+        {/* Right: Ad Canvas / Brand voice reference (supporting) */}
         <div className="overflow-hidden flex flex-col">
           <AdCanvas variants={variants} renderContext={renderContext} />
         </div>
