@@ -1045,8 +1045,6 @@ export default function RefreshEngine({
       {/* ═══ STEP 1: CHOOSE YOUR AD INGREDIENTS ═══ */}
       {step === "select" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-4">
-          <p className="text-xs font-semibold text-white/80 uppercase tracking-wider font-mono">Choose your ad ingredients</p>
-
           {/* Persona picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
