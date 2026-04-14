@@ -13,8 +13,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var r=document.documentElement;if(t==='light'){r.classList.remove('dark');r.classList.add('light');r.style.setProperty('--color-docebo-dark','#f5f3ef');r.style.setProperty('--color-docebo-card','#ffffff');r.style.setProperty('--color-docebo-border','#d9d3c9');r.style.setProperty('--color-docebo-muted','#6b7280');r.style.setProperty('--color-docebo-midnight','#f0ece6');}}catch(e){}})();`,
+          }}
+        />
         {/* Docebo typography: Figtree (body), Lora (quotes), IBM Plex Mono (code/CTA) */}
         <link
           href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap"
