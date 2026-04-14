@@ -61,10 +61,12 @@ export default function CreativeMonitor() {
       <header className="flex items-center justify-between px-6 py-3 border-b border-docebo-border bg-docebo-midnight/90 backdrop-blur shrink-0">
         <div className="flex items-center gap-3">
           <div
+            role="img"
+            aria-label="Docebo"
             className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: "#0057FF" }}
           >
-            <span className="text-white font-bold text-sm font-headline">d</span>
+            <span aria-hidden="true" className="text-white font-bold text-sm font-headline">d</span>
           </div>
           <div>
             <h1 className="text-base font-semibold text-white font-headline">
