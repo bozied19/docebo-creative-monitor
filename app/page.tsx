@@ -116,16 +116,19 @@ export default function CreativeMonitor() {
             label: "Total Campaigns",
             value: fatigue.length,
             color: "text-white",
+            hint: "All campaigns currently tracked by PostHog",
           },
           {
             label: "Healthy",
             value: fatigue.filter((r) => r.status === "HEALTHY").length,
             color: "text-docebo-bright-green",
+            hint: "Fatigue score below threshold, CTR holding",
           },
           {
             label: "Watch List",
             value: fatigue.filter((r) => r.status === "WATCH").length,
             color: "text-amber-400",
+            hint: "Early signs of fatigue — CTR softening",
           },
           {
             label: "Needs Refresh",
@@ -133,11 +136,13 @@ export default function CreativeMonitor() {
               (r) => r.status === "PAUSE" || r.status === "REFRESH"
             ).length,
             color: "text-docebo-pink",
+            hint: "Paused or flagged for refresh — CTR collapsed or CPM spiking",
           },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-docebo-midnight px-4 py-2.5 text-center"
+            title={stat.hint}
+            className="bg-docebo-midnight px-4 py-2.5 text-center cursor-help"
           >
             <p className={`text-xl font-semibold font-mono tabular-nums ${stat.color}`}>
               {healthLoading ? "—" : stat.value}
