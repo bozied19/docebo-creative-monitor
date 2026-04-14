@@ -120,13 +120,13 @@ export default function HealthTables({
       <div className="flex border-b border-docebo-border">
         <button
           onClick={() => setActiveTab("fatigue")}
-          className={`px-4 py-2.5 text-sm font-medium transition-colors ${activeTab === "fatigue" ? "text-docebo-blue border-b-2 border-docebo-blue" : "text-docebo-muted hover:text-white"}`}
+          className={`px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue focus-visible:ring-inset ${activeTab === "fatigue" ? "text-docebo-blue border-b-2 border-docebo-blue" : "text-docebo-muted hover:text-white"}`}
         >
           Fatigue Scores ({fatigue.length})
         </button>
         <button
           onClick={() => setActiveTab("qualified")}
-          className={`px-4 py-2.5 text-sm font-medium transition-colors ${activeTab === "qualified" ? "text-docebo-blue border-b-2 border-docebo-blue" : "text-docebo-muted hover:text-white"}`}
+          className={`px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue focus-visible:ring-inset ${activeTab === "qualified" ? "text-docebo-blue border-b-2 border-docebo-blue" : "text-docebo-muted hover:text-white"}`}
         >
           Qualified Creatives ({qualified.length})
         </button>
@@ -140,7 +140,7 @@ export default function HealthTables({
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue ${
                   statusFilter === s
                     ? s === "ALL"
                       ? "bg-docebo-blue/20 text-docebo-light-blue"
