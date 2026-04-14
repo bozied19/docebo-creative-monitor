@@ -739,19 +739,21 @@ interface RefreshEngineProps {
 
 /* ── Persona options (unchanged) ───────────────────────────────── */
 const PERSONA_OPTIONS = [
-  { id: "brand", label: "Brand", desc: "Big bold statements. Broad appeal across all Docebo audiences." },
-  { id: "ld-leader", label: "L&D Leader", desc: "CLO, VP/Director of L&D. Learning ROI, workforce readiness, vendor consolidation." },
-  { id: "hr-leader", label: "HR Leader", desc: "CHRO, CPO, VP of HR. People strategy, HRIS integration, retention, compliance." },
-  { id: "enablement", label: "Revenue & Enablement", desc: "CRO, CSO, Sales Enablement. Pipeline, win rates, Salesforce, rep ramp." },
-  { id: "customer-ed", label: "Customer Education", desc: "Monetization, support deflection, time-to-value, NRR." },
-  { id: "partnerships", label: "Partner Enablement", desc: "Partner certification, revenue attribution, ecosystem growth." },
-  { id: "pro-dev", label: "Professional Development", desc: "Skills frameworks, Kirkpatrick measurement, career pathing." },
-  { id: "franchise", label: "Franchise & Frontline", desc: "Device policy, offline learning, brand consistency at scale." },
-  { id: "compliance", label: "Compliance", desc: "Audit readiness, automated assignment, regulatory defensibility." },
-  { id: "finance", label: "Finance", desc: "CFO, VP Finance. TCO transparency, ROI defensibility, AI spend governance." },
-  { id: "it-leader", label: "IT", desc: "CIO, CTO, VP IT. Security, SSO, API architecture, AI governance." },
-  { id: "operations", label: "Operations", desc: "COO, Head of Ops. Scalability, frontline readiness, time-to-productivity." },
+  { id: "brand", label: "Brand", group: "Brand & Learning", desc: "Big bold statements. Broad appeal across all Docebo audiences." },
+  { id: "ld-leader", label: "L&D Leader", group: "Brand & Learning", desc: "CLO, VP/Director of L&D. Learning ROI, workforce readiness, vendor consolidation." },
+  { id: "pro-dev", label: "Professional Development", group: "Brand & Learning", desc: "Skills frameworks, Kirkpatrick measurement, career pathing." },
+  { id: "hr-leader", label: "HR Leader", group: "Go-to-market", desc: "CHRO, CPO, VP of HR. People strategy, HRIS integration, retention, compliance." },
+  { id: "enablement", label: "Revenue & Enablement", group: "Go-to-market", desc: "CRO, CSO, Sales Enablement. Pipeline, win rates, Salesforce, rep ramp." },
+  { id: "customer-ed", label: "Customer Education", group: "Go-to-market", desc: "Monetization, support deflection, time-to-value, NRR." },
+  { id: "partnerships", label: "Partner Enablement", group: "Go-to-market", desc: "Partner certification, revenue attribution, ecosystem growth." },
+  { id: "franchise", label: "Franchise & Frontline", group: "Operations & Compliance", desc: "Device policy, offline learning, brand consistency at scale." },
+  { id: "compliance", label: "Compliance", group: "Operations & Compliance", desc: "Audit readiness, automated assignment, regulatory defensibility." },
+  { id: "finance", label: "Finance", group: "Operations & Compliance", desc: "CFO, VP Finance. TCO transparency, ROI defensibility, AI spend governance." },
+  { id: "it-leader", label: "IT", group: "Operations & Compliance", desc: "CIO, CTO, VP IT. Security, SSO, API architecture, AI governance." },
+  { id: "operations", label: "Operations", group: "Operations & Compliance", desc: "COO, Head of Ops. Scalability, frontline readiness, time-to-productivity." },
 ];
+
+const PERSONA_GROUPS = ["Brand & Learning", "Go-to-market", "Operations & Compliance"] as const;
 
 /* ── Scoring standards ─────────────────────────────────────────── */
 const SCORING_STANDARDS = [
@@ -1060,41 +1062,50 @@ export default function RefreshEngine({
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {PERSONA_OPTIONS.map((p) => {
-                const active = selectedPersona === p.id;
-                const isBrand = p.id === "brand";
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPersona(active ? null : p.id)}
-                    className={`text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer ${
-                      isBrand && !active
-                        ? "col-span-2 border-dashed border-docebo-electric-purple/30 bg-docebo-electric-purple/5 hover:border-docebo-electric-purple/50 hover:bg-docebo-electric-purple/10"
-                        : ""
-                    } ${
-                      active
-                        ? isBrand
-                          ? "col-span-2 border-docebo-electric-purple/50 bg-docebo-electric-purple/15 shadow-[0_0_8px_rgba(126,46,233,0.15)]"
-                          : "border-docebo-blue/50 bg-docebo-blue/15 shadow-[0_0_8px_rgba(0,87,255,0.15)]"
-                        : !isBrand
-                          ? "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60"
-                          : ""
-                    }`}
-                  >
-                    <p className={`text-xs font-medium ${
-                      active
-                        ? isBrand ? "text-docebo-purple" : "text-docebo-light-blue"
-                        : "text-white/80"
-                    }`}>
-                      {p.label}
-                    </p>
-                    <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
-                      {p.desc}
-                    </p>
-                  </button>
-                );
-              })}
+            <div className="space-y-3">
+              {PERSONA_GROUPS.map((group) => (
+                <div key={group}>
+                  <p className="text-[10px] uppercase tracking-wider text-docebo-muted/60 font-mono mb-1.5">
+                    {group}
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {PERSONA_OPTIONS.filter((p) => p.group === group).map((p) => {
+                      const active = selectedPersona === p.id;
+                      const isBrand = p.id === "brand";
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => setSelectedPersona(active ? null : p.id)}
+                          className={`text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue ${
+                            isBrand && !active
+                              ? "col-span-2 border-dashed border-docebo-electric-purple/30 bg-docebo-electric-purple/5 hover:border-docebo-electric-purple/50 hover:bg-docebo-electric-purple/10"
+                              : ""
+                          } ${
+                            active
+                              ? isBrand
+                                ? "col-span-2 border-docebo-electric-purple/50 bg-docebo-electric-purple/15 shadow-[0_0_8px_rgba(126,46,233,0.15)]"
+                                : "border-docebo-blue/50 bg-docebo-blue/15 shadow-[0_0_8px_rgba(0,87,255,0.15)]"
+                              : !isBrand
+                                ? "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60"
+                                : ""
+                          }`}
+                        >
+                          <p className={`text-xs font-medium ${
+                            active
+                              ? isBrand ? "text-docebo-purple" : "text-docebo-light-blue"
+                              : "text-white/80"
+                          }`}>
+                            {p.label}
+                          </p>
+                          <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
+                            {p.desc}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
