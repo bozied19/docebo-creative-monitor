@@ -86,9 +86,20 @@ export default function CreativeMonitor() {
           <button
             onClick={loadHealth}
             disabled={healthLoading}
-            className="text-xs px-3 py-1.5 rounded-lg bg-docebo-card border border-docebo-border text-docebo-muted hover:text-white hover:border-docebo-blue/50 disabled:opacity-50 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-lg bg-docebo-card border border-docebo-border text-docebo-muted hover:text-white hover:border-docebo-blue/50 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
           >
-            {healthLoading ? "Refreshing..." : "Refresh Data"}
+            {healthLoading && (
+              <svg
+                aria-hidden="true"
+                className="w-3 h-3 animate-spin"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+                <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            )}
+            {healthLoading ? "Refreshing…" : "Refresh Data"}
           </button>
           <div className="flex items-center gap-1.5 text-xs text-docebo-muted">
             <span className="w-2 h-2 rounded-full bg-docebo-bright-green" />
