@@ -192,9 +192,9 @@ export default function HealthTables({
                     <td className="px-4 py-2 max-w-[240px]">
                       <span
                         title={row.campaign_name}
-                        className="block break-words leading-snug text-xs text-white/80"
+                        className="block truncate leading-snug text-xs text-white/80"
                       >
-                        {row.campaign_name}
+                        {row.campaign_name.replace(/_[a-f0-9]{32}$/i, "")}
                       </span>
                     </td>
                     <td className="px-3 py-2">
