@@ -69,7 +69,7 @@ export default function CreativeMonitor() {
             <span aria-hidden="true" className="text-white font-bold text-sm font-headline">d</span>
           </div>
           <div>
-            <h1 className="text-base font-semibold text-white font-headline">
+            <h1 className="text-base font-bold text-white font-headline tracking-tight">
               Creative Health Monitor
             </h1>
             <p className="text-xs text-docebo-muted">
@@ -128,10 +128,10 @@ export default function CreativeMonitor() {
             key={stat.label}
             className="bg-docebo-midnight px-4 py-2.5 text-center"
           >
-            <p className={`text-xl font-bold font-mono ${stat.color}`}>
+            <p className={`text-xl font-semibold font-mono tabular-nums ${stat.color}`}>
               {healthLoading ? "—" : stat.value}
             </p>
-            <p className="text-xs text-docebo-muted mt-0.5">{stat.label}</p>
+            <p className="text-[13px] text-docebo-muted/90 mt-0.5">{stat.label}</p>
           </div>
         ))}
       </div>

@@ -1581,7 +1581,7 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
       >
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-white leading-tight">
+            <h3 className="text-sm font-medium text-white leading-tight">
               {voice.label}
             </h3>
             {hasFullGuide && (
@@ -1778,7 +1778,7 @@ export default function AdCanvas({ variants, renderContext }: AdCanvasProps) {
     return (
       <div className="flex flex-col h-full">
         <div className="px-4 py-3 border-b border-docebo-border">
-          <h2 className="text-sm font-semibold text-white font-headline">Brand voice guides</h2>
+          <h2 className="text-base font-semibold text-white font-headline tracking-tight">Brand voice guides</h2>
           <p className="text-xs text-docebo-muted mt-0.5">
             {BRAND_VOICE_OPTIONS.length} voices — select a campaign to generate mockups
           </p>

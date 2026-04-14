@@ -988,7 +988,7 @@ export default function RefreshEngine({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-4 py-3 border-b border-docebo-border">
-        <h2 className="text-lg font-semibold text-white font-headline flex items-center gap-2">
+        <h2 className="text-base font-semibold text-white font-headline flex items-center gap-2 tracking-tight">
           <span className="w-2 h-2 rounded-full bg-docebo-bright-green pulse-glow" />
           Creative Refresh Engine
         </h2>
