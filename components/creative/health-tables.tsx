@@ -165,12 +165,28 @@ export default function HealthTables({
                 </tr>
               </thead>
               <tbody className="divide-y divide-docebo-border/40">
-                {filteredFatigue.map((row, i) => (
+                {filteredFatigue.map((row, i) => {
+                  const actionable = row.status !== "HEALTHY";
+                  return (
                   <tr
                     key={i}
                     onClick={() => onCampaignClick(row)}
-                    className={`hover:bg-docebo-card/50 transition-colors ${
-                      row.status !== "HEALTHY" ? "cursor-pointer" : "cursor-default"
+                    onKeyDown={(e) => {
+                      if (!actionable) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onCampaignClick(row);
+                      }
+                    }}
+                    role={actionable ? "button" : undefined}
+                    tabIndex={actionable ? 0 : undefined}
+                    aria-label={
+                      actionable
+                        ? `Refresh campaign ${row.campaign_name}`
+                        : undefined
+                    }
+                    className={`hover:bg-docebo-card/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue ${
+                      actionable ? "cursor-pointer" : "cursor-default"
                     }`}
                   >
                     <td className="px-4 py-2 max-w-[240px]">
@@ -213,7 +229,8 @@ export default function HealthTables({
                       </span>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
