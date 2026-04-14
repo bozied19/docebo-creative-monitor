@@ -1601,23 +1601,27 @@ function BrandVoiceCard({ voice }: { voice: BrandVoiceOption }) {
             )}
           </div>
         </div>
-        <p className="text-xs text-docebo-muted mb-2">{voice.desc}</p>
-        {voice.positioning && (
-          <div className="text-[10px] text-docebo-muted mb-2 border-l-2 border-docebo-border pl-2">
-            <span className="text-docebo-muted/50">From:</span> {voice.positioning.from}<br />
-            <span className="text-docebo-muted/50">To:</span> <span className="text-white/80">{voice.positioning.to}</span>
-          </div>
+        <p className="text-xs text-docebo-muted line-clamp-2">{voice.desc}</p>
+        {(!hasFullGuide || expanded) && (
+          <>
+            {voice.positioning && (
+              <div className="text-[10px] text-docebo-muted mt-2 border-l-2 border-docebo-border pl-2">
+                <span className="text-docebo-muted/50">From:</span> {voice.positioning.from}<br />
+                <span className="text-docebo-muted/50">To:</span> <span className="text-white/80">{voice.positioning.to}</span>
+              </div>
+            )}
+            <p className="text-[10px] text-docebo-muted mt-2">
+              <span className="text-white/70 font-medium">Core Energy:</span> {voice.coreEnergy}
+            </p>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {toneParts.map((part) => (
+                <span key={part} className="text-[10px] px-1.5 py-0.5 rounded bg-docebo-card text-docebo-muted">
+                  {part.trim()}
+                </span>
+              ))}
+            </div>
+          </>
         )}
-        <p className="text-[10px] text-docebo-muted mb-1.5">
-          <span className="text-white/70 font-medium">Core Energy:</span> {voice.coreEnergy}
-        </p>
-        <div className="flex flex-wrap gap-1">
-          {toneParts.map((part) => (
-            <span key={part} className="text-[10px] px-1.5 py-0.5 rounded bg-docebo-card text-docebo-muted">
-              {part.trim()}
-            </span>
-          ))}
-        </div>
       </button>
 
       {/* Expanded guide content */}
