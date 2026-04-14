@@ -56,7 +56,7 @@ export default function CreativeMonitor() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="min-h-screen lg:h-screen flex flex-col">
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-docebo-border bg-docebo-midnight/90 backdrop-blur shrink-0">
         <div className="flex items-center gap-3">
@@ -97,7 +97,7 @@ export default function CreativeMonitor() {
       </header>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-4 gap-px bg-docebo-border/30 border-b border-docebo-border shrink-0">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-docebo-border/30 border-b border-docebo-border shrink-0">
         {[
           {
             label: "Total Campaigns",
@@ -134,10 +134,10 @@ export default function CreativeMonitor() {
         ))}
       </div>
 
-      {/* Three-panel layout */}
-      <div className="flex-1 grid grid-cols-[1fr_380px_1fr] min-h-0">
+      {/* Three-panel layout — stacks on mobile, 3 cols on lg+ */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_380px_1fr] lg:min-h-0">
         {/* Left: Health Tables */}
-        <div className="border-r border-docebo-border overflow-hidden flex flex-col">
+        <div className="border-b lg:border-b-0 lg:border-r border-docebo-border overflow-hidden flex flex-col">
           <HealthTables
             fatigue={fatigue}
             qualified={qualified}
@@ -148,7 +148,7 @@ export default function CreativeMonitor() {
         </div>
 
         {/* Center: Refresh Engine */}
-        <div className="border-r border-docebo-border overflow-hidden flex flex-col">
+        <div className="border-b lg:border-b-0 lg:border-r border-docebo-border overflow-hidden flex flex-col">
           <RefreshEngine
             selectedCampaign={selectedCampaign}
             onVariantsGenerated={handleVariantsGenerated}
