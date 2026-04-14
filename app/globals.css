@@ -37,6 +37,62 @@ body {
   font-family: var(--font-sans);
 }
 
+/* ── Light Theme ──────────────────────────────────── */
+html.light body {
+  color: #1f2937;
+}
+
+/* White text → dark on light backgrounds */
+html.light .text-white {
+  color: #111827;
+}
+html.light .text-white\/80 {
+  color: rgb(17 24 39 / 0.8);
+}
+html.light .text-white\/70 {
+  color: rgb(17 24 39 / 0.7);
+}
+html.light .text-white\/60 {
+  color: rgb(17 24 39 / 0.6);
+}
+html.light .text-white\/50 {
+  color: rgb(17 24 39 / 0.5);
+}
+html.light .hover\:text-white:hover {
+  color: #111827;
+}
+
+/* Muted text — darken for readability on light bg */
+html.light .text-docebo-muted {
+  color: #4b5563;
+}
+html.light .text-docebo-muted\/50 {
+  color: rgb(75 85 99 / 0.5);
+}
+
+/* Accent colors — slightly deeper for light bg contrast */
+html.light .text-docebo-bright-green {
+  color: #16a34a;
+}
+html.light .text-amber-400 {
+  color: #b45309;
+}
+html.light .text-red-400 {
+  color: #dc2626;
+}
+html.light .text-docebo-light-blue {
+  color: #0046cc;
+}
+html.light .text-docebo-purple {
+  color: #7c3aed;
+}
+html.light .text-docebo-pink {
+  color: #db2777;
+}
+html.light .text-docebo-neon-green {
+  color: #15803d;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

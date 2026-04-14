@@ -11,6 +11,7 @@ import RefreshEngine, {
   type CanvasRenderContext,
 } from "@/components/creative/refresh-engine";
 import AdCanvas from "@/components/creative/ad-canvas";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default function CreativeMonitor() {
   const [fatigue, setFatigue] = useState<FatigueRow[]>([]);
@@ -91,6 +92,7 @@ export default function CreativeMonitor() {
             <span className="w-2 h-2 rounded-full bg-docebo-bright-green" />
             PostHog Live
           </div>
+          <ThemeToggle />
         </div>
       </header>
 
