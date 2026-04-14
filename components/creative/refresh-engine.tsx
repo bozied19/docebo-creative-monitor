@@ -742,7 +742,7 @@ const PERSONA_OPTIONS = [
   { id: "brand", label: "Brand", group: "Brand & Learning", desc: "Big bold statements. Broad appeal across all Docebo audiences." },
   { id: "ld-leader", label: "L&D Leader", group: "Brand & Learning", desc: "CLO, VP/Director of L&D. Learning ROI, workforce readiness, vendor consolidation." },
   { id: "pro-dev", label: "Professional Development", group: "Brand & Learning", desc: "Skills frameworks, Kirkpatrick measurement, career pathing." },
-  { id: "hr-leader", label: "HR Leader", group: "Go-to-market", desc: "CHRO, CPO, VP of HR. People strategy, HRIS integration, retention, compliance." },
+  { id: "hr-leader", label: "HR Leader", group: "Brand & Learning", desc: "CHRO, CPO, VP of HR. People strategy, HRIS integration, retention, compliance." },
   { id: "enablement", label: "Revenue & Enablement", group: "Go-to-market", desc: "CRO, CSO, Sales Enablement. Pipeline, win rates, Salesforce, rep ramp." },
   { id: "customer-ed", label: "Customer Education", group: "Go-to-market", desc: "Monetization, support deflection, time-to-value, NRR." },
   { id: "partnerships", label: "Partner Enablement", group: "Go-to-market", desc: "Partner certification, revenue attribution, ecosystem growth." },
