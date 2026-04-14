@@ -63,10 +63,15 @@ export default function CreativeMonitor() {
           <div
             role="img"
             aria-label="Docebo"
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            className="w-8 h-8 rounded-lg flex items-center justify-center shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset,0_4px_10px_rgba(0,87,255,0.35)]"
             style={{ backgroundColor: "#0057FF" }}
           >
-            <span aria-hidden="true" className="text-white font-bold text-sm font-headline">d</span>
+            <svg aria-hidden="true" viewBox="0 0 20 20" className="w-4 h-4 text-white">
+              <path
+                d="M13.5 2.5v7.8a6 6 0 1 1-2.2-4.65V2.5h2.2zm-5.7 13.3a3.8 3.8 0 1 0 0-7.6 3.8 3.8 0 0 0 0 7.6z"
+                fill="currentColor"
+              />
+            </svg>
           </div>
           <div>
             <h1 className="text-base font-bold text-white font-headline tracking-tight">
