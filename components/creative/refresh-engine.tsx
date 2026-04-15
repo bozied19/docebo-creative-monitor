@@ -693,6 +693,9 @@ export interface Variant {
   intro_text: string;
   headline: string;
   creative_overlay: string;
+  /** Smaller in-image supporting line, 6-12 words. Complements creative_overlay;
+   *  must differ from headline and intro_text. Rendered under the big overlay. */
+  overlay_subtext: string;
   visual_direction: string;
   cta_text: string;
   /** Messaging angle from the 8-angle taxonomy */

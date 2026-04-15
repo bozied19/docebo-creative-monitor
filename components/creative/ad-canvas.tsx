@@ -526,6 +526,23 @@ function StandardMockup({
               {headlineAccent}
             </h2>
           )}
+
+          {variant.overlay_subtext && (
+            <p
+              style={{
+                color: theme.subColor,
+                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontWeight: 500,
+                fontSize: "clamp(16px, 3.2cqw, 34px)",
+                lineHeight: 1.35,
+                letterSpacing: "-0.005em",
+                marginTop: "5%",
+                maxWidth: "85%",
+              }}
+            >
+              {variant.overlay_subtext}
+            </p>
+          )}
         </div>
 
         {/* Bottom row */}
@@ -666,6 +683,22 @@ function WaveMockup({
         >
           {variant.creative_overlay}
         </h2>
+        {variant.overlay_subtext && (
+          <p
+            style={{
+              color: "#0033A0",
+              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontWeight: 500,
+              fontSize: "clamp(15px, 3cqw, 30px)",
+              lineHeight: 1.35,
+              marginTop: "5%",
+              maxWidth: "85%",
+              opacity: 0.85,
+            }}
+          >
+            {variant.overlay_subtext}
+          </p>
+        )}
       </div>
     </div>
   );
