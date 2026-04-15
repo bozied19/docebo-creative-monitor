@@ -420,6 +420,7 @@ function StandardMockup({
         backgroundColor: theme.bg,
         background: theme.bgGradient || theme.bg,
         aspectRatio: aspectRatio || "1 / 1",
+        containerType: "inline-size",
       }}
     >
       {/* Corner gradient accent */}
@@ -490,16 +491,16 @@ function StandardMockup({
         className="absolute inset-0 flex flex-col justify-between"
         style={{ padding: "10%" }}
       >
-        <div style={{ maxWidth: "85%", marginTop: "5%" }}>
+        <div style={{ maxWidth: "95%", marginTop: "2%" }}>
           <h2
             style={{
               color: theme.headlineColor,
               fontFamily:
                 "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 800,
-              fontSize: "clamp(24px, 7vw, 52px)",
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
+              fontSize: "clamp(40px, 13cqw, 150px)",
+              lineHeight: 1.0,
+              letterSpacing: "-0.03em",
               margin: 0,
               fontStyle:
                 "italic",
@@ -514,9 +515,9 @@ function StandardMockup({
                 fontFamily:
                   "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
                 fontWeight: 800,
-                fontSize: "clamp(24px, 7vw, 52px)",
-                lineHeight: 1.05,
-                letterSpacing: "-0.02em",
+                fontSize: "clamp(40px, 13cqw, 150px)",
+                lineHeight: 1.0,
+                letterSpacing: "-0.03em",
                 margin: 0,
                 fontStyle:
                   "italic",
@@ -537,7 +538,7 @@ function StandardMockup({
               color: theme.logoColor,
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 700,
-              fontSize: "clamp(14px, 2.8vw, 24px)",
+              fontSize: "clamp(14px, 2.8cqw, 24px)",
               letterSpacing: "-0.01em",
             }}
           >
@@ -548,7 +549,7 @@ function StandardMockup({
               color: theme.ctaColor,
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 600,
-              fontSize: "clamp(11px, 2vw, 16px)",
+              fontSize: "clamp(11px, 2cqw, 16px)",
               ...(theme.ctaBg
                 ? {
                     backgroundColor: theme.ctaBg,
@@ -585,6 +586,7 @@ function WaveMockup({
       style={{
         backgroundColor: theme.bg,
         aspectRatio: aspectRatio || "1 / 1",
+        containerType: "inline-size",
       }}
     >
       {/* Navy bottom section with wave curve */}
@@ -621,7 +623,7 @@ function WaveMockup({
                 color: "#FFFFFF",
                 fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
                 fontWeight: 700,
-                fontSize: "clamp(14px, 3vw, 22px)",
+                fontSize: "clamp(14px, 3cqw, 22px)",
               }}
             >
               {variant.cta_text} →
@@ -641,7 +643,7 @@ function WaveMockup({
             color: "#0033A0",
             fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 700,
-            fontSize: "clamp(14px, 2.8vw, 22px)",
+            fontSize: "clamp(14px, 2.8cqw, 22px)",
             letterSpacing: "-0.01em",
             marginBottom: "8%",
           }}
@@ -656,9 +658,9 @@ function WaveMockup({
             fontFamily:
               "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 800,
-            fontSize: "clamp(28px, 8vw, 56px)",
-            lineHeight: 1.05,
-            letterSpacing: "-0.02em",
+            fontSize: "clamp(40px, 13cqw, 150px)",
+            lineHeight: 1.0,
+            letterSpacing: "-0.03em",
             margin: 0,
           }}
         >
@@ -690,6 +692,7 @@ function QuoteMockup({
           theme.bgGradient ||
           "linear-gradient(165deg, #0033CC 0%, #4C1D95 50%, #9333EA 100%)",
         aspectRatio: aspectRatio || "1 / 1",
+        containerType: "inline-size",
       }}
     >
       {/* Large quote marks */}
@@ -700,7 +703,7 @@ function QuoteMockup({
           left: "8%",
           color: "#FFFFFF",
           fontFamily: "'Lora', Georgia, serif",
-          fontSize: "clamp(60px, 16vw, 120px)",
+          fontSize: "clamp(60px, 16cqw, 120px)",
           lineHeight: 1,
           opacity: 0.95,
           fontWeight: 800,
@@ -725,7 +728,7 @@ function QuoteMockup({
             fontFamily:
               "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 800,
-            fontSize: "clamp(20px, 5.5vw, 42px)",
+            fontSize: "clamp(20px, 5.5cqw, 42px)",
             lineHeight: 1.15,
             letterSpacing: "-0.01em",
           }}
@@ -772,7 +775,7 @@ function QuoteMockup({
               color: "#FFFFFF",
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 700,
-              fontSize: "clamp(14px, 3vw, 22px)",
+              fontSize: "clamp(14px, 3cqw, 22px)",
               margin: 0,
             }}
           >
@@ -783,7 +786,7 @@ function QuoteMockup({
               color: "rgba(255,255,255,0.6)",
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 400,
-              fontSize: "clamp(10px, 2vw, 15px)",
+              fontSize: "clamp(10px, 2cqw, 15px)",
               margin: "2px 0 0",
             }}
           >
@@ -816,6 +819,7 @@ function CoBrandMockup({
       style={{
         backgroundColor: theme.bg,
         aspectRatio: aspectRatio || "1 / 1",
+        containerType: "inline-size",
       }}
     >
       {/* Lime banner top-left */}
@@ -844,7 +848,7 @@ function CoBrandMockup({
             color: "#0033A0",
             fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 700,
-            fontSize: "clamp(12px, 2.5vw, 20px)",
+            fontSize: "clamp(12px, 2.5cqw, 20px)",
           }}
         >
           docebo
@@ -854,7 +858,7 @@ function CoBrandMockup({
             color: "#0033A0",
             fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 300,
-            fontSize: "clamp(10px, 2vw, 16px)",
+            fontSize: "clamp(10px, 2cqw, 16px)",
           }}
         >
           |
@@ -864,7 +868,7 @@ function CoBrandMockup({
             color: "#0033A0",
             fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 700,
-            fontSize: "clamp(10px, 2vw, 16px)",
+            fontSize: "clamp(10px, 2cqw, 16px)",
             textTransform: "uppercase",
             letterSpacing: "0.05em",
           }}
@@ -890,9 +894,9 @@ function CoBrandMockup({
               "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 800,
             fontStyle: "italic",
-            fontSize: "clamp(26px, 8vw, 58px)",
-            lineHeight: 1.05,
-            letterSpacing: "-0.02em",
+            fontSize: "clamp(38px, 12cqw, 140px)",
+            lineHeight: 1.0,
+            letterSpacing: "-0.03em",
             margin: 0,
           }}
         >
@@ -910,7 +914,7 @@ function CoBrandMockup({
             color: isNavy ? "#FFFFFF" : "#1a1a1a",
             fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 600,
-            fontSize: "clamp(12px, 2.5vw, 18px)",
+            fontSize: "clamp(12px, 2.5cqw, 18px)",
           }}
         >
           Discover how →

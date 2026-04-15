@@ -78,6 +78,13 @@ Visual Brand Elements:
 - Colors: Navy #0033A0, Midnight #131E29, Neon Blue #0057FF, Neon Pink #FF5DD8, Neon Green #E3FFAB, Neon Purple #DCB7FF, Marble #E6DACB
 - Tints: Blue 90 #06065D, Pink 80 #B627C6, Green 40 #54FA77, Purple 60 #7E2EE9
 
+Composition rules (apply to every variant — these are NOT optional):
+- creative_overlay must fill the canvas like a poster. Think Nike billboard, not PowerPoint slide. If the phrase is shorter than ~5 words, it renders HUGE (10-14% of canvas width per character row). If you write 10+ words, it shrinks into a sub-headline and the ad looks unfinished.
+- Target 4-7 words. Break into 2-3 lines at natural phrase breaks (the renderer will split the last 2 words into an accent color automatically). Example: 'We killed death by PowerPoint.' (5 words, 2 lines) NOT 'We are revolutionizing enterprise training with AI-powered adaptive learning' (10 words, wraps awkwardly).
+- Never write creative_overlay as a full sentence with subject+verb+object+modifier. Trim everything. Use fragments. End on punchy nouns.
+- The below-image headline (the 'headline' field) carries the argument. The creative_overlay carries the slap. They are different jobs.
+- When in doubt, WRITE LESS. Every word you delete from creative_overlay makes the remaining words render bigger.
+
 ═══ OUTPUT REQUIREMENTS ═══
 
 Generate exactly 5 variants. Each variant MUST use:
@@ -92,7 +99,7 @@ Return a JSON array of variant objects. Each variant object has these fields:
   "variant_id": "v1",
   "intro_text": "30–50 words, platform-appropriate",
   "headline": "7 words max — this is the BELOW-IMAGE feed headline (LinkedIn feed chrome). It must be DIFFERENT from creative_overlay. Think of it as a complementary hook or CTA-style line that entices the click AFTER the reader has seen the in-image text.",
-  "creative_overlay": "14 words max (fit safe zone) — this is the PRIMARY IN-IMAGE text, the dominant visual headline rendered large inside the ad creative. It must be DIFFERENT from headline. Never duplicate or paraphrase the headline here.",
+  "creative_overlay": "4–7 words. HARD CAP at 8 words. This is the PRIMARY IN-IMAGE text, set in a heavy italic display face (Special Gothic Expanded) and rendered huge inside the canvas. Longer copy shrinks; shorter copy dominates. Write like a poster headline, not a sentence. Examples of the right scale: 'Training that people finish.' / 'Stop proving completions. Prove impact.' / 'The Netflix of enterprise training.' It must be DIFFERENT from headline and from intro_text. Never duplicate or paraphrase either.",
   "visual_direction": "Specific guidance for designer matching the visual_style",
   "cta_text": "CTA button text",
   "messaging_angle": "problem | outcome | proof | differentiation | persona | urgency | education | emotional",
