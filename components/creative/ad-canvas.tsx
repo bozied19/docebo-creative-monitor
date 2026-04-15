@@ -411,6 +411,10 @@ function StandardMockup({
   const splitAt = Math.max(1, overlayWords.length - 2);
   const headlinePrimary = overlayWords.slice(0, splitAt).join(" ");
   const headlineAccent = overlayWords.slice(splitAt).join(" ");
+  const subtext =
+    variant.overlay_subtext ||
+    variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) ||
+    "";
 
   return (
     <div
@@ -527,7 +531,7 @@ function StandardMockup({
             </h2>
           )}
 
-          {variant.overlay_subtext && (
+          {subtext && (
             <p
               style={{
                 color: theme.subColor,
@@ -540,7 +544,7 @@ function StandardMockup({
                 maxWidth: "85%",
               }}
             >
-              {variant.overlay_subtext}
+              {subtext}
             </p>
           )}
         </div>
@@ -596,6 +600,10 @@ function WaveMockup({
   mockupRef: React.RefObject<HTMLDivElement | null>;
   aspectRatio?: string;
 }) {
+  const subtext =
+    variant.overlay_subtext ||
+    variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) ||
+    "";
   return (
     <div
       ref={mockupRef}
@@ -683,7 +691,7 @@ function WaveMockup({
         >
           {variant.creative_overlay}
         </h2>
-        {variant.overlay_subtext && (
+        {subtext && (
           <p
             style={{
               color: "#0033A0",
@@ -696,7 +704,7 @@ function WaveMockup({
               opacity: 0.85,
             }}
           >
-            {variant.overlay_subtext}
+            {subtext}
           </p>
         )}
       </div>
