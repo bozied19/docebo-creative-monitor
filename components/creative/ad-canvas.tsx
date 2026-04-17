@@ -1619,13 +1619,30 @@ function GifMockup({
   };
   const placement = statHeadlinePlacementFor(theme.layout);
 
-  // Breath curve: scale 1.00 → 1.03, glow 0 → strong.
+  // Pick a stat color that reads well on the base mockup's background.
+  // Visual styles with dark backgrounds need bright, saturated accents —
+  // not the muted lime/lavender that some theme configs use.
+  const VISUAL_STYLE_STAT_COLORS: Record<string, string> = {
+    "neon-intelligence": "#54FA77",   // bright green on black
+    "digital-rebellion": "#FF5DD8",   // neon pink on midnight
+    "data-as-power": "#54FA77",       // bright green on midnight
+    "system-ui": "#4C8DFF",           // blue on dark
+    "rebellious-editorial": "#FF5DD8", // pink on marble-dark
+    "minimal-authority": "#7E2EE9",   // purple on white
+    "human-contrast": "#0057FF",      // blue on beige
+  };
+  const vs = variant.visual_style;
+  const statColor = (vs && VISUAL_STYLE_STAT_COLORS[vs]) || theme.accentColor;
+
+  // Breath curve: scale 1.00 → 1.03, glow 0 → moderate.
+  // Glow kept tight (max 30px outer) so neon accents read as clean
+  // color rather than washing out into a muddy halo on dark backgrounds.
   const pulseScale = 1 + 0.03 * pulseProgress;
-  const glowOuter = 80 * pulseProgress;
-  const glowInner = 24 * pulseProgress;
+  const glowOuter = 30 * pulseProgress;
+  const glowInner = 10 * pulseProgress;
   const statShadow =
     pulseProgress > 0.01
-      ? `0 0 ${glowOuter}px ${theme.accentColor}, 0 0 ${glowInner}px ${theme.accentColor}`
+      ? `0 0 ${glowOuter}px ${statColor}90, 0 0 ${glowInner}px ${statColor}60`
       : "none";
 
   return (
@@ -1649,7 +1666,7 @@ function GifMockup({
         >
           <div
             style={{
-              color: theme.accentColor,
+              color: statColor,
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 900,
               fontSize: "clamp(80px, 28cqw, 360px)",
@@ -1916,6 +1933,10 @@ function AdMockup({
 
     try {
       const encoder = GIFEncoder();
+      // Use a global palette from frame 1 so colors stay consistent across
+      // the animation and neon brand accents don't get quantized away.
+      let globalPalette: number[][] | null = null;
+
       for (const sample of samples) {
         setExportState(sample.state);
         // Wait two paints so React commits the frame before capture.
@@ -1927,11 +1948,15 @@ function AdMockup({
         const ctx = canvas.getContext("2d");
         if (!ctx) continue;
         const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        // 128-color palette per MOTION.md §7 — balances brand fidelity with file size.
-        const palette = quantize(data, 128);
-        const indexed = applyPalette(data, palette);
+
+        // 256-color palette (GIF max). Build global palette from first frame
+        // so brand colors (neon accents on dark backgrounds) stay faithful.
+        if (!globalPalette) {
+          globalPalette = quantize(data, 256);
+        }
+        const indexed = applyPalette(data, globalPalette);
         encoder.writeFrame(indexed, width, height, {
-          palette,
+          palette: globalPalette,
           delay: sample.delay_ms,
         });
       }
