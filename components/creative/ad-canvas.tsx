@@ -7,7 +7,7 @@ import { saveAs } from "file-saver";
 import { GIFEncoder, quantize, applyPalette } from "gifenc";
 import type { Variant, CanvasRenderContext } from "./refresh-engine";
 import { BRAND_VOICE_OPTIONS, isGifFormat, type BrandVoiceOption } from "./refresh-engine";
-import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard } from "./visual-styles";
+import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard, LogoBar, SocialProofBadge, MetricStrip } from "./visual-styles";
 
 /* ── Feedback types ────────────────────────────────────────────── */
 interface FeedbackEntry {
@@ -548,6 +548,38 @@ function StandardMockup({
             >
               {subtext}
             </p>
+          )}
+
+          {/* Conditional: Logo bar for social-proof hooks */}
+          {variant.hook_type === "social-proof" && (
+            <LogoBar
+              color={theme.subColor}
+              bgColor={theme.bg === "#FFFFFF" || theme.bg === "#E6DACB" ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)"}
+              style={{ marginTop: "5%" }}
+            />
+          )}
+
+          {/* Conditional: Metric strip for data-stat hooks */}
+          {variant.hook_type === "data-stat" && (
+            <MetricStrip
+              metrics={[
+                { value: "94%", label: "Completion" },
+                { value: "3.2x", label: "ROI" },
+                { value: "60%", label: "Faster" },
+              ]}
+              accentColor={theme.accentColor}
+              textColor={theme.subColor}
+              style={{ marginTop: "5%" }}
+            />
+          )}
+
+          {/* Conditional: Social proof badge for proof messaging */}
+          {variant.messaging_angle === "proof" && variant.hook_type !== "social-proof" && variant.hook_type !== "data-stat" && (
+            <SocialProofBadge
+              accentColor={theme.accentColor}
+              textColor={theme.headlineColor}
+              style={{ marginTop: "5%" }}
+            />
           )}
         </div>
 

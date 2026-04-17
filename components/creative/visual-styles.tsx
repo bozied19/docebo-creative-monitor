@@ -32,6 +32,269 @@ function splitOverlay(text: string) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   REUSABLE VISUAL ELEMENTS
+
+   Shared components that any renderer can drop in based on the
+   variant's hook_type, messaging_angle, or brand_voice.
+   ══════════════════════════════════════════════════════════════════ */
+
+/** Row of enterprise customer logo placeholders. Used for social-proof hooks. */
+export function LogoBar({
+  color = "rgba(255,255,255,0.35)",
+  bgColor = "rgba(255,255,255,0.06)",
+  style,
+}: {
+  color?: string;
+  bgColor?: string;
+  style?: React.CSSProperties;
+}) {
+  const logos = ["Zoom", "Samsung", "Pret", "La-Z-Boy", "Walmart"];
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "clamp(6px, 1.5cqw, 14px)",
+        ...style,
+      }}
+    >
+      {logos.map((name) => (
+        <div
+          key={name}
+          style={{
+            padding: "clamp(3px, 0.6cqw, 6px) clamp(6px, 1.2cqw, 12px)",
+            borderRadius: "clamp(3px, 0.5cqw, 5px)",
+            backgroundColor: bgColor,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <span
+            style={{
+              color,
+              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontWeight: 600,
+              fontSize: "clamp(7px, 1.3cqw, 12px)",
+              letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {name}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** G2/Gartner-style social proof badge. */
+export function SocialProofBadge({
+  rating = "4.5",
+  source = "G2",
+  label = "Leader",
+  accentColor = "#FF5DD8",
+  textColor = "rgba(255,255,255,0.8)",
+  style,
+}: {
+  rating?: string;
+  source?: string;
+  label?: string;
+  accentColor?: string;
+  textColor?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "clamp(4px, 0.8cqw, 8px)",
+        padding: "clamp(4px, 0.8cqw, 8px) clamp(8px, 1.5cqw, 14px)",
+        borderRadius: "clamp(4px, 0.8cqw, 8px)",
+        border: `1px solid ${accentColor}30`,
+        backgroundColor: `${accentColor}10`,
+        ...style,
+      }}
+    >
+      {/* Shield icon */}
+      <svg
+        viewBox="0 0 24 24"
+        fill={accentColor}
+        style={{ width: "clamp(14px, 2.5cqw, 24px)", height: "clamp(14px, 2.5cqw, 24px)", flexShrink: 0 }}
+      >
+        <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 14l-3.5-3.5 1.41-1.41L11 13.17l5.09-5.09L17.5 9.5 11 16z" />
+      </svg>
+      <div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: "clamp(2px, 0.4cqw, 4px)" }}>
+          <span
+            style={{
+              color: textColor,
+              fontFamily: "'Special Gothic Expanded', 'Figtree', sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(12px, 2.2cqw, 20px)",
+              lineHeight: 1,
+            }}
+          >
+            {rating}
+          </span>
+          <span
+            style={{
+              color: accentColor,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontWeight: 600,
+              fontSize: "clamp(7px, 1.2cqw, 11px)",
+              textTransform: "uppercase",
+            }}
+          >
+            {source}
+          </span>
+        </div>
+        <span
+          style={{
+            color: textColor,
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: "clamp(6px, 1cqw, 9px)",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            opacity: 0.6,
+          }}
+        >
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Quote attribution block with headshot placeholder + name/title. */
+export function QuoteAttribution({
+  name = "VP of Learning",
+  title = "Fortune 500 Enterprise",
+  headlineColor = "#FFFFFF",
+  subColor = "rgba(255,255,255,0.5)",
+  accentColor = "#FF5DD8",
+  style,
+}: {
+  name?: string;
+  title?: string;
+  headlineColor?: string;
+  subColor?: string;
+  accentColor?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "clamp(6px, 1.2cqw, 12px)", ...style }}>
+      {/* Headshot placeholder */}
+      <div
+        style={{
+          width: "clamp(24px, 5cqw, 44px)",
+          height: "clamp(24px, 5cqw, 44px)",
+          borderRadius: "50%",
+          backgroundColor: accentColor,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: 0.8,
+        }}
+      >
+        <svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)" style={{ width: "55%", height: "55%" }}>
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+        </svg>
+      </div>
+      <div>
+        <p style={{ color: headlineColor, fontFamily: "'Figtree', sans-serif", fontWeight: 600, fontSize: "clamp(9px, 1.8cqw, 16px)", margin: 0, lineHeight: 1.2 }}>
+          {name}
+        </p>
+        <p style={{ color: subColor, fontFamily: "'Figtree', sans-serif", fontSize: "clamp(7px, 1.3cqw, 12px)", margin: "1px 0 0", lineHeight: 1.2 }}>
+          {title}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Decorative gradient blob — organic accent shape. */
+export function GradientBlob({
+  color1,
+  color2,
+  style,
+}: {
+  color1: string;
+  color2: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute" as const,
+        width: "40%",
+        height: "40%",
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${color1}30 0%, ${color2}10 50%, transparent 70%)`,
+        filter: "blur(30px)",
+        pointerEvents: "none" as const,
+        ...style,
+      }}
+    />
+  );
+}
+
+/** Row of stat metrics — compact horizontal display. */
+export function MetricStrip({
+  metrics,
+  accentColor = "#54FA77",
+  textColor = "rgba(255,255,255,0.6)",
+  style,
+}: {
+  metrics: Array<{ value: string; label: string }>;
+  accentColor?: string;
+  textColor?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: "clamp(8px, 2cqw, 20px)",
+        ...style,
+      }}
+    >
+      {metrics.map((m) => (
+        <div key={m.label} style={{ textAlign: "center" as const }}>
+          <p
+            style={{
+              color: accentColor,
+              fontFamily: "'Special Gothic Expanded', 'Figtree', sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(14px, 3.5cqw, 32px)",
+              margin: 0,
+              lineHeight: 1.1,
+            }}
+          >
+            {m.value}
+          </p>
+          <p
+            style={{
+              color: textColor,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: "clamp(6px, 1cqw, 9px)",
+              textTransform: "uppercase" as const,
+              letterSpacing: "0.06em",
+              margin: "2px 0 0",
+            }}
+          >
+            {m.label}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
    1. NEON INTELLIGENCE
    Dark base, circuit grid pattern, glowing headline, neon accents,
    floating metric pill. High-conversion performance energy.
@@ -196,6 +459,20 @@ export function NeonIntelligenceMockup({ variant, theme, mockupRef, aspectRatio 
           </div>
         )}
 
+        {/* Conditional: Logo bar for social-proof hooks */}
+        {variant.hook_type === "social-proof" && (
+          <LogoBar color={`${theme.accentColor}90`} bgColor={`${theme.accentColor}12`} style={{ marginTop: "4%" }} />
+        )}
+
+        {/* Conditional: Social proof badge for proof messaging */}
+        {variant.messaging_angle === "proof" && variant.hook_type !== "social-proof" && (
+          <SocialProofBadge
+            accentColor={theme.accentColor}
+            textColor="#FFFFFF"
+            style={{ position: "absolute", bottom: "18%", right: "8%" }}
+          />
+        )}
+
         {/* Bottom row */}
         <div className="flex items-end justify-between" style={{ width: "100%" }}>
           <span
@@ -226,6 +503,9 @@ export function NeonIntelligenceMockup({ variant, theme, mockupRef, aspectRatio 
           </span>
         </div>
       </div>
+
+      {/* Gradient blob — bottom-left ambient glow */}
+      <GradientBlob color1={theme.accentColor} color2="#0057FF" style={{ bottom: "-15%", left: "-10%" }} />
     </div>
   );
 }
@@ -351,8 +631,26 @@ export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: 
           )}
         </div>
 
+        {/* Conditional: Quote attribution for story-native hooks */}
+        {(variant.hook_type === "story-native" || variant.hook_type === "social-proof") && (
+          <QuoteAttribution
+            headlineColor={theme.headlineColor}
+            subColor={theme.subColor}
+            accentColor={theme.accentColor}
+            style={{ marginTop: "6%" }}
+          />
+        )}
+
         {/* CTA at bottom */}
         <div style={{ marginTop: "auto" }}>
+          {/* Conditional: Social proof badge above CTA for proof messaging */}
+          {variant.messaging_angle === "proof" && (
+            <SocialProofBadge
+              accentColor={theme.accentColor}
+              textColor={theme.headlineColor}
+              style={{ marginBottom: "clamp(6px, 1.5cqw, 12px)" }}
+            />
+          )}
           <span
             style={{
               color: "#FFFFFF",
@@ -369,6 +667,16 @@ export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: 
           </span>
         </div>
       </div>
+
+      {/* Conditional: Logo bar at bottom of image area for social-proof */}
+      {variant.hook_type === "social-proof" && (
+        <div className="absolute" style={{ bottom: "5%", left: "52%", right: "6%" }}>
+          <LogoBar
+            color={theme.subColor}
+            bgColor="rgba(0,0,0,0.06)"
+          />
+        </div>
+      )}
     </div>
   );
 }
