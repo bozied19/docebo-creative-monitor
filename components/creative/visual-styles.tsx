@@ -518,6 +518,8 @@ export function NeonIntelligenceMockup({ variant, theme, mockupRef, aspectRatio 
 
 export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
   const subtext = variant.overlay_subtext || variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) || "";
+  const accentCol = theme.accentColor || "#0033A0";
+  const headCol = theme.headlineColor || "#0033A0";
 
   return (
     <div
@@ -529,82 +531,97 @@ export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: 
         containerType: "inline-size",
       }}
     >
-      {/* Image placeholder — large right-side block */}
+      {/* Image placeholder — right column, professional photo frame */}
       <div
         className="absolute"
         style={{
-          top: "6%",
+          top: "8%",
           right: "6%",
-          width: "42%",
-          height: "65%",
-          backgroundColor: "#EBE6DD",
-          borderRadius: "clamp(8px, 2cqw, 20px)",
+          width: "38%",
+          height: "55%",
+          backgroundColor: "#E8E2D8",
+          borderRadius: "clamp(6px, 1.2cqw, 14px)",
           overflow: "hidden",
         }}
       >
-        {/* Silhouette placeholder */}
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ opacity: 0.25 }}
+        {/* Abstract professional figure — shoulders + head crop */}
+        <svg
+          viewBox="0 0 200 260"
+          className="absolute"
+          style={{ bottom: 0, left: "50%", transform: "translateX(-50%)", width: "85%", height: "80%", opacity: 0.12 }}
         >
-          <svg viewBox="0 0 120 160" style={{ width: "60%", height: "70%" }}>
-            <ellipse cx="60" cy="50" rx="28" ry="32" fill={theme.accentColor || "#0033A0"} />
-            <ellipse cx="60" cy="140" rx="48" ry="45" fill={theme.accentColor || "#0033A0"} />
-          </svg>
-        </div>
+          {/* Head */}
+          <circle cx="100" cy="75" r="35" fill={headCol} />
+          {/* Shoulders */}
+          <path d="M30 260 Q30 180 100 165 Q170 180 170 260 Z" fill={headCol} />
+        </svg>
 
-        {/* Accent stripe along bottom */}
+        {/* Subtle gradient overlay — warmth */}
         <div
-          className="absolute bottom-0 left-0 right-0"
+          className="absolute inset-0"
           style={{
-            height: "6%",
-            backgroundColor: theme.accentColor,
+            background: `linear-gradient(180deg, transparent 40%, ${accentCol}08 100%)`,
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Thin accent line at left edge */}
+        <div
+          className="absolute"
+          style={{
+            top: "8%",
+            left: 0,
+            width: "3px",
+            height: "35%",
+            backgroundColor: accentCol,
+            borderRadius: "0 2px 2px 0",
+            opacity: 0.7,
           }}
         />
       </div>
 
-      {/* Text content — left editorial column */}
+      {/* Main content — left side, vertically centered */}
       <div
-        className="absolute flex flex-col justify-between"
+        className="absolute flex flex-col"
         style={{
-          top: "6%",
-          left: "6%",
-          width: "44%",
-          height: "88%",
+          top: "8%",
+          left: "7%",
+          width: "46%",
+          bottom: "8%",
         }}
       >
         {/* Logo */}
         <span
           style={{
-            color: theme.headlineColor || "#0033A0",
+            color: headCol,
             fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 700,
-            fontSize: "clamp(14px, 2.8cqw, 22px)",
+            fontSize: "clamp(13px, 2.5cqw, 20px)",
             letterSpacing: "-0.01em",
           }}
         >
           docebo
         </span>
 
-        {/* Headline area */}
-        <div style={{ marginTop: "12%" }}>
+        {/* Headline group — vertically centered */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
           {/* Thin accent bar */}
           <div
             style={{
-              width: "clamp(30px, 8cqw, 60px)",
+              width: "clamp(28px, 7cqw, 50px)",
               height: "3px",
-              backgroundColor: theme.accentColor,
-              marginBottom: "6%",
+              backgroundColor: accentCol,
+              marginBottom: "5%",
               borderRadius: "2px",
             }}
           />
 
           <h2
             style={{
-              color: theme.headlineColor || "#0033A0",
+              color: headCol,
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 800,
-              fontSize: "clamp(28px, 9cqw, 100px)",
+              fontSize: "clamp(26px, 8.5cqw, 90px)",
               lineHeight: 1.0,
               letterSpacing: "-0.03em",
               margin: 0,
@@ -617,38 +634,38 @@ export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: 
           {subtext && (
             <p
               style={{
-                color: theme.subColor || "#0033A0",
+                color: headCol,
                 fontFamily: "'Figtree', 'Inter', sans-serif",
                 fontWeight: 400,
-                fontSize: "clamp(13px, 2.6cqw, 26px)",
+                fontSize: "clamp(12px, 2.4cqw, 24px)",
                 lineHeight: 1.4,
-                marginTop: "6%",
-                opacity: 0.75,
+                marginTop: "5%",
+                opacity: 0.6,
+                maxWidth: "95%",
               }}
             >
               {subtext}
             </p>
           )}
+
+          {/* Conditional: Quote attribution for story-native hooks */}
+          {(variant.hook_type === "story-native" || variant.hook_type === "social-proof") && (
+            <QuoteAttribution
+              headlineColor={headCol}
+              subColor={theme.subColor}
+              accentColor={accentCol}
+              style={{ marginTop: "6%" }}
+            />
+          )}
         </div>
 
-        {/* Conditional: Quote attribution for story-native hooks */}
-        {(variant.hook_type === "story-native" || variant.hook_type === "social-proof") && (
-          <QuoteAttribution
-            headlineColor={theme.headlineColor}
-            subColor={theme.subColor}
-            accentColor={theme.accentColor}
-            style={{ marginTop: "6%" }}
-          />
-        )}
-
-        {/* CTA at bottom */}
-        <div style={{ marginTop: "auto" }}>
-          {/* Conditional: Social proof badge above CTA for proof messaging */}
+        {/* Bottom: CTA + optional badge — anchored */}
+        <div>
           {variant.messaging_angle === "proof" && (
             <SocialProofBadge
-              accentColor={theme.accentColor}
-              textColor={theme.headlineColor}
-              style={{ marginBottom: "clamp(6px, 1.5cqw, 12px)" }}
+              accentColor={accentCol}
+              textColor={headCol}
+              style={{ marginBottom: "clamp(6px, 1.2cqw, 10px)" }}
             />
           )}
           <span
@@ -657,8 +674,8 @@ export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: 
               fontFamily: "'Figtree', 'Inter', sans-serif",
               fontWeight: 600,
               fontSize: "clamp(11px, 2cqw, 16px)",
-              backgroundColor: theme.accentColor,
-              padding: "2.5% 6%",
+              backgroundColor: accentCol,
+              padding: "clamp(6px, 1.2cqw, 12px) clamp(14px, 3cqw, 24px)",
               borderRadius: "999px",
               display: "inline-block",
             }}
@@ -668,13 +685,10 @@ export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: 
         </div>
       </div>
 
-      {/* Conditional: Logo bar at bottom of image area for social-proof */}
+      {/* Conditional: Logo bar along bottom for social-proof */}
       {variant.hook_type === "social-proof" && (
-        <div className="absolute" style={{ bottom: "5%", left: "52%", right: "6%" }}>
-          <LogoBar
-            color={theme.subColor}
-            bgColor="rgba(0,0,0,0.06)"
-          />
+        <div className="absolute" style={{ bottom: "4%", right: "6%", left: "55%" }}>
+          <LogoBar color={theme.subColor} bgColor="rgba(0,0,0,0.05)" />
         </div>
       )}
     </div>
