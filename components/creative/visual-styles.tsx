@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ThemeConfig } from "./ad-canvas";
 import type { Variant } from "./refresh-engine";
 
@@ -1678,6 +1679,429 @@ export function ThoughtLeaderWrapper({ children, variant }: { children: React.Re
 
 
 /* ══════════════════════════════════════════════════════════════════
+   MULTI-CARD RENDERERS
+
+   CarouselMockup: renders the variant's `cards` array as a
+   horizontal card strip with prev/next navigation and dot indicators.
+   Each card is a mini-mockup applying the visual style's palette.
+
+   DocumentMockup: renders cards as stacked pages with the hook page
+   prominent and subsequent pages visible as a peek/stack behind it.
+   ══════════════════════════════════════════════════════════════════ */
+
+/** Single card within a carousel or document — renders one card_overlay + card_subtext. */
+function CardFace({
+  card,
+  index,
+  total,
+  theme,
+  isCarousel,
+}: {
+  card: { card_overlay: string; card_subtext?: string; card_cta?: string; card_visual_note?: string };
+  index: number;
+  total: number;
+  theme: ThemeConfig;
+  isCarousel: boolean;
+}) {
+  const isLast = index === total - 1;
+  const isFirst = index === 0;
+
+  return (
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{
+        backgroundColor: theme.bgGradient ? undefined : theme.bg,
+        background: theme.bgGradient || theme.bg,
+      }}
+    >
+      {/* Corner accent on first card */}
+      {isFirst && theme.cornerGradient !== "none" && (
+        <div
+          className="absolute"
+          style={{
+            top: 0,
+            right: 0,
+            width: "50%",
+            height: "50%",
+            background: theme.cornerGradient,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      {/* Card content */}
+      <div
+        className="absolute inset-0 flex flex-col justify-between"
+        style={{ padding: isCarousel ? "10% 8%" : "8% 8%" }}
+      >
+        {/* Top: page number or logo */}
+        <div className="flex items-center justify-between">
+          {isFirst ? (
+            <span
+              style={{
+                color: theme.logoColor,
+                fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+                fontWeight: 700,
+                fontSize: "clamp(10px, 2.2cqw, 18px)",
+                opacity: 0.9,
+              }}
+            >
+              docebo
+            </span>
+          ) : (
+            <span
+              style={{
+                color: theme.subColor,
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: "clamp(8px, 1.5cqw, 12px)",
+                opacity: 0.5,
+              }}
+            >
+              {isCarousel ? `${index + 1}/${total}` : `Page ${index + 1}`}
+            </span>
+          )}
+        </div>
+
+        {/* Main text */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <h3
+            style={{
+              color: isLast ? theme.accentColor : theme.headlineColor,
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 800,
+              fontSize: isFirst
+                ? "clamp(20px, 7cqw, 60px)"
+                : "clamp(16px, 5.5cqw, 48px)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.03em",
+              margin: 0,
+              fontStyle: "italic",
+            }}
+          >
+            {card.card_overlay}
+          </h3>
+
+          {card.card_subtext && (
+            <p
+              style={{
+                color: theme.subColor,
+                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontWeight: 400,
+                fontSize: "clamp(10px, 2.2cqw, 20px)",
+                lineHeight: 1.4,
+                marginTop: "5%",
+                opacity: 0.75,
+                maxWidth: "90%",
+              }}
+            >
+              {card.card_subtext}
+            </p>
+          )}
+        </div>
+
+        {/* CTA on last card */}
+        {card.card_cta && (
+          <div>
+            <span
+              style={{
+                color: theme.ctaColor,
+                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontWeight: 600,
+                fontSize: "clamp(10px, 2cqw, 16px)",
+                ...(theme.ctaBg
+                  ? { backgroundColor: theme.ctaBg, padding: "2% 5%", borderRadius: "999px" }
+                  : {}),
+              }}
+            >
+              {card.card_cta}
+            </span>
+          </div>
+        )}
+
+        {/* Bottom accent on non-CTA cards */}
+        {!card.card_cta && theme.bottomAccentColor && (
+          <div
+            className="absolute"
+            style={{
+              bottom: 0,
+              left: 0,
+              width: "30%",
+              height: "4px",
+              backgroundColor: theme.bottomAccentColor,
+              borderRadius: "0 2px 0 0",
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Carousel: horizontal strip of cards with prev/next + dots. */
+export function CarouselMockup({
+  variant,
+  theme,
+  mockupRef,
+  aspectRatio,
+}: StyleRendererProps) {
+  const cards = variant.cards;
+  const [activeCard, setActiveCard] = useState(0);
+
+  if (!cards || cards.length === 0) {
+    // Fallback: no cards data, just render creative_overlay as single card
+    return null;
+  }
+
+  const total = cards.length;
+  const card = cards[activeCard];
+
+  return (
+    <div
+      ref={mockupRef}
+      className="relative w-full overflow-hidden"
+      style={{
+        aspectRatio: aspectRatio || "1 / 1",
+        containerType: "inline-size",
+      }}
+    >
+      {/* Active card */}
+      <CardFace
+        card={card}
+        index={activeCard}
+        total={total}
+        theme={theme}
+        isCarousel={true}
+      />
+
+      {/* Peek of next card (right edge) */}
+      {activeCard < total - 1 && (
+        <div
+          className="absolute"
+          style={{
+            top: "3%",
+            right: 0,
+            width: "8%",
+            bottom: "3%",
+            backgroundColor: theme.bg,
+            opacity: 0.6,
+            borderRadius: "clamp(4px, 0.8cqw, 8px) 0 0 clamp(4px, 0.8cqw, 8px)",
+            boxShadow: "-4px 0 12px rgba(0,0,0,0.3)",
+          }}
+        />
+      )}
+
+      {/* Navigation arrows */}
+      {activeCard > 0 && (
+        <button
+          onClick={() => setActiveCard(activeCard - 1)}
+          className="absolute cursor-pointer"
+          style={{
+            top: "50%",
+            left: "2%",
+            transform: "translateY(-50%)",
+            width: "clamp(20px, 4cqw, 32px)",
+            height: "clamp(20px, 4cqw, 32px)",
+            borderRadius: "50%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 3,
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" style={{ width: "60%", height: "60%" }}>
+            <path d="M15 19l-7-7 7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
+      {activeCard < total - 1 && (
+        <button
+          onClick={() => setActiveCard(activeCard + 1)}
+          className="absolute cursor-pointer"
+          style={{
+            top: "50%",
+            right: "2%",
+            transform: "translateY(-50%)",
+            width: "clamp(20px, 4cqw, 32px)",
+            height: "clamp(20px, 4cqw, 32px)",
+            borderRadius: "50%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 3,
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" style={{ width: "60%", height: "60%" }}>
+            <path d="M9 5l7 7-7 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
+
+      {/* Dot indicators */}
+      <div
+        className="absolute flex items-center justify-center"
+        style={{
+          bottom: "3%",
+          left: 0,
+          right: 0,
+          gap: "clamp(3px, 0.6cqw, 6px)",
+          zIndex: 3,
+        }}
+      >
+        {cards.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveCard(i)}
+            className="cursor-pointer"
+            style={{
+              width: i === activeCard ? "clamp(12px, 2.5cqw, 20px)" : "clamp(5px, 1cqw, 8px)",
+              height: "clamp(5px, 1cqw, 8px)",
+              borderRadius: "clamp(3px, 0.5cqw, 4px)",
+              backgroundColor: i === activeCard ? "#FFFFFF" : "rgba(255,255,255,0.35)",
+              border: "none",
+              padding: 0,
+              transition: "width 0.2s, background-color 0.2s",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Document: stacked pages with hook page prominent + page peek behind. */
+export function DocumentMockup({
+  variant,
+  theme,
+  mockupRef,
+  aspectRatio,
+}: StyleRendererProps) {
+  const cards = variant.cards;
+  const [activePage, setActivePage] = useState(0);
+
+  if (!cards || cards.length === 0) {
+    return null;
+  }
+
+  const total = cards.length;
+  const card = cards[activePage];
+
+  return (
+    <div
+      ref={mockupRef}
+      className="relative w-full overflow-hidden"
+      style={{
+        aspectRatio: aspectRatio || "1 / 1",
+        containerType: "inline-size",
+      }}
+    >
+      {/* Background stack effect — two offset layers */}
+      <div
+        className="absolute"
+        style={{
+          top: "2%",
+          left: "2%",
+          right: "-1.5%",
+          bottom: "-1.5%",
+          backgroundColor: theme.bg,
+          opacity: 0.3,
+          borderRadius: "clamp(4px, 0.8cqw, 8px)",
+          border: "1px solid rgba(255,255,255,0.05)",
+        }}
+      />
+      <div
+        className="absolute"
+        style={{
+          top: "1%",
+          left: "1%",
+          right: "-0.75%",
+          bottom: "-0.75%",
+          backgroundColor: theme.bg,
+          opacity: 0.5,
+          borderRadius: "clamp(4px, 0.8cqw, 8px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      />
+
+      {/* Active page */}
+      <div
+        className="relative w-full h-full"
+        style={{ borderRadius: "clamp(4px, 0.8cqw, 8px)", overflow: "hidden" }}
+      >
+        <CardFace
+          card={card}
+          index={activePage}
+          total={total}
+          theme={theme}
+          isCarousel={false}
+        />
+      </div>
+
+      {/* Page navigation strip at bottom */}
+      <div
+        className="absolute flex items-center justify-center"
+        style={{
+          bottom: "2.5%",
+          left: "10%",
+          right: "10%",
+          gap: "clamp(2px, 0.4cqw, 4px)",
+          zIndex: 3,
+        }}
+      >
+        {cards.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setActivePage(i)}
+            className="cursor-pointer"
+            style={{
+              flex: i === activePage ? 2 : 1,
+              height: "clamp(3px, 0.6cqw, 5px)",
+              borderRadius: "2px",
+              backgroundColor: i === activePage
+                ? theme.accentColor
+                : i < activePage
+                  ? "rgba(255,255,255,0.3)"
+                  : "rgba(255,255,255,0.12)",
+              border: "none",
+              padding: 0,
+              transition: "flex 0.2s, background-color 0.2s",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Page counter badge */}
+      <div
+        className="absolute"
+        style={{
+          top: "3%",
+          right: "3%",
+          padding: "1% 3%",
+          borderRadius: "clamp(3px, 0.6cqw, 6px)",
+          backgroundColor: "rgba(0,0,0,0.5)",
+          backdropFilter: "blur(4px)",
+          zIndex: 3,
+        }}
+      >
+        <span
+          style={{
+            color: "rgba(255,255,255,0.7)",
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: "clamp(8px, 1.4cqw, 12px)",
+          }}
+        >
+          {activePage + 1} / {total}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
    ROUTER — picks the right renderer for a given visual_style
    ══════════════════════════════════════════════════════════════════ */
 
@@ -1707,13 +2131,34 @@ export function renderVisualStyle(
   return <Renderer {...props} />;
 }
 
+/** Render a multi-card mockup (carousel or document) if the variant has cards data.
+ *  Returns null if the format doesn't support multi-card or no cards exist. */
+export function renderMultiCard(
+  adFormat: string | undefined,
+  props: StyleRendererProps,
+): React.ReactElement | null {
+  const { variant } = props;
+  if (!variant.cards || variant.cards.length === 0) return null;
+
+  if (adFormat === "carousel") {
+    return <CarouselMockup {...props} />;
+  }
+  if (adFormat === "document") {
+    return <DocumentMockup {...props} />;
+  }
+  return null;
+}
+
 /** Returns the appropriate format wrapper for an ad_format.
- *  Wraps children with carousel dots, document pages, etc. */
+ *  For carousel/document with cards data, the multi-card renderer
+ *  replaces the wrapper entirely. For other formats or when no cards
+ *  exist, wraps children with platform chrome. */
 export function wrapForFormat(
   adFormat: string | undefined,
   variant: Variant,
   children: React.ReactNode,
 ): React.ReactNode {
+  // Carousel/document without cards data still get simple chrome wrappers
   switch (adFormat) {
     case "carousel":
       return <CarouselWrapper>{children}</CarouselWrapper>;

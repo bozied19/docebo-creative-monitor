@@ -53,9 +53,10 @@ HOOK-TYPE (12 types):
 - curiosity-gap: Incomplete reveal, Teaser, Insider knowledge, Counterintuitive setup
 - timeliness: Trend hook, Regulation/policy hook, Event tie-in, Breaking news format
 
-AD-FORMAT (6 formats):
+AD-FORMAT (7 formats):
 - banner: Single Image Ad. 1200×1200 (1:1) or 1200×628 (1.91:1) or 1200×1500 (4:5). Intro: 150 chars. Headline: 70 chars max. Safe zone: center 1000×450px.
-- dynamic-word-gif: Animated GIF or word-swap. 1080×1080. Motion: 3-6 seconds looping. One element changes, everything else holds steady.
+- dynamic-word-gif-square: Animated GIF, 1080×1080 (1:1). Mobile-first LinkedIn/IG feed. 3-6s loop. One element changes.
+- dynamic-word-gif-feed: Animated GIF, 1200×627 (1.91:1). LinkedIn desktop feed + email hero. 3-6s loop. One element changes.
 - document: Multi-page swipeable. 1080×1080 per page. 5-10 pages sweet spot. Page 1=hook, 2-4=insight, final=CTA. No headline/CTA button on ad.
 - carousel: Multi-card swipeable. 1080×1080 (1:1 ONLY). 2-10 cards (5-6 sweet spot). Card headline: 45 chars. CTA on last card only.
 - article-newsletter: Sponsored LinkedIn article/newsletter. Cover: 1920×1080 or 1200×644. Intro text: 150 chars. CTA: "Read" or "Subscribe".
@@ -121,11 +122,143 @@ Return a JSON array of variant objects. Each variant object has these fields:
   }
 }
 
+═══ CAROUSEL & DOCUMENT FORMAT — MULTI-CARD CONTENT ═══
+
+When ad_format is "carousel" or "document", each variant MUST include a "cards" array
+with per-card/per-page content. The creative_overlay and overlay_subtext still represent
+the hook card (card 0), but the cards array provides the full narrative sequence.
+
+For carousel: 5-6 cards. Card 1 = hook (matches creative_overlay). Cards 2-4 = insight/proof. Last card = CTA.
+For document: 6-8 pages. Page 1 = hook. Pages 2-5 = narrative arc. Pages 6-7 = trust/scale. Last page = CTA.
+
+Each card object:
+{
+  "card_overlay": "4-7 words. The primary text for this card/page.",
+  "card_subtext": "8-15 words. Supporting line for this card/page.",
+  "card_cta": "CTA text. Only include on the LAST card/page.",
+  "card_visual_note": "Brief visual direction for this card (e.g. 'Proof card: customer logo')"
+}
+
+Card narrative rules:
+- Card 1 = the HOOK. Must stop the scroll. Use creative_overlay as the text.
+- Card 2-3 = build the ARGUMENT. Escalate tension, add specifics.
+- Card 4-5 = provide PROOF. Named customers, specific metrics, real outcomes.
+- Last card = the ASK. Clean CTA, low friction. Only card with card_cta.
+- Each card must advance the story — no card should repeat the previous card's point.
+- Design each card to work as a standalone social card (readable at thumbnail size).
+
 Self-Scoring Rules:
 - If any dimension scores below 7, automatically regenerate that variant until it reaches 7+ across all dimensions.
 - Voice compliance test: Does the copy match the specified brand_voice tone mix?
 - Differentiation test: Could any competitor run this ad? If yes, score it below 5 and rewrite.
 - Visual brand fit test: Does the visual_direction match the specified visual_style characteristics?
+
+═══ DYNAMIC-WORD-GIF FORMAT — ADDITIONAL REQUIREMENTS (MOTION SPEC v1) ═══
+
+When ad_format starts with "dynamic-word-gif" (either -square or -feed), the variant renders as a looping animated GIF governed by the motion spec in MOTION.md. Compliance is NOT optional — non-compliant variants will be rejected at QA.
+
+THE ONE-ELEMENT RULE:
+Only ONE element animates. Everything else is perfectly still. No background shimmer, no CTA pulse, no gradient drift. This is the single rule that separates gold-standard motion from stock-template motion.
+
+REQUIRED FIELDS (in addition to the standard variant fields):
+
+- "animation_strategy": Exactly one of "word-swap", "stat-pulse", or "type-on". Tied to hook_type:
+    * data-stat hook → stat-pulse
+    * statement, curiosity-gap, pattern-interrupt → type-on
+    * comparison-versus, identity-persona → word-swap
+    * any other hook → word-swap (safe default)
+
+- "stat_value": REQUIRED for stat-pulse. A specific number (e.g. "94%", "3.2x", "$2.4M", "3,800+"). 2-6 characters. Never vague ("fast", "better" are forbidden). OMIT for word-swap.
+  * IMPORTANT: In stat-pulse variants, the stat_value renders as the HERO headline (very large, pulsing). Do NOT duplicate it in creative_overlay or overlay_subtext — the renderer will quiet the headline slot so the stat is the single focal point.
+  * overlay_subtext (which renders UNDER the pulsing stat) is the "because" line — it explains what the stat measures in complementary language. Example: stat_value="94%", overlay_subtext="Completion rates. Zero begging required." NOT "94% completion rates" (that would repeat the number).
+
+- "animation_frames": Array describing the loop. Rules:
+    * Total duration (sum of duration_ms) MUST be between 4000 and 5500 ms.
+    * Every rest frame has duration_ms between 1800 and 2400 (minimum 1800 — the reader must have time to comprehend).
+    * Each frame has "duration_ms": integer.
+
+  For word-swap: 2-4 frames, each with "overlay_text" set to that frame's creative_overlay variant.
+    * All overlay_text phrases must be tonally consistent (same voice, same rhythm, 4-7 words each).
+    * Each phrase is a complete thought.
+    * duration_ms per frame: 1800-2200 (reader needs time).
+    * The first frame's overlay_text should match creative_overlay exactly (serves as static fallback).
+
+  For stat-pulse: exactly 2 or 4 frames alternating rest and pulse.
+    * Rest frame: duration_ms 1800-2400, "stat_pulse": false.
+    * Pulse frame: duration_ms 1200, "stat_pulse": true. (The 1200ms = 500ms swell + 700ms settle; the renderer handles the breathing curve.)
+    * The stat is PERSISTENT on both rest and pulse frames — never "appears" or "disappears". The pulse is rhythm, not reveal.
+    * stat_value stays constant across frames unless you're doing a count-up (rare; urgency ads only).
+
+- "loop_count": Always -1 (infinite) for advertising GIFs.
+
+FIRST-FRAME FALLBACK (Outlook desktop, corporate firewalls, slow connections show only frame 1):
+- Frame 1 must independently communicate the full ad message: logo + creative_overlay + CTA all visible and readable.
+- Never put key information only in middle or later frames.
+- For word-swap: first frame's overlay_text IS creative_overlay.
+- For stat-pulse: first frame is a rest frame with stat visible at rest state.
+
+FORBIDDEN PATTERNS:
+- Stat appearing/disappearing (amateurish; breath is correct)
+- Hold times under 1800ms (reader can't comprehend)
+- Total loop under 3500ms (frantic) or over 6000ms (kills re-impression)
+- Multiple animated elements in one variant
+- Linear easing (the renderer applies easing; you don't specify it, but don't describe motion as "linear" or "constant speed" in visual_direction either)
+
+EXAMPLE (word-swap, 3 phrases, 5400ms total):
+  "animation_strategy": "word-swap",
+  "animation_frames": [
+    { "duration_ms": 2000, "overlay_text": "Training people finish." },
+    { "duration_ms": 1800, "overlay_text": "Training people remember." },
+    { "duration_ms": 1600, "overlay_text": "Training people repeat." }
+  ],
+  "loop_count": -1
+
+EXAMPLE (stat-pulse, single breath, 5200ms total):
+  "stat_value": "94%",
+  "animation_strategy": "stat-pulse",
+  "animation_frames": [
+    { "duration_ms": 2200, "stat_pulse": false },
+    { "duration_ms": 1200, "stat_pulse": true  },
+    { "duration_ms": 1800, "stat_pulse": false }
+  ],
+  "loop_count": -1
+
+EXAMPLE (stat-pulse, double breath, 5200ms total):
+  "stat_value": "3.2x",
+  "animation_strategy": "stat-pulse",
+  "animation_frames": [
+    { "duration_ms": 1800, "stat_pulse": false },
+    { "duration_ms": 1200, "stat_pulse": true  },
+    { "duration_ms": 1000, "stat_pulse": false },
+    { "duration_ms": 1200, "stat_pulse": true  }
+  ],
+  "loop_count": -1
+
+═══ TYPE-ON STRATEGY (additional rules) ═══
+
+type-on animates creative_overlay character-by-character with a classic thin "|" cursor, then holds the typed text, fades it out, and reappears the complete message as a confident final beat before looping.
+
+For type-on variants:
+- creative_overlay is the ONLY message. It types once per loop. Keep it 25–40 characters (the sweet spot — types in 1200–1800ms). Over 50 chars the typing phase dominates the loop and reader fatigues.
+- animation_frames is a SINGLE frame with duration_ms set to the desired TOTAL LOOP duration (the renderer internally allocates typing, hold, fade, reappear, and final-hold beats). 4500–5500ms is the right range.
+- animation_frames[0] does NOT carry overlay_text or stat_* fields. Just duration_ms.
+- stat_value must NOT be set.
+
+EXAMPLE (type-on, 5000ms total loop):
+  "creative_overlay": "Training people actually finish.",
+  "animation_strategy": "type-on",
+  "animation_frames": [
+    { "duration_ms": 5000 }
+  ],
+  "loop_count": -1
+
+EXAMPLE (type-on, shorter message, 4500ms loop):
+  "creative_overlay": "Burn the checkbox.",
+  "animation_strategy": "type-on",
+  "animation_frames": [
+    { "duration_ms": 4500 }
+  ],
+  "loop_count": -1
 
 CRITICAL: Your response must be ONLY a valid JSON array of variant objects. No markdown, no explanation, no preamble. Just the JSON array.`;
 
@@ -239,6 +372,137 @@ function generateMockVariants(_prompt: string, platform?: string, visualStyle?: 
       self_score: { voice_compliance: 8, visual_brand_fit: 8, differentiation: 8, terminology: 9 },
     },
   ];
+
+  // Inject GIF animation metadata when format is any GIF surface.
+  // Timings comply with MOTION.md: rest ≥1800ms, pulse=1200ms,
+  // total loop 4000–5500ms, stat persistent (never appear/disappear).
+  if (af.startsWith("dynamic-word-gif")) {
+    type MockVariant = typeof variants[number] & {
+      stat_value?: string;
+      animation_strategy?: "word-swap" | "stat-pulse" | "type-on";
+      animation_frames?: Array<{ duration_ms: number; overlay_text?: string; stat_value?: string; stat_pulse?: boolean }>;
+      loop_count?: number;
+    };
+
+    // v1: data-stat hook → stat-pulse, single breath, 5200ms
+    const v1 = variants[0] as MockVariant;
+    v1.stat_value = "94%";
+    v1.animation_strategy = "stat-pulse";
+    v1.animation_frames = [
+      { duration_ms: 2200, stat_pulse: false },
+      { duration_ms: 1200, stat_pulse: true },
+      { duration_ms: 1800, stat_pulse: false },
+    ];
+    v1.loop_count = -1;
+
+    // v2: statement hook → type-on, single 5000ms loop
+    const v2 = variants[1] as MockVariant;
+    v2.animation_strategy = "type-on";
+    v2.animation_frames = [{ duration_ms: 5000 }];
+    v2.loop_count = -1;
+
+    // v3: data-stat hook → stat-pulse, double breath, 5200ms
+    const v3 = variants[2] as MockVariant;
+    v3.stat_value = "3,800+";
+    v3.animation_strategy = "stat-pulse";
+    v3.animation_frames = [
+      { duration_ms: 1800, stat_pulse: false },
+      { duration_ms: 1200, stat_pulse: true },
+      { duration_ms: 1000, stat_pulse: false },
+      { duration_ms: 1200, stat_pulse: true },
+    ];
+    v3.loop_count = -1;
+
+    // v4: comparison-versus hook → word-swap, 3 phrases, 5400ms
+    const v4 = variants[3] as MockVariant;
+    v4.animation_strategy = "word-swap";
+    v4.animation_frames = [
+      { duration_ms: 2000, overlay_text: "Four tools become one." },
+      { duration_ms: 1800, overlay_text: "Four logins become one." },
+      { duration_ms: 1600, overlay_text: "Four dashboards become one." },
+    ];
+    v4.loop_count = -1;
+
+    // v5: question hook (treat as word-swap by default), 2 phrases, 4000ms
+    const v5 = variants[4] as MockVariant;
+    v5.animation_strategy = "word-swap";
+    v5.animation_frames = [
+      { duration_ms: 2200, overlay_text: "Reporting vanity metrics?" },
+      { duration_ms: 1800, overlay_text: "Report revenue instead." },
+    ];
+    v5.loop_count = -1;
+  }
+
+  // Inject multi-card content for carousel and document formats.
+  if (af === "carousel" || af === "document") {
+    type CardVariant = typeof variants[number] & {
+      cards?: Array<{
+        card_overlay: string;
+        card_subtext?: string;
+        card_cta?: string;
+        card_visual_note?: string;
+      }>;
+    };
+
+    const cardSets: Array<Array<{ card_overlay: string; card_subtext?: string; card_cta?: string; card_visual_note?: string }>> = [
+      // v1: data narrative — stat progression
+      [
+        { card_overlay: "Training people actually finish.", card_subtext: "The completion crisis costs enterprises $300B/year.", card_visual_note: "Hook card: bold statement, dark bg" },
+        { card_overlay: "12% average completion.", card_subtext: "That's the industry benchmark. It's embarrassing.", card_visual_note: "Problem card: large red stat" },
+        { card_overlay: "94% with Docebo.", card_subtext: "Because AI personalizes every path.", card_visual_note: "Solution card: large green stat" },
+        { card_overlay: "60% faster onboarding.", card_subtext: "Zoom cut ramp time in half.", card_visual_note: "Proof card: customer logo" },
+        { card_overlay: "3,800+ enterprises agree.", card_subtext: "See why they switched.", card_cta: "See the data →", card_visual_note: "CTA card: logo bar + button" },
+      ],
+      // v2: provocative challenge
+      [
+        { card_overlay: "Burn the compliance checkbox.", card_subtext: "Your team deserves better than mandatory tedium.", card_visual_note: "Hook: confrontational, bold italic" },
+        { card_overlay: "What if they wanted to learn?", card_subtext: "Not because HR said so. Because the content was good.", card_visual_note: "Reframe: question, lighter tone" },
+        { card_overlay: "Content they binge.", card_subtext: "AI-curated paths that adapt to each learner.", card_visual_note: "Feature: product UI mockup" },
+        { card_overlay: "Proof, not promises.", card_subtext: "La-Z-Boy: 6x engagement. Pret: 94% completion.", card_visual_note: "Proof: metric cards" },
+        { card_overlay: "Your move.", card_cta: "See it live →", card_visual_note: "CTA: minimal, confident" },
+      ],
+      // v3: authority + proof
+      [
+        { card_overlay: "Prove the learning worked.", card_subtext: "Your board wants revenue impact, not completion rates.", card_visual_note: "Hook: executive pain" },
+        { card_overlay: "Connect learning to NRR.", card_subtext: "Docebo ties education data to Salesforce + Gainsight.", card_visual_note: "Integration: product screenshot" },
+        { card_overlay: "From gut feeling to proof.", card_subtext: "Real-time dashboards your CFO will actually read.", card_visual_note: "Dashboard: data viz" },
+        { card_overlay: "3.2x ROI. Auditable.", card_subtext: "Conservative assumptions. Real customer data.", card_visual_note: "Stat card: green accent" },
+        { card_overlay: "See the numbers.", card_cta: "Get the benchmark →", card_visual_note: "CTA: data-forward" },
+      ],
+      // v4: tool consolidation story
+      [
+        { card_overlay: "Four tools become one.", card_subtext: "Your team juggles an LMS, CMS, analytics tool, and authoring suite.", card_visual_note: "Hook: 4 icons → 1" },
+        { card_overlay: "One login. One truth.", card_subtext: "No more exporting CSVs between platforms.", card_visual_note: "Simplification: clean UI" },
+        { card_overlay: "AI does the routing.", card_subtext: "Right content, right person, right moment.", card_visual_note: "Feature: AI flow diagram" },
+        { card_overlay: "From eye-roll to engaged.", card_subtext: "Engagement up 6x after consolidation.", card_visual_note: "Proof: before/after metric" },
+        { card_overlay: "See the platform.", card_cta: "Take the tour →", card_visual_note: "CTA: product-forward" },
+      ],
+      // v5: vanity metrics challenge
+      [
+        { card_overlay: "Stop reporting vanity metrics.", card_subtext: "Completion rates tell you nothing about business impact.", card_visual_note: "Hook: provocation" },
+        { card_overlay: "What does your board want?", card_subtext: "Revenue. Retention. Readiness. Not clicks.", card_visual_note: "Reframe: boardroom context" },
+        { card_overlay: "Analytics that matter.", card_subtext: "Skills gaps, revenue attribution, behavioral change.", card_visual_note: "Feature: dashboard" },
+        { card_overlay: "47% of CLOs can't prove ROI.", card_subtext: "Be in the other 53%.", card_visual_note: "Stat: urgency" },
+        { card_overlay: "Real metrics. Real proof.", card_cta: "See the dashboard →", card_visual_note: "CTA: confident" },
+      ],
+    ];
+
+    // Add extra pages for document format (pages 6-8)
+    const extraPages = [
+      { card_overlay: "Built for enterprise scale.", card_subtext: "SOC 2 · ISO 27001 · SSO · 40+ languages.", card_visual_note: "Trust: security badges" },
+      { card_overlay: "Implementation in weeks.", card_subtext: "Not quarters. Dedicated CSM from day one.", card_visual_note: "Timeline: simple visual" },
+      { card_overlay: "See it yourself.", card_cta: "Book a walkthrough →", card_visual_note: "Final CTA: warm, inviting" },
+    ];
+
+    for (let i = 0; i < variants.length; i++) {
+      const v = variants[i] as CardVariant;
+      const baseCards = cardSets[i] || cardSets[0];
+      v.cards = af === "document"
+        ? [...baseCards, ...extraPages]
+        : baseCards;
+    }
+  }
+
   return variants;
 }
 

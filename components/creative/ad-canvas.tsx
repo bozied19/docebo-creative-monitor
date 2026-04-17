@@ -7,7 +7,7 @@ import { saveAs } from "file-saver";
 import { GIFEncoder, quantize, applyPalette } from "gifenc";
 import type { Variant, CanvasRenderContext } from "./refresh-engine";
 import { BRAND_VOICE_OPTIONS, isGifFormat, type BrandVoiceOption } from "./refresh-engine";
-import { renderVisualStyle, hasStyleRenderer, wrapForFormat } from "./visual-styles";
+import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard } from "./visual-styles";
 
 /* ── Feedback types ────────────────────────────────────────────── */
 interface FeedbackEntry {
@@ -1950,7 +1950,16 @@ function AdMockup({
         />
       );
     } else {
-      // Try visual-style-specific renderer first
+      const adFormat = renderContext?.ad_format || variant.ad_format;
+
+      // Try multi-card renderer first (carousel/document with cards data)
+      const multiCard = renderMultiCard(adFormat, { variant, theme, mockupRef, aspectRatio });
+      if (multiCard) {
+        // Multi-card renderers handle their own chrome — no wrapper needed
+        return multiCard;
+      }
+
+      // Try visual-style-specific renderer
       const vs = renderContext?.visual_style || variant.visual_style;
       const styleResult = vs ? renderVisualStyle(vs, { variant, theme, mockupRef, aspectRatio }) : null;
 

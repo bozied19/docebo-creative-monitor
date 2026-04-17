@@ -643,12 +643,20 @@ const AD_FORMAT_OPTIONS: AdFormatOption[] = [
     specs: "Intro: 150 chars. Headline: 70 chars max. Safe zone: center 1000×450px on horizontal.",
   },
   {
-    id: "dynamic-word-gif",
-    label: "Dynamic Word / GIF",
-    desc: "Animated GIF or rotating text. Pattern interrupt that stops mid-scroll.",
+    id: "dynamic-word-gif-square",
+    label: "Dynamic Word / GIF (Square)",
+    desc: "Animated GIF for mobile feed (LinkedIn/IG). Pattern interrupt that stops mid-scroll.",
     dimensions: { width: 1080, height: 1080, label: "1080×1080 (1:1)" },
     aspectRatio: "1 / 1",
-    specs: "Motion: 3–6 seconds looping. One element changes, everything else holds steady.",
+    specs: "Motion: 3–6s loop. One element changes. Mobile-first; reads at thumbnail size.",
+  },
+  {
+    id: "dynamic-word-gif-feed",
+    label: "Dynamic Word / GIF (Feed)",
+    desc: "Animated GIF for LinkedIn desktop feed / email hero. Landscape ratio.",
+    dimensions: { width: 1200, height: 627, label: "1200×627 (1.91:1)" },
+    aspectRatio: "1200 / 627",
+    specs: "Motion: 3–6s loop. One element changes. Optimized for desktop feed + inline email.",
   },
   {
     id: "document",
@@ -683,6 +691,12 @@ const AD_FORMAT_OPTIONS: AdFormatOption[] = [
     specs: "Source: existing organic post. Non-editable creative. Best for brand awareness that doesn't feel like it.",
   },
 ];
+
+/** True for any GIF ad_format (square or feed). Centralizes the check
+ *  so adding new GIF surfaces (e.g. 9:16 Stories) stays a one-liner. */
+export function isGifFormat(ad_format?: string | null): boolean {
+  return !!ad_format && ad_format.startsWith("dynamic-word-gif");
+}
 
 /* ══════════════════════════════════════════════════════════════════
    VARIANT INTERFACE — structured UTM fields
@@ -724,6 +738,37 @@ export interface Variant {
   };
   /** Legacy compat — keep ad_type derived from messaging_angle */
   ad_type?: string;
+  /** Highlighted numeric stat (e.g., "94%", "3.2x"). Used by stat-pulse animation. */
+  stat_value?: string;
+  /** Animation strategy for dynamic-word-gif format. */
+  animation_strategy?: "word-swap" | "stat-pulse" | "type-on";
+  /** Frame sequence for dynamic-word-gif format. 2–4 frames, 3–6s total loop. */
+  animation_frames?: Array<{
+    /** Display duration in milliseconds. */
+    duration_ms: number;
+    /** Overrides creative_overlay for word-swap strategy. */
+    overlay_text?: string;
+    /** Overrides stat_value for stat-pulse strategy. */
+    stat_value?: string;
+    /** When true, render stat in pulsed/accent state (stat-pulse strategy). */
+    stat_pulse?: boolean;
+  }>;
+  /** Loop count. -1 = infinite. Default infinite. */
+  loop_count?: number;
+  /** Multi-card content for carousel and document formats.
+   *  Each card has its own overlay text, subtext, and optional CTA.
+   *  Card 0 = hook/hero card (uses creative_overlay as fallback).
+   *  Carousel: 5-6 cards recommended. Document: 5-10 pages. */
+  cards?: Array<{
+    /** Primary in-image text for this card/page. */
+    card_overlay: string;
+    /** Supporting line for this card/page. */
+    card_subtext?: string;
+    /** CTA text (typically only on the last card). */
+    card_cta?: string;
+    /** Card-specific visual note for the designer. */
+    card_visual_note?: string;
+  }>;
 }
 
 /** Props passed to the canvas for format-aware rendering */
