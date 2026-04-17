@@ -7,7 +7,7 @@ import { saveAs } from "file-saver";
 import { GIFEncoder, quantize, applyPalette } from "gifenc";
 import type { Variant, CanvasRenderContext } from "./refresh-engine";
 import { BRAND_VOICE_OPTIONS, isGifFormat, type BrandVoiceOption } from "./refresh-engine";
-import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard, LogoBar, SocialProofBadge, MetricStrip } from "./visual-styles";
+import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard, resolveSubtext, LogoBar, SocialProofBadge, MetricStrip } from "./visual-styles";
 
 /* ── Feedback types ────────────────────────────────────────────── */
 interface FeedbackEntry {
@@ -413,10 +413,7 @@ function StandardMockup({
   const splitAt = Math.max(1, overlayWords.length - 2);
   const headlinePrimary = overlayWords.slice(0, splitAt).join(" ");
   const headlineAccent = overlayWords.slice(splitAt).join(" ");
-  const subtext =
-    variant.overlay_subtext ||
-    variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) ||
-    "";
+  const subtext = resolveSubtext(variant);
 
   return (
     <div
@@ -634,10 +631,7 @@ function WaveMockup({
   mockupRef: React.RefObject<HTMLDivElement | null>;
   aspectRatio?: string;
 }) {
-  const subtext =
-    variant.overlay_subtext ||
-    variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) ||
-    "";
+  const subtext = resolveSubtext(variant);
   return (
     <div
       ref={mockupRef}

@@ -31,6 +31,20 @@ function splitOverlay(text: string) {
   };
 }
 
+/** Resolve the in-image subtext for a variant.
+ *  Exported so legacy renderers in ad-canvas.tsx can use the same logic.
+ *
+ *  Priority: overlay_subtext > first sentence of intro_text > "".
+ *  But: when overlay_subtext is explicitly "" (e.g. quieted GIF variants),
+ *  we return "" — do NOT fall back to intro_text. The fallback only triggers
+ *  when overlay_subtext is undefined/null (i.e. missing from the data). */
+export function resolveSubtext(variant: Variant): string {
+  // If overlay_subtext is a string (even empty), respect it literally.
+  if (typeof variant.overlay_subtext === "string") return variant.overlay_subtext;
+  // Missing overlay_subtext → fall back to first sentence of intro_text.
+  return variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) || "";
+}
+
 /* ══════════════════════════════════════════════════════════════════
    REUSABLE VISUAL ELEMENTS
 
@@ -302,7 +316,7 @@ export function MetricStrip({
 
 export function NeonIntelligenceMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
   const { primary, accent } = splitOverlay(variant.creative_overlay);
-  const subtext = variant.overlay_subtext || variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) || "";
+  const subtext = resolveSubtext(variant);
 
   return (
     <div
@@ -517,7 +531,7 @@ export function NeonIntelligenceMockup({ variant, theme, mockupRef, aspectRatio 
    ══════════════════════════════════════════════════════════════════ */
 
 export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
-  const subtext = variant.overlay_subtext || variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) || "";
+  const subtext = resolveSubtext(variant);
   const accentCol = theme.accentColor || "#0033A0";
   const headCol = theme.headlineColor || "#0033A0";
 
@@ -703,7 +717,7 @@ export function HumanContrastMockup({ variant, theme, mockupRef, aspectRatio }: 
 
 export function RebelliousEditorialMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
   const { primary, accent } = splitOverlay(variant.creative_overlay);
-  const subtext = variant.overlay_subtext || variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) || "";
+  const subtext = resolveSubtext(variant);
 
   return (
     <div
@@ -864,7 +878,7 @@ export function RebelliousEditorialMockup({ variant, theme, mockupRef, aspectRat
    ══════════════════════════════════════════════════════════════════ */
 
 export function DataAsPowerMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
-  const subtext = variant.overlay_subtext || variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) || "";
+  const subtext = resolveSubtext(variant);
   const statVal = variant.stat_value || "94%";
 
   return (
@@ -890,191 +904,180 @@ export function DataAsPowerMockup({ variant, theme, mockupRef, aspectRatio }: St
         <rect width="100%" height="100%" fill="url(#data-grid)" />
       </svg>
 
-      {/* Top row: Logo + label */}
+      {/* Content — flex column prevents overlap */}
       <div
-        className="absolute flex items-center justify-between"
-        style={{ top: "6%", left: "6%", right: "6%" }}
+        className="absolute inset-0 flex flex-col"
+        style={{ padding: "6%" }}
       >
-        <span
-          style={{
-            color: "#FFFFFF",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 700,
-            fontSize: "clamp(14px, 2.5cqw, 20px)",
-          }}
-        >
-          docebo
-        </span>
-        <span
-          style={{
-            color: "rgba(255,255,255,0.4)",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "clamp(9px, 1.5cqw, 13px)",
-            textTransform: "uppercase",
-            letterSpacing: "0.12em",
-          }}
-        >
-          Performance Data
-        </span>
-      </div>
-
-      {/* Hero metric card */}
-      <div
-        className="absolute"
-        style={{
-          top: "16%",
-          left: "6%",
-          width: "50%",
-          padding: "4%",
-          borderRadius: "clamp(6px, 1.5cqw, 14px)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          backgroundColor: "rgba(255,255,255,0.04)",
-        }}
-      >
-        <p
-          style={{
-            color: "rgba(255,255,255,0.4)",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "clamp(9px, 1.5cqw, 13px)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            margin: 0,
-          }}
-        >
-          Key Metric
-        </p>
-        <p
-          style={{
-            color: theme.accentColor || "#54FA77",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 900,
-            fontSize: "clamp(36px, 10cqw, 100px)",
-            lineHeight: 1.0,
-            margin: "2% 0 0",
-          }}
-        >
-          {statVal}
-        </p>
-      </div>
-
-      {/* Mini bar chart */}
-      <div
-        className="absolute"
-        style={{
-          top: "16%",
-          right: "6%",
-          width: "32%",
-          padding: "4%",
-          borderRadius: "clamp(6px, 1.5cqw, 14px)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          backgroundColor: "rgba(255,255,255,0.04)",
-        }}
-      >
-        <p
-          style={{
-            color: "rgba(255,255,255,0.4)",
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: "clamp(8px, 1.2cqw, 11px)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            margin: "0 0 8%",
-          }}
-        >
-          Trend
-        </p>
-        <svg viewBox="0 0 100 50" style={{ width: "100%" }}>
-          {/* Bar chart */}
-          {[15, 25, 35, 28, 42, 38, 48].map((h, i) => (
-            <rect
-              key={i}
-              x={i * 14 + 2}
-              y={50 - h}
-              width="10"
-              height={h}
-              rx="2"
-              fill={i === 6 ? (theme.accentColor || "#54FA77") : "rgba(255,255,255,0.15)"}
-            />
-          ))}
-        </svg>
-      </div>
-
-      {/* Headline area */}
-      <div
-        className="absolute"
-        style={{
-          top: "50%",
-          left: "6%",
-          right: "6%",
-        }}
-      >
-        <h2
-          style={{
-            color: "#FFFFFF",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 800,
-            fontSize: "clamp(28px, 9cqw, 100px)",
-            lineHeight: 1.0,
-            letterSpacing: "-0.03em",
-            margin: 0,
-            fontStyle: "italic",
-          }}
-        >
-          {variant.creative_overlay}
-        </h2>
-
-        {subtext && (
-          <p
+        {/* Top row: Logo + label */}
+        <div className="flex items-center justify-between">
+          <span
             style={{
-              color: "rgba(255,255,255,0.5)",
-              fontFamily: "'Figtree', 'Inter', sans-serif",
-              fontWeight: 400,
-              fontSize: "clamp(13px, 2.4cqw, 24px)",
-              lineHeight: 1.35,
-              marginTop: "4%",
-              maxWidth: "80%",
+              color: "#FFFFFF",
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 700,
+              fontSize: "clamp(14px, 2.5cqw, 20px)",
             }}
           >
-            {subtext}
-          </p>
-        )}
-      </div>
-
-      {/* Bottom row: mini metrics + CTA */}
-      <div
-        className="absolute flex items-end justify-between"
-        style={{ bottom: "6%", left: "6%", right: "6%" }}
-      >
-        <div className="flex items-center" style={{ gap: "clamp(8px, 2cqw, 20px)" }}>
-          {["3.2x ROI", "60% faster", "Audit-ready"].map((metric) => (
-            <span
-              key={metric}
-              style={{
-                color: "rgba(255,255,255,0.5)",
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: "clamp(8px, 1.4cqw, 12px)",
-                padding: "1% 3%",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "4px",
-              }}
-            >
-              {metric}
-            </span>
-          ))}
+            docebo
+          </span>
+          <span
+            style={{
+              color: "rgba(255,255,255,0.4)",
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: "clamp(9px, 1.5cqw, 13px)",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+            }}
+          >
+            Performance Data
+          </span>
         </div>
 
-        <span
-          style={{
-            color: "#131E29",
-            fontFamily: "'Figtree', 'Inter', sans-serif",
-            fontWeight: 600,
-            fontSize: "clamp(11px, 2cqw, 16px)",
-            backgroundColor: theme.accentColor || "#54FA77",
-            padding: "1.5% 4%",
-            borderRadius: "6px",
-          }}
-        >
-          {variant.cta_text} →
-        </span>
+        {/* Data cards row */}
+        <div className="flex" style={{ gap: "3%", marginTop: "4%" }}>
+          {/* Hero metric card */}
+          <div
+            style={{
+              flex: "1.5",
+              padding: "3.5%",
+              borderRadius: "clamp(6px, 1.5cqw, 14px)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "rgba(255,255,255,0.04)",
+            }}
+          >
+            <p
+              style={{
+                color: "rgba(255,255,255,0.4)",
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: "clamp(9px, 1.5cqw, 13px)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                margin: 0,
+              }}
+            >
+              Key Metric
+            </p>
+            <p
+              style={{
+                color: theme.accentColor || "#54FA77",
+                fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+                fontWeight: 900,
+                fontSize: "clamp(28px, 8cqw, 80px)",
+                lineHeight: 1.0,
+                margin: "2% 0 0",
+              }}
+            >
+              {statVal}
+            </p>
+          </div>
+
+          {/* Mini bar chart */}
+          <div
+            style={{
+              flex: 1,
+              padding: "3.5%",
+              borderRadius: "clamp(6px, 1.5cqw, 14px)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "rgba(255,255,255,0.04)",
+            }}
+          >
+            <p
+              style={{
+                color: "rgba(255,255,255,0.4)",
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: "clamp(8px, 1.2cqw, 11px)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                margin: "0 0 8%",
+              }}
+            >
+              Trend
+            </p>
+            <svg viewBox="0 0 100 50" style={{ width: "100%", display: "block" }}>
+              {[15, 25, 35, 28, 42, 38, 48].map((h, i) => (
+                <rect
+                  key={i}
+                  x={i * 14 + 2}
+                  y={50 - h}
+                  width="10"
+                  height={h}
+                  rx="2"
+                  fill={i === 6 ? (theme.accentColor || "#54FA77") : "rgba(255,255,255,0.15)"}
+                />
+              ))}
+            </svg>
+          </div>
+        </div>
+
+        {/* Headline area — flex-grows to fill available space */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", marginTop: "4%" }}>
+          <h2
+            style={{
+              color: "#FFFFFF",
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(24px, 8cqw, 80px)",
+              lineHeight: 1.0,
+              letterSpacing: "-0.03em",
+              margin: 0,
+              fontStyle: "italic",
+            }}
+          >
+            {variant.creative_overlay}
+          </h2>
+
+          {subtext && (
+            <p
+              style={{
+                color: "rgba(255,255,255,0.5)",
+                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontWeight: 400,
+                fontSize: "clamp(11px, 2.2cqw, 20px)",
+                lineHeight: 1.35,
+                marginTop: "3%",
+                maxWidth: "80%",
+              }}
+            >
+              {subtext}
+            </p>
+          )}
+        </div>
+
+        {/* Bottom row: mini metrics + CTA */}
+        <div className="flex items-end justify-between">
+          <div className="flex items-center" style={{ gap: "clamp(6px, 1.5cqw, 14px)" }}>
+            {["3.2x ROI", "60% faster", "Audit-ready"].map((metric) => (
+              <span
+                key={metric}
+                style={{
+                  color: "rgba(255,255,255,0.5)",
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: "clamp(7px, 1.3cqw, 11px)",
+                  padding: "1% 2.5%",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "4px",
+                }}
+              >
+                {metric}
+              </span>
+            ))}
+          </div>
+
+          <span
+            style={{
+              color: "#131E29",
+              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontWeight: 600,
+              fontSize: "clamp(11px, 2cqw, 16px)",
+              backgroundColor: theme.accentColor || "#54FA77",
+              padding: "1.5% 4%",
+              borderRadius: "6px",
+            }}
+          >
+            {variant.cta_text} →
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -1088,7 +1091,7 @@ export function DataAsPowerMockup({ variant, theme, mockupRef, aspectRatio }: St
 
 export function DigitalRebellionMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
   const { primary, accent } = splitOverlay(variant.creative_overlay);
-  const subtext = variant.overlay_subtext || variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) || "";
+  const subtext = resolveSubtext(variant);
 
   return (
     <div
@@ -1165,121 +1168,107 @@ export function DigitalRebellionMockup({ variant, theme, mockupRef, aspectRatio 
         }}
       />
 
-      {/* Headline with RGB offset / glitch shadow */}
+      {/* Content — flex column prevents overlap, z-index above decorative elements */}
       <div
-        className="absolute"
-        style={{
-          top: "18%",
-          left: "6%",
-          right: "6%",
-          zIndex: 2,
-        }}
+        className="absolute inset-0 flex flex-col justify-between"
+        style={{ padding: "7% 6%", zIndex: 2 }}
       >
-        {/* Ghost red offset */}
-        <h2
-          className="absolute"
-          style={{
-            color: "#FF5DD8",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 900,
-            fontSize: "clamp(44px, 14cqw, 170px)",
-            lineHeight: 0.95,
-            letterSpacing: "-0.03em",
-            margin: 0,
-            fontStyle: "italic",
-            opacity: 0.2,
-            transform: "translate(-2px, 2px)",
-            pointerEvents: "none",
-          }}
-        >
-          {primary}
-        </h2>
-        {/* Ghost blue offset */}
-        <h2
-          className="absolute"
-          style={{
-            color: "#0057FF",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 900,
-            fontSize: "clamp(44px, 14cqw, 170px)",
-            lineHeight: 0.95,
-            letterSpacing: "-0.03em",
-            margin: 0,
-            fontStyle: "italic",
-            opacity: 0.15,
-            transform: "translate(3px, -1px)",
-            pointerEvents: "none",
-          }}
-        >
-          {primary}
-        </h2>
-        {/* Main text */}
-        <h2
-          style={{
-            color: "#FFFFFF",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 900,
-            fontSize: "clamp(44px, 14cqw, 170px)",
-            lineHeight: 0.95,
-            letterSpacing: "-0.03em",
-            margin: 0,
-            fontStyle: "italic",
-            position: "relative",
-          }}
-        >
-          {primary}
-        </h2>
-        {accent && (
+        {/* Headline with RGB offset / glitch shadow */}
+        <div style={{ position: "relative", marginTop: "4%" }}>
+          {/* Ghost pink offset */}
           <h2
+            className="absolute"
             style={{
-              color: theme.accentColor || "#FF5DD8",
+              color: "#FF5DD8",
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 900,
-              fontSize: "clamp(44px, 14cqw, 170px)",
+              fontSize: "clamp(36px, 12cqw, 130px)",
+              lineHeight: 0.95,
+              letterSpacing: "-0.03em",
+              margin: 0,
+              fontStyle: "italic",
+              opacity: 0.2,
+              transform: "translate(-2px, 2px)",
+              pointerEvents: "none",
+            }}
+          >
+            {primary}
+          </h2>
+          {/* Ghost blue offset */}
+          <h2
+            className="absolute"
+            style={{
+              color: "#0057FF",
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 900,
+              fontSize: "clamp(36px, 12cqw, 130px)",
+              lineHeight: 0.95,
+              letterSpacing: "-0.03em",
+              margin: 0,
+              fontStyle: "italic",
+              opacity: 0.15,
+              transform: "translate(3px, -1px)",
+              pointerEvents: "none",
+            }}
+          >
+            {primary}
+          </h2>
+          {/* Main text */}
+          <h2
+            style={{
+              color: "#FFFFFF",
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 900,
+              fontSize: "clamp(36px, 12cqw, 130px)",
               lineHeight: 0.95,
               letterSpacing: "-0.03em",
               margin: 0,
               fontStyle: "italic",
               position: "relative",
-              textShadow: `3px 0 #0057FF30, -2px 0 #FF5DD830`,
             }}
           >
-            {accent}
+            {primary}
           </h2>
-        )}
-      </div>
+          {accent && (
+            <h2
+              style={{
+                color: theme.accentColor || "#FF5DD8",
+                fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+                fontWeight: 900,
+                fontSize: "clamp(36px, 12cqw, 130px)",
+                lineHeight: 0.95,
+                letterSpacing: "-0.03em",
+                margin: 0,
+                fontStyle: "italic",
+                position: "relative",
+                textShadow: `3px 0 #0057FF30, -2px 0 #FF5DD830`,
+              }}
+            >
+              {accent}
+            </h2>
+          )}
+        </div>
 
-      {/* Subtext in monospace — "corrupted data" feel */}
-      {subtext && (
-        <div
-          className="absolute"
-          style={{
-            bottom: "20%",
-            left: "6%",
-            right: "6%",
-            zIndex: 2,
-          }}
-        >
+        {/* Subtext in monospace — "corrupted data" feel */}
+        {subtext && (
           <p
             style={{
               color: "rgba(255,255,255,0.55)",
               fontFamily: "'IBM Plex Mono', monospace",
               fontWeight: 400,
-              fontSize: "clamp(12px, 2.2cqw, 22px)",
+              fontSize: "clamp(11px, 2cqw, 18px)",
               lineHeight: 1.5,
               maxWidth: "75%",
+              margin: 0,
             }}
           >
             {subtext}
           </p>
-        </div>
-      )}
+        )}
 
-      {/* Bottom bar */}
-      <div
-        className="absolute flex items-end justify-between"
-        style={{ bottom: "5%", left: "6%", right: "6%", zIndex: 2 }}
-      >
+        {/* Bottom bar */}
+        <div className="flex items-end justify-between">
+
         <span
           style={{
             color: "rgba(255,255,255,0.5)",
@@ -1303,6 +1292,7 @@ export function DigitalRebellionMockup({ variant, theme, mockupRef, aspectRatio 
         >
           {variant.cta_text} →
         </span>
+        </div>
       </div>
     </div>
   );
@@ -1339,11 +1329,12 @@ export function MinimalAuthorityMockup({ variant, theme, mockupRef, aspectRatio 
         }}
       />
 
-      {/* Logo — top left, understated */}
+      {/* Content — flex column, whitespace via flex-grow spacer */}
       <div
-        className="absolute"
-        style={{ top: "8%", left: "10%" }}
+        className="absolute inset-0 flex flex-col"
+        style={{ padding: "8% 10%" }}
       >
+        {/* Logo — top left, understated */}
         <span
           style={{
             color: "#0033A0",
@@ -1356,23 +1347,17 @@ export function MinimalAuthorityMockup({ variant, theme, mockupRef, aspectRatio 
         >
           docebo
         </span>
-      </div>
 
-      {/* Single powerful headline — bottom-left anchored with maximum whitespace above */}
-      <div
-        className="absolute"
-        style={{
-          bottom: "18%",
-          left: "10%",
-          right: "10%",
-        }}
-      >
+        {/* Whitespace spacer — pushes content to bottom */}
+        <div style={{ flex: 1 }} />
+
+        {/* Headline block */}
         <h2
           style={{
             color: "#0A0A0A",
             fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 800,
-            fontSize: "clamp(36px, 11cqw, 130px)",
+            fontSize: "clamp(32px, 10cqw, 110px)",
             lineHeight: 1.0,
             letterSpacing: "-0.04em",
             margin: 0,
@@ -1398,7 +1383,7 @@ export function MinimalAuthorityMockup({ variant, theme, mockupRef, aspectRatio 
               color: "#0A0A0A",
               fontFamily: "'Figtree', 'Inter', sans-serif",
               fontWeight: 400,
-              fontSize: "clamp(13px, 2.4cqw, 24px)",
+              fontSize: "clamp(12px, 2.2cqw, 22px)",
               lineHeight: 1.4,
               marginTop: "3%",
               opacity: 0.5,
@@ -1408,12 +1393,9 @@ export function MinimalAuthorityMockup({ variant, theme, mockupRef, aspectRatio 
             {subtext}
           </p>
         )}
-      </div>
 
-      {/* CTA — bottom right, minimal */}
-      <div
-        className="absolute"
-        style={{ bottom: "8%", right: "10%" }}
+        {/* CTA — bottom right, minimal */}
+        <div className="flex justify-end" style={{ marginTop: "6%" }}
       >
         <span
           style={{
@@ -1425,6 +1407,7 @@ export function MinimalAuthorityMockup({ variant, theme, mockupRef, aspectRatio 
         >
           {variant.cta_text} →
         </span>
+        </div>
       </div>
     </div>
   );
@@ -1437,7 +1420,7 @@ export function MinimalAuthorityMockup({ variant, theme, mockupRef, aspectRatio 
    ══════════════════════════════════════════════════════════════════ */
 
 export function SystemUIMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
-  const subtext = variant.overlay_subtext || variant.intro_text?.split(/\.\s+/)[0]?.slice(0, 100) || "";
+  const subtext = resolveSubtext(variant);
 
   return (
     <div
