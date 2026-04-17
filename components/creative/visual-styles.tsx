@@ -721,145 +721,137 @@ export function RebelliousEditorialMockup({ variant, theme, mockupRef, aspectRat
         style={{
           top: 0,
           right: 0,
-          width: "55%",
+          width: "50%",
           height: "100%",
           backgroundColor: theme.accentColor,
-          clipPath: "polygon(35% 0, 100% 0, 100% 100%, 15% 100%)",
-          opacity: 0.12,
+          clipPath: "polygon(40% 0, 100% 0, 100% 100%, 20% 100%)",
+          opacity: 0.08,
           pointerEvents: "none",
         }}
       />
 
-      {/* Large decorative asterisk */}
+      {/* Decorative asterisk — top right */}
       <div
         className="absolute"
         style={{
-          top: "4%",
-          right: "6%",
+          top: "5%",
+          right: "7%",
           color: theme.accentColor,
           fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-          fontSize: "clamp(80px, 22cqw, 240px)",
+          fontSize: "clamp(40px, 10cqw, 80px)",
           fontWeight: 900,
           lineHeight: 0.8,
-          opacity: 0.15,
+          opacity: 0.25,
           pointerEvents: "none",
         }}
       >
         *
       </div>
 
-      {/* Oversized headline — intentionally bleeds off left edge */}
+      {/* Content — uses flex column to prevent overlap */}
       <div
-        className="absolute"
-        style={{
-          top: "12%",
-          left: "-2%",
-          right: "5%",
-        }}
+        className="absolute inset-0 flex flex-col justify-between"
+        style={{ padding: "8% 7% 7%" }}
       >
-        <h2
-          style={{
-            color: "#E6DACB",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 900,
-            fontSize: "clamp(48px, 15cqw, 180px)",
-            lineHeight: 0.9,
-            letterSpacing: "-0.04em",
-            margin: 0,
-            fontStyle: "italic",
-            textTransform: "uppercase",
-          }}
-        >
-          {primary}
-        </h2>
-        {accent && (
-          <h2
-            style={{
-              color: theme.accentColor,
-              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-              fontWeight: 900,
-              fontSize: "clamp(48px, 15cqw, 180px)",
-              lineHeight: 0.9,
-              letterSpacing: "-0.04em",
-              margin: 0,
-              fontStyle: "italic",
-              textTransform: "uppercase",
-              marginLeft: "12%",
-            }}
-          >
-            {accent}
-          </h2>
-        )}
-      </div>
-
-      {/* Subtext — offset right, smaller editorial type */}
-      {subtext && (
-        <div
-          className="absolute"
-          style={{
-            bottom: "22%",
-            right: "8%",
-            maxWidth: "55%",
-            textAlign: "right",
-          }}
-        >
-          <div
-            style={{
-              width: "clamp(25px, 6cqw, 50px)",
-              height: "2px",
-              backgroundColor: theme.accentColor,
-              marginLeft: "auto",
-              marginBottom: "4%",
-            }}
-          />
-          <p
-            style={{
-              color: "#E6DACB",
-              fontFamily: "'Lora', Georgia, serif",
-              fontWeight: 400,
-              fontStyle: "italic",
-              fontSize: "clamp(14px, 2.8cqw, 28px)",
-              lineHeight: 1.4,
-              opacity: 0.8,
-            }}
-          >
-            {subtext}
-          </p>
-        </div>
-      )}
-
-      {/* Bottom bar */}
-      <div
-        className="absolute flex items-end justify-between"
-        style={{
-          bottom: "6%",
-          left: "6%",
-          right: "6%",
-        }}
-      >
+        {/* Logo */}
         <span
           style={{
             color: "#E6DACB",
             fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
             fontWeight: 700,
-            fontSize: "clamp(14px, 2.8cqw, 22px)",
-            opacity: 0.7,
+            fontSize: "clamp(13px, 2.5cqw, 20px)",
+            opacity: 0.6,
           }}
         >
           docebo
         </span>
-        <span
-          style={{
-            color: theme.accentColor,
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontWeight: 600,
-            fontSize: "clamp(11px, 2cqw, 16px)",
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-          }}
-        >
-          {variant.cta_text} →
-        </span>
+
+        {/* Headline block — main visual weight */}
+        <div style={{ marginLeft: "-1%", maxWidth: "95%" }}>
+          <h2
+            style={{
+              color: "#E6DACB",
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 900,
+              fontSize: "clamp(32px, 11cqw, 120px)",
+              lineHeight: 0.92,
+              letterSpacing: "-0.04em",
+              margin: 0,
+              fontStyle: "italic",
+              textTransform: "uppercase",
+            }}
+          >
+            {primary}
+          </h2>
+          {accent && (
+            <h2
+              style={{
+                color: theme.accentColor,
+                fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+                fontWeight: 900,
+                fontSize: "clamp(32px, 11cqw, 120px)",
+                lineHeight: 0.92,
+                letterSpacing: "-0.04em",
+                margin: 0,
+                fontStyle: "italic",
+                textTransform: "uppercase",
+              }}
+            >
+              {accent}
+            </h2>
+          )}
+        </div>
+
+        {/* Subtext — offset right, editorial serif italic */}
+        {subtext && (
+          <div
+            style={{
+              textAlign: "right",
+              maxWidth: "70%",
+              marginLeft: "auto",
+            }}
+          >
+            <div
+              style={{
+                width: "clamp(25px, 6cqw, 45px)",
+                height: "2px",
+                backgroundColor: theme.accentColor,
+                marginLeft: "auto",
+                marginBottom: "clamp(4px, 1cqw, 10px)",
+              }}
+            />
+            <p
+              style={{
+                color: "#E6DACB",
+                fontFamily: "'Lora', Georgia, serif",
+                fontWeight: 400,
+                fontStyle: "italic",
+                fontSize: "clamp(12px, 2.4cqw, 22px)",
+                lineHeight: 1.35,
+                opacity: 0.7,
+                margin: 0,
+              }}
+            >
+              {subtext}
+            </p>
+          </div>
+        )}
+
+        {/* CTA row */}
+        <div className="flex items-end justify-end">
+          <span
+            style={{
+              color: theme.accentColor,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontWeight: 600,
+              fontSize: "clamp(10px, 1.8cqw, 15px)",
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+            }}
+          >
+            {variant.cta_text} →
+          </span>
+        </div>
       </div>
     </div>
   );

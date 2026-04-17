@@ -1533,6 +1533,9 @@ function GifMockup({
       ...variant,
       creative_overlay: "",
       overlay_subtext: "",
+      // Clear intro_text so visual style renderers don't fall back to it
+      // when overlay_subtext is empty (falsy "" triggers the fallback).
+      intro_text: "",
     };
     const typePlacement = statHeadlinePlacementFor(theme.layout);
 
@@ -1616,6 +1619,9 @@ function GifMockup({
     ...variant,
     creative_overlay: "",
     overlay_subtext: "",
+    // Clear intro_text so visual style renderers don't fall back to it
+    // when overlay_subtext is empty (falsy "" triggers the fallback).
+    intro_text: "",
   };
   const placement = statHeadlinePlacementFor(theme.layout);
 
