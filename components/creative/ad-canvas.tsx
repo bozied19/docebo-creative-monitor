@@ -1,11 +1,13 @@
 "use client";
 
 import { useRef, useCallback, useState, useEffect } from "react";
-import { toPng } from "html-to-image";
+import { toPng, toCanvas } from "html-to-image";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { GIFEncoder, quantize, applyPalette } from "gifenc";
 import type { Variant, CanvasRenderContext } from "./refresh-engine";
-import { BRAND_VOICE_OPTIONS, type BrandVoiceOption } from "./refresh-engine";
+import { BRAND_VOICE_OPTIONS, isGifFormat, type BrandVoiceOption } from "./refresh-engine";
+import { renderVisualStyle, hasStyleRenderer, wrapForFormat } from "./visual-styles";
 
 /* ── Feedback types ────────────────────────────────────────────── */
 interface FeedbackEntry {
@@ -46,7 +48,7 @@ const VISUAL_STYLE_THEME_MAP: Record<string, AdTheme[]> = {
 };
 
 /* ── Visual theme definitions matching real Docebo ads ──────────── */
-type AdTheme =
+export type AdTheme =
   | "navy-white"
   | "navy-green"
   | "navy-pink"
@@ -60,7 +62,7 @@ type AdTheme =
   | "cobrand-navy-green"
   | "cobrand-beige";
 
-interface ThemeConfig {
+export interface ThemeConfig {
   layout: "standard" | "wave" | "quote" | "cobrand";
   bg: string;
   bgGradient?: string;
@@ -84,7 +86,7 @@ interface ThemeConfig {
  * Fonts: Special Gothic Expanded (headlines), Figtree (body), Lora (quotes), IBM Plex Mono (CTAs)
  */
 
-const THEMES: Record<AdTheme, ThemeConfig> = {
+export const THEMES: Record<AdTheme, ThemeConfig> = {
   /* ── Navy backgrounds ───────────────────────────── */
   "navy-white": {
     layout: "standard",
@@ -1076,6 +1078,587 @@ function FeedbackPanel({
   );
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   GIF mockup — MOTION.md compliant
+   ══════════════════════════════════════════════════════════════════
+
+   Delegates to Standard / Wave / Quote / CoBrand so all 12 themes
+   work for GIFs. Adds two motion strategies on top:
+
+   - word-swap: two layered base mockups; outgoing slides up + fades,
+     incoming slides in from below + fades. Per-voice easing. No hard
+     cut. Transition 320ms with asymmetric timing (outgoing faster).
+
+   - stat-pulse: persistent stat (always visible). On pulse frames it
+     breathes — scale 100%→103% + glow swell over 500ms (ease-out),
+     then settles over remaining frame duration (ease-in-out). Stat
+     never appears/disappears. Placement is per-layout safe zone.
+
+   Live preview runs a rAF-driven orchestrator. GIF export drives
+   deterministic sub-frames via `exportState`.
+   ══════════════════════════════════════════════════════════════════ */
+
+/** Approximated easing curves keyed to brand_voice. */
+function easeForVoice(voice?: string): (t: number) => number {
+  if (voice === "provocateur") {
+    // Punchy symmetric ease (approx cubic-bezier(0.6, 0, 0.4, 1))
+    return (t) => (t < 0.5 ? 4 * t ** 3 : 1 - ((-2 * t + 2) ** 3) / 2);
+  }
+  if (voice === "trusted-advisor") {
+    // Refined (approx cubic-bezier(0.4, 0, 0.2, 1))
+    return (t) => 1 - Math.pow(1 - t, 2.5);
+  }
+  // Default: confident swagger — ease-out cubic
+  return (t) => 1 - Math.pow(1 - t, 3);
+}
+
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t ** 3 : 1 - ((-2 * t + 2) ** 3) / 2;
+
+/** Typing speed per brand voice, in milliseconds per character.
+ *  Matches MOTION.md §4.4. */
+function typingSpeedFor(voice?: string): number {
+  if (voice === "provocateur") return 35; // punchy
+  if (voice === "trusted-advisor") return 60; // measured
+  return 45; // default: confident
+}
+
+/** State describing what the GIF mockup should render at any instant. */
+type GifAnimState =
+  | {
+      kind: "word-swap";
+      /** The rest frame the viewer currently sees. */
+      fromIndex: number;
+      /** Set only during a transition to the next frame. */
+      toIndex: number | null;
+      /** Transition progress 0–1. Always 0 when toIndex is null. */
+      progress: number;
+    }
+  | {
+      kind: "stat-pulse";
+      /** Current frame. */
+      frameIndex: number;
+      /** 0 = rest, 1 = peak pulse. Smoothly animates during pulse frames. */
+      pulseProgress: number;
+    }
+  | {
+      kind: "type-on";
+      /** Which beat of the loop we're in. */
+      phase: "typing" | "hold-typed" | "fading" | "reappear" | "hold-complete";
+      /** Characters revealed from creative_overlay (0..text.length). */
+      charsRevealed: number;
+      /** 0..1. Driven during fading + reappear; 1 otherwise. */
+      opacity: number;
+      /** Cursor visible. True during typing + hold-typed only. */
+      showCursor: boolean;
+    };
+
+/** Remove the stat_value substring from supporting copy so it doesn't
+ *  duplicate the pulsing headline stat. Handles non-word chars like
+ *  %, +, $ which \b regex can't. Collapses resulting whitespace. */
+function stripStatFromText(text: string | undefined, stat: string): string {
+  if (!text) return "";
+  if (!stat) return text;
+  const escaped = stat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return text
+    .replace(new RegExp(`${escaped}\\s*`, "g"), "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[\s.,;:]+/, "")
+    .trim();
+}
+
+/** Placement for the stat-as-headline block, per base layout.
+ *  The stat occupies the headline zone (not a side safe zone), so it
+ *  reads as the ad's hero element rather than a floating decoration. */
+function statHeadlinePlacementFor(layout: ThemeConfig["layout"]): {
+  container: React.CSSProperties;
+  textAlign: React.CSSProperties["textAlign"];
+} {
+  switch (layout) {
+    case "cobrand":
+      return {
+        container: {
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          maxWidth: "80%",
+        },
+        textAlign: "center",
+      };
+    case "quote":
+      return {
+        container: { left: "10%", top: "14%", maxWidth: "80%" },
+        textAlign: "left",
+      };
+    case "wave":
+      // Wave has a beige band up top; put stat in the navy lower half.
+      return {
+        container: { left: "10%", top: "52%", maxWidth: "80%" },
+        textAlign: "left",
+      };
+    default: // standard
+      return {
+        container: { left: "10%", top: "12%", maxWidth: "80%" },
+        textAlign: "left",
+      };
+  }
+}
+
+function GifMockup({
+  variant,
+  theme,
+  mockupRef,
+  aspectRatio,
+  exportState,
+}: {
+  variant: Variant;
+  theme: ThemeConfig;
+  mockupRef: React.RefObject<HTMLDivElement | null>;
+  aspectRatio?: string;
+  /** When provided, forces the displayed animation state (used during GIF export).
+   *  When null/undefined, the component drives its own live loop. */
+  exportState?: GifAnimState | null;
+}) {
+  const frames = variant.animation_frames ?? [];
+  const strategy: "word-swap" | "stat-pulse" | "type-on" =
+    variant.animation_strategy === "stat-pulse"
+      ? "stat-pulse"
+      : variant.animation_strategy === "type-on"
+        ? "type-on"
+        : "word-swap";
+
+  // Internal state for live preview. Export drives its own state via exportState.
+  const [liveState, setLiveState] = useState<GifAnimState>(() => {
+    if (strategy === "stat-pulse") return { kind: "stat-pulse", frameIndex: 0, pulseProgress: 0 };
+    if (strategy === "type-on")
+      return {
+        kind: "type-on",
+        phase: "typing",
+        charsRevealed: 0,
+        opacity: 1,
+        showCursor: true,
+      };
+    return { kind: "word-swap", fromIndex: 0, toIndex: null, progress: 0 };
+  });
+  const display: GifAnimState = exportState ?? liveState;
+
+  // Discard-ref for base mockups (we don't capture them individually — the
+  // outer wrapper holds the capture ref).
+  const fromBaseRef = useRef<HTMLDivElement>(null);
+  const toBaseRef = useRef<HTMLDivElement>(null);
+  const baseRefSolo = useRef<HTMLDivElement>(null);
+
+  // Live orchestrator — runs only when no exportState is provided.
+  // Depends ONLY on stable primitives (variant_id, strategy, brand_voice,
+  // and whether we're in export mode). Frames and easing are captured
+  // inside the effect so fresh-reference re-renders don't restart the loop.
+  useEffect(() => {
+    if (exportState) return;
+    const localFrames = variant.animation_frames ?? [];
+    if (localFrames.length === 0) return;
+    const localEase = easeForVoice(variant.brand_voice);
+
+    let cancelled = false;
+    const rafIds: number[] = [];
+    const timerIds: number[] = [];
+
+    const hold = (ms: number) =>
+      new Promise<void>((resolve) => {
+        const t = window.setTimeout(resolve, ms);
+        timerIds.push(t);
+      });
+
+    const animate = (
+      duration: number,
+      ease: (t: number) => number,
+      onUpdate: (eased: number) => void,
+    ) =>
+      new Promise<void>((resolve) => {
+        const start = performance.now();
+        const tick = (now: number) => {
+          if (cancelled) return resolve();
+          const raw = Math.min(1, (now - start) / duration);
+          onUpdate(ease(raw));
+          if (raw < 1) rafIds.push(requestAnimationFrame(tick));
+          else resolve();
+        };
+        rafIds.push(requestAnimationFrame(tick));
+      });
+
+    const run = async () => {
+      const TRANSITION_MS = 320;
+      const SWELL_MS = 500;
+      let idx = 0;
+
+      // Type-on has a single linear beat sequence — no per-frame loop.
+      if (strategy === "type-on") {
+        const fullText = variant.creative_overlay || "";
+        const charCount = fullText.length;
+        const typingSpeed = typingSpeedFor(variant.brand_voice);
+        const HOLD_TYPED_MS = 1500;
+        const FADE_MS = 400;
+        const REAPPEAR_MS = 150;
+        const HOLD_COMPLETE_MS = 1500;
+
+        while (!cancelled) {
+          // Typing phase — reveal char-by-char
+          for (let c = 1; c <= charCount; c++) {
+            if (cancelled) return;
+            setLiveState({
+              kind: "type-on",
+              phase: "typing",
+              charsRevealed: c,
+              opacity: 1,
+              showCursor: true,
+            });
+            await hold(typingSpeed);
+          }
+          if (cancelled) return;
+          // Hold typed (cursor visible)
+          setLiveState({
+            kind: "type-on",
+            phase: "hold-typed",
+            charsRevealed: charCount,
+            opacity: 1,
+            showCursor: true,
+          });
+          await hold(HOLD_TYPED_MS);
+          if (cancelled) return;
+          // Fade out (text + cursor)
+          await animate(FADE_MS, easeInOutCubic, (p) =>
+            setLiveState({
+              kind: "type-on",
+              phase: "fading",
+              charsRevealed: charCount,
+              opacity: 1 - p,
+              showCursor: false,
+            }),
+          );
+          if (cancelled) return;
+          // Reappear as complete block (no cursor)
+          await animate(REAPPEAR_MS, localEase, (p) =>
+            setLiveState({
+              kind: "type-on",
+              phase: "reappear",
+              charsRevealed: charCount,
+              opacity: p,
+              showCursor: false,
+            }),
+          );
+          if (cancelled) return;
+          // Hold complete
+          setLiveState({
+            kind: "type-on",
+            phase: "hold-complete",
+            charsRevealed: charCount,
+            opacity: 1,
+            showCursor: false,
+          });
+          await hold(HOLD_COMPLETE_MS);
+        }
+        return;
+      }
+
+      while (!cancelled) {
+        const frame = localFrames[idx];
+
+        if (strategy === "word-swap") {
+          setLiveState({ kind: "word-swap", fromIndex: idx, toIndex: null, progress: 0 });
+          await hold(frame.duration_ms);
+          if (cancelled) return;
+          if (localFrames.length < 2) continue;
+          const nextIdx = (idx + 1) % localFrames.length;
+          await animate(TRANSITION_MS, localEase, (p) =>
+            setLiveState({ kind: "word-swap", fromIndex: idx, toIndex: nextIdx, progress: p }),
+          );
+          idx = nextIdx;
+        } else {
+          // stat-pulse
+          const isPulse = frame.stat_pulse === true;
+          if (isPulse) {
+            const settleMs = Math.max(frame.duration_ms - SWELL_MS, 200);
+            // Swell up
+            await animate(SWELL_MS, localEase, (p) =>
+              setLiveState({ kind: "stat-pulse", frameIndex: idx, pulseProgress: p }),
+            );
+            if (cancelled) return;
+            // Settle down
+            await animate(settleMs, easeInOutCubic, (p) =>
+              setLiveState({ kind: "stat-pulse", frameIndex: idx, pulseProgress: 1 - p }),
+            );
+          } else {
+            setLiveState({ kind: "stat-pulse", frameIndex: idx, pulseProgress: 0 });
+            await hold(frame.duration_ms);
+          }
+          idx = (idx + 1) % localFrames.length;
+        }
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+      rafIds.forEach((id) => cancelAnimationFrame(id));
+      timerIds.forEach((id) => clearTimeout(id));
+    };
+  }, [exportState, variant.variant_id, variant.brand_voice, variant.animation_frames, strategy]);
+
+  // Build variants for each layer.
+  const variantForFrame = (idx: number): Variant => {
+    const f = frames[idx];
+    if (strategy === "word-swap" && f?.overlay_text) {
+      return { ...variant, creative_overlay: f.overlay_text };
+    }
+    return variant;
+  };
+
+  const renderBase = (
+    v: Variant,
+    ref: React.RefObject<HTMLDivElement | null>,
+  ) => {
+    // Try visual-style-specific renderer first
+    const vs = v.visual_style;
+    if (vs && hasStyleRenderer(vs)) {
+      return renderVisualStyle(vs, { variant: v, theme, mockupRef: ref, aspectRatio });
+    }
+    // Fallback to theme-layout-based renderers
+    switch (theme.layout) {
+      case "wave":
+        return <WaveMockup variant={v} theme={theme} mockupRef={ref} aspectRatio={aspectRatio} />;
+      case "quote":
+        return <QuoteMockup variant={v} theme={theme} mockupRef={ref} aspectRatio={aspectRatio} />;
+      case "cobrand":
+        return <CoBrandMockup variant={v} theme={theme} mockupRef={ref} aspectRatio={aspectRatio} />;
+      default:
+        return <StandardMockup variant={v} theme={theme} mockupRef={ref} aspectRatio={aspectRatio} />;
+    }
+  };
+
+  // ── Word-swap render ─────────────────────────────────────────────
+  if (display.kind === "word-swap") {
+    const { fromIndex, toIndex, progress } = display;
+    const fromVariant = variantForFrame(fromIndex);
+    const transitioning = toIndex !== null && progress > 0;
+
+    // Asymmetric timing: outgoing fades faster than incoming ramps in.
+    // Outgoing: fully gone by progress = 0.5 (160ms of 320ms).
+    // Incoming: starts at progress = 0.1875 (60ms), full by progress = 1.
+    const outP = Math.min(1, progress / 0.5);
+    const inP = Math.max(0, Math.min(1, (progress - 0.1875) / 0.8125));
+    const fromAlpha = 1 - outP;
+    const fromY = -18 * outP; // percent of text height
+    const toAlpha = inP;
+    const toY = 18 * (1 - inP);
+
+    return (
+      <div
+        ref={mockupRef}
+        className="relative w-full overflow-hidden"
+        style={{
+          aspectRatio: aspectRatio || "1 / 1",
+          containerType: "inline-size",
+        }}
+      >
+        {/* From layer */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: fromAlpha,
+            transform: `translateY(${fromY}%)`,
+            willChange: transitioning ? "opacity, transform" : undefined,
+          }}
+        >
+          {renderBase(fromVariant, transitioning ? fromBaseRef : baseRefSolo)}
+        </div>
+        {/* To layer — only during transition */}
+        {transitioning && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: toAlpha,
+              transform: `translateY(${toY}%)`,
+              willChange: "opacity, transform",
+            }}
+          >
+            {renderBase(variantForFrame(toIndex!), toBaseRef)}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Type-on render ───────────────────────────────────────────────
+  // Classic thin-cursor typing. Base mockup is quieted (empty overlay
+  // + subtext); GifMockup draws the progressively-revealed text in
+  // the headline zone with a "|" cursor during typing and hold-typed.
+  if (display.kind === "type-on") {
+    const fullText = variant.creative_overlay || "";
+    const typed = fullText.slice(0, Math.max(0, Math.min(fullText.length, display.charsRevealed)));
+    const overlaySubtext = variant.overlay_subtext || "";
+    const quietedTypeVariant: Variant = {
+      ...variant,
+      creative_overlay: "",
+      overlay_subtext: "",
+    };
+    const typePlacement = statHeadlinePlacementFor(theme.layout);
+
+    return (
+      <div
+        ref={mockupRef}
+        className="relative w-full overflow-hidden"
+        style={{
+          aspectRatio: aspectRatio || "1 / 1",
+          containerType: "inline-size",
+        }}
+      >
+        <div className="absolute inset-0">{renderBase(quietedTypeVariant, baseRefSolo)}</div>
+        <div
+          style={{
+            position: "absolute",
+            pointerEvents: "none",
+            textAlign: typePlacement.textAlign,
+            opacity: display.opacity,
+            ...typePlacement.container,
+          }}
+        >
+          <h2
+            style={{
+              color: theme.headlineColor,
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(40px, 13cqw, 150px)",
+              lineHeight: 1.0,
+              letterSpacing: "-0.03em",
+              margin: 0,
+              fontStyle: "italic",
+            }}
+          >
+            {typed}
+            {display.showCursor && (
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "0.05em",
+                  height: "0.9em",
+                  marginLeft: "0.04em",
+                  verticalAlign: "baseline",
+                  backgroundColor: theme.accentColor,
+                  transform: "translateY(0.05em)",
+                }}
+              />
+            )}
+          </h2>
+          {overlaySubtext && (
+            <p
+              style={{
+                color: theme.subColor,
+                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontWeight: 500,
+                fontSize: "clamp(16px, 3.2cqw, 34px)",
+                lineHeight: 1.35,
+                letterSpacing: "-0.005em",
+                marginTop: "4%",
+                maxWidth: "100%",
+              }}
+            >
+              {overlaySubtext}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Stat-pulse render (Option A — stat IS the headline) ────────
+  // The base mockup renders only background + logo + CTA (headline and
+  // subtext quieted). GifMockup draws the stat in the headline position
+  // with a subtext "because" line underneath. One hero number, one
+  // supporting beat — the gold-standard B2B stat-ad shape.
+  const { frameIndex, pulseProgress } = display;
+  const currentFrame = frames[frameIndex];
+  const statValue = currentFrame?.stat_value ?? variant.stat_value ?? "";
+  const cleanSubtext = stripStatFromText(variant.overlay_subtext, statValue);
+  const quietedVariant: Variant = {
+    ...variant,
+    creative_overlay: "",
+    overlay_subtext: "",
+  };
+  const placement = statHeadlinePlacementFor(theme.layout);
+
+  // Breath curve: scale 1.00 → 1.03, glow 0 → strong.
+  const pulseScale = 1 + 0.03 * pulseProgress;
+  const glowOuter = 80 * pulseProgress;
+  const glowInner = 24 * pulseProgress;
+  const statShadow =
+    pulseProgress > 0.01
+      ? `0 0 ${glowOuter}px ${theme.accentColor}, 0 0 ${glowInner}px ${theme.accentColor}`
+      : "none";
+
+  return (
+    <div
+      ref={mockupRef}
+      className="relative w-full overflow-hidden"
+      style={{
+        aspectRatio: aspectRatio || "1 / 1",
+        containerType: "inline-size",
+      }}
+    >
+      <div className="absolute inset-0">{renderBase(quietedVariant, baseRefSolo)}</div>
+      {statValue && (
+        <div
+          style={{
+            position: "absolute",
+            pointerEvents: "none",
+            textAlign: placement.textAlign,
+            ...placement.container,
+          }}
+        >
+          <div
+            style={{
+              color: theme.accentColor,
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 900,
+              fontSize: "clamp(80px, 28cqw, 360px)",
+              lineHeight: 0.95,
+              letterSpacing: "-0.04em",
+              fontStyle: "italic",
+              display: "inline-block",
+              transform: `scale(${pulseScale})`,
+              textShadow: statShadow,
+              transformOrigin:
+                placement.textAlign === "right"
+                  ? "right center"
+                  : placement.textAlign === "center"
+                    ? "center center"
+                    : "left center",
+            }}
+          >
+            {statValue}
+          </div>
+          {cleanSubtext && (
+            <p
+              style={{
+                color: theme.subColor,
+                fontFamily: "'Figtree', 'Inter', sans-serif",
+                fontWeight: 500,
+                fontSize: "clamp(16px, 3.2cqw, 34px)",
+                lineHeight: 1.35,
+                letterSpacing: "-0.005em",
+                marginTop: "4%",
+                maxWidth: "100%",
+              }}
+            >
+              {cleanSubtext}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Single ad mockup (picks renderer based on theme layout) ───── */
 function AdMockup({
   variant,
@@ -1086,6 +1669,7 @@ function AdMockup({
   themePenalties,
   forcedTheme,
   mockupRefs,
+  gifExporters,
   renderContext,
 }: {
   variant: Variant;
@@ -1096,6 +1680,7 @@ function AdMockup({
   themePenalties: ThemePenalties;
   forcedTheme?: AdTheme;
   mockupRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  gifExporters: React.MutableRefObject<Map<string, () => Promise<Blob | null>>>;
   renderContext?: CanvasRenderContext;
 }) {
   const mockupRef = useRef<HTMLDivElement>(null);
@@ -1103,6 +1688,12 @@ function AdMockup({
   const themeName = forcedTheme || pickTheme(index, themePenalties, visualStyle);
   const theme = THEMES[themeName];
   const aspectRatio = renderContext?.aspectRatio;
+  const isGif =
+    isGifFormat(variant.ad_format) &&
+    !!variant.animation_frames &&
+    variant.animation_frames.length > 0;
+  const [exportState, setExportState] = useState<GifAnimState | null>(null);
+  const [exportingGif, setExportingGif] = useState(false);
 
   // Register this mockup's DOM ref so FigmaSendPanel can render it to PNG
   useEffect(() => {
@@ -1129,45 +1720,263 @@ function AdMockup({
     }
   }, [variant.variant_id, index]);
 
-  const renderMockup = () => {
-    switch (theme.layout) {
-      case "wave":
-        return (
-          <WaveMockup
-            variant={variant}
-            theme={theme}
-            mockupRef={mockupRef}
-            aspectRatio={aspectRatio}
-          />
-        );
-      case "quote":
-        return (
-          <QuoteMockup
-            variant={variant}
-            theme={theme}
-            mockupRef={mockupRef}
-            aspectRatio={aspectRatio}
-          />
-        );
-      case "cobrand":
-        return (
-          <CoBrandMockup
-            variant={variant}
-            theme={theme}
-            mockupRef={mockupRef}
-            aspectRatio={aspectRatio}
-          />
-        );
-      default:
-        return (
-          <StandardMockup
-            variant={variant}
-            theme={theme}
-            mockupRef={mockupRef}
-            aspectRatio={aspectRatio}
-          />
-        );
+  const encodeGifBlob = useCallback(async (): Promise<Blob | null> => {
+    if (!mockupRef.current) return null;
+    const frames = variant.animation_frames ?? [];
+    if (frames.length === 0) return null;
+    const strategy: "word-swap" | "stat-pulse" | "type-on" =
+      variant.animation_strategy === "stat-pulse"
+        ? "stat-pulse"
+        : variant.animation_strategy === "type-on"
+          ? "type-on"
+          : "word-swap";
+    const voiceEase = easeForVoice(variant.brand_voice);
+
+    // Build the deterministic sub-frame schedule per MOTION.md §7.
+    // Rest segments collapse to a single encoded frame with full delay
+    // (gifenc's frame-diff optimizer keeps the file tight).
+    // Transition segments sample at ~80ms intervals.
+    type Sample = { state: GifAnimState; delay_ms: number };
+    const samples: Sample[] = [];
+
+    const TRANSITION_MS = 320;
+    const TRANSITION_STEPS = 4; // 80ms per step = ~12fps during motion
+    const SWELL_MS = 500;
+    const SWELL_STEPS = 6;
+
+    if (strategy === "word-swap") {
+      for (let i = 0; i < frames.length; i++) {
+        // Rest at this frame
+        samples.push({
+          state: { kind: "word-swap", fromIndex: i, toIndex: null, progress: 0 },
+          delay_ms: frames[i].duration_ms,
+        });
+        // Transition to next (only if looping — last frame transitions back to 0)
+        const next = (i + 1) % frames.length;
+        if (frames.length > 1) {
+          const stepDelay = Math.round(TRANSITION_MS / TRANSITION_STEPS);
+          for (let s = 1; s <= TRANSITION_STEPS; s++) {
+            const rawP = s / TRANSITION_STEPS;
+            samples.push({
+              state: {
+                kind: "word-swap",
+                fromIndex: i,
+                toIndex: next,
+                progress: voiceEase(rawP),
+              },
+              delay_ms: stepDelay,
+            });
+          }
+        }
+      }
+    } else if (strategy === "type-on") {
+      // Type-on: one sub-frame per revealed character during typing,
+      // one held frame for each steady state, and a short fade+reappear.
+      const fullText = variant.creative_overlay || "";
+      const charCount = fullText.length;
+      const typingSpeed = typingSpeedFor(variant.brand_voice);
+      const HOLD_TYPED_MS = 1500;
+      const FADE_MS = 400;
+      const FADE_STEPS = 4;
+      const REAPPEAR_MS = 150;
+      const HOLD_COMPLETE_MS = 1500;
+
+      // Typing phase — one frame per character
+      for (let c = 1; c <= charCount; c++) {
+        samples.push({
+          state: {
+            kind: "type-on",
+            phase: "typing",
+            charsRevealed: c,
+            opacity: 1,
+            showCursor: true,
+          },
+          delay_ms: typingSpeed,
+        });
+      }
+      // Hold typed
+      samples.push({
+        state: {
+          kind: "type-on",
+          phase: "hold-typed",
+          charsRevealed: charCount,
+          opacity: 1,
+          showCursor: true,
+        },
+        delay_ms: HOLD_TYPED_MS,
+      });
+      // Fade out
+      const fadeStepDelay = Math.round(FADE_MS / FADE_STEPS);
+      for (let s = 1; s <= FADE_STEPS; s++) {
+        samples.push({
+          state: {
+            kind: "type-on",
+            phase: "fading",
+            charsRevealed: charCount,
+            opacity: 1 - easeInOutCubic(s / FADE_STEPS),
+            showCursor: false,
+          },
+          delay_ms: fadeStepDelay,
+        });
+      }
+      // Reappear — single quick frame (150ms) at full opacity, no cursor
+      samples.push({
+        state: {
+          kind: "type-on",
+          phase: "reappear",
+          charsRevealed: charCount,
+          opacity: 1,
+          showCursor: false,
+        },
+        delay_ms: REAPPEAR_MS,
+      });
+      // Hold complete
+      samples.push({
+        state: {
+          kind: "type-on",
+          phase: "hold-complete",
+          charsRevealed: charCount,
+          opacity: 1,
+          showCursor: false,
+        },
+        delay_ms: HOLD_COMPLETE_MS,
+      });
+    } else {
+      // stat-pulse
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
+        if (frame.stat_pulse === true) {
+          // Swell up (500ms)
+          const swellStepDelay = Math.round(SWELL_MS / SWELL_STEPS);
+          for (let s = 1; s <= SWELL_STEPS; s++) {
+            samples.push({
+              state: {
+                kind: "stat-pulse",
+                frameIndex: i,
+                pulseProgress: voiceEase(s / SWELL_STEPS),
+              },
+              delay_ms: swellStepDelay,
+            });
+          }
+          // Settle down (remaining)
+          const settleMs = Math.max(frame.duration_ms - SWELL_MS, 200);
+          const settleSteps = 5;
+          const settleStepDelay = Math.round(settleMs / settleSteps);
+          for (let s = 1; s <= settleSteps; s++) {
+            samples.push({
+              state: {
+                kind: "stat-pulse",
+                frameIndex: i,
+                pulseProgress: 1 - easeInOutCubic(s / settleSteps),
+              },
+              delay_ms: settleStepDelay,
+            });
+          }
+        } else {
+          // Rest: single encoded frame with full delay
+          samples.push({
+            state: { kind: "stat-pulse", frameIndex: i, pulseProgress: 0 },
+            delay_ms: frame.duration_ms,
+          });
+        }
+      }
     }
+
+    try {
+      const encoder = GIFEncoder();
+      for (const sample of samples) {
+        setExportState(sample.state);
+        // Wait two paints so React commits the frame before capture.
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        );
+        if (!mockupRef.current) break;
+        const canvas = await toCanvas(mockupRef.current, { pixelRatio: 1 });
+        const ctx = canvas.getContext("2d");
+        if (!ctx) continue;
+        const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        // 128-color palette per MOTION.md §7 — balances brand fidelity with file size.
+        const palette = quantize(data, 128);
+        const indexed = applyPalette(data, palette);
+        encoder.writeFrame(indexed, width, height, {
+          palette,
+          delay: sample.delay_ms,
+        });
+      }
+      encoder.finish();
+      return new Blob([encoder.bytes() as BlobPart], { type: "image/gif" });
+    } finally {
+      setExportState(null);
+    }
+  }, [variant.animation_frames, variant.animation_strategy, variant.brand_voice]);
+
+  // Register encoder so FigmaSendPanel can produce GIFs for the ZIP.
+  // Uses a ref to the latest encoder so we register once per variant_id.
+  const encodeGifBlobRef = useRef(encodeGifBlob);
+  useEffect(() => {
+    encodeGifBlobRef.current = encodeGifBlob;
+  }, [encodeGifBlob]);
+  useEffect(() => {
+    if (!isGif) return;
+    const stable = () => encodeGifBlobRef.current();
+    gifExporters.current.set(variant.variant_id, stable);
+    return () => { gifExporters.current.delete(variant.variant_id); };
+  }, [variant.variant_id, isGif, gifExporters]);
+
+  const handleDownloadGif = useCallback(async () => {
+    setExportingGif(true);
+    try {
+      const blob = await encodeGifBlob();
+      if (!blob) return;
+      saveAs(blob, `docebo-ad-${variant.variant_id || index + 1}.gif`);
+    } catch (err) {
+      console.error("Failed to export GIF:", err);
+    } finally {
+      setExportingGif(false);
+    }
+  }, [encodeGifBlob, variant.variant_id, index]);
+
+  const renderMockup = () => {
+    let mockupContent: React.ReactElement;
+
+    if (isGif) {
+      mockupContent = (
+        <GifMockup
+          variant={variant}
+          theme={theme}
+          mockupRef={mockupRef}
+          aspectRatio={aspectRatio}
+          exportState={exportState}
+        />
+      );
+    } else {
+      // Try visual-style-specific renderer first
+      const vs = renderContext?.visual_style || variant.visual_style;
+      const styleResult = vs ? renderVisualStyle(vs, { variant, theme, mockupRef, aspectRatio }) : null;
+
+      if (styleResult) {
+        mockupContent = styleResult;
+      } else {
+        // Fallback to theme-layout-based renderers
+        switch (theme.layout) {
+          case "wave":
+            mockupContent = <WaveMockup variant={variant} theme={theme} mockupRef={mockupRef} aspectRatio={aspectRatio} />;
+            break;
+          case "quote":
+            mockupContent = <QuoteMockup variant={variant} theme={theme} mockupRef={mockupRef} aspectRatio={aspectRatio} />;
+            break;
+          case "cobrand":
+            mockupContent = <CoBrandMockup variant={variant} theme={theme} mockupRef={mockupRef} aspectRatio={aspectRatio} />;
+            break;
+          default:
+            mockupContent = <StandardMockup variant={variant} theme={theme} mockupRef={mockupRef} aspectRatio={aspectRatio} />;
+        }
+      }
+    }
+
+    // Wrap with format-specific chrome (carousel dots, document pages, etc.)
+    const adFormat = renderContext?.ad_format || variant.ad_format;
+    return <>{wrapForFormat(adFormat, variant, mockupContent)}</>;
   };
 
   return (
@@ -1195,12 +2004,22 @@ function AdMockup({
           </span>
           {approved ? "Approved for Figma" : "Approve for Figma"}
         </button>
-        <button
-          onClick={handleDownload}
-          className="text-xs px-2 py-1 rounded bg-docebo-card text-docebo-muted hover:bg-docebo-border hover:text-white transition-colors cursor-pointer"
-        >
-          ↓ PNG
-        </button>
+        {isGif ? (
+          <button
+            onClick={handleDownloadGif}
+            disabled={exportingGif}
+            className="text-xs px-2 py-1 rounded bg-docebo-card text-docebo-muted hover:bg-docebo-border hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {exportingGif ? "Encoding…" : "↓ GIF"}
+          </button>
+        ) : (
+          <button
+            onClick={handleDownload}
+            className="text-xs px-2 py-1 rounded bg-docebo-card text-docebo-muted hover:bg-docebo-border hover:text-white transition-colors cursor-pointer"
+          >
+            ↓ PNG
+          </button>
+        )}
       </div>
 
       {/* Variant header */}
@@ -1378,10 +2197,12 @@ function FigmaSendPanel({
   variants,
   approvedIds,
   mockupRefs,
+  gifExporters,
 }: {
   variants: Variant[];
   approvedIds: Set<string>;
   mockupRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  gifExporters: React.MutableRefObject<Map<string, () => Promise<Blob | null>>>;
 }) {
   const [figmaUrl, setFigmaUrl] = useState("");
   const [sending, setSending] = useState(false);
@@ -1401,6 +2222,22 @@ function FigmaSendPanel({
       const imgFolder = zip.folder("docebo-approved-mockups");
 
       for (const v of approvedVariants) {
+        const isGifVariant =
+          isGifFormat(v.ad_format) &&
+          !!v.animation_frames &&
+          v.animation_frames.length > 0;
+
+        if (isGifVariant) {
+          const exporter = gifExporters.current.get(v.variant_id);
+          if (!exporter) continue;
+          const blob = await exporter();
+          if (!blob) continue;
+          const buf = await blob.arrayBuffer();
+          const filename = `docebo-${v.variant_id}-${v.ad_type ?? "gif"}.gif`;
+          imgFolder!.file(filename, buf);
+          continue;
+        }
+
         const el = mockupRefs.current.get(v.variant_id);
         if (!el) continue;
         const dataUrl = await toPng(el, { quality: 1, pixelRatio: 2 });
@@ -1411,10 +2248,13 @@ function FigmaSendPanel({
       }
 
       // Add a brief.txt with the creative details
-      const briefLines = approvedVariants.map((v) =>
-        [
+      const briefLines = approvedVariants.map((v) => {
+        const isGifVariant =
+          isGifFormat(v.ad_format) && !!v.animation_frames?.length;
+        const ext = isGifVariant ? "gif" : "png";
+        return [
           `━━━ ${v.variant_id} | ${v.ad_type} | ${v.hook_type} ━━━`,
-          `File: docebo-${v.variant_id}-${v.ad_type}.png`,
+          `File: docebo-${v.variant_id}-${v.ad_type}.${ext}`,
           `Headline: ${v.headline}`,
           `Overlay: ${v.creative_overlay}`,
           `CTA: ${v.cta_text}`,
@@ -1423,8 +2263,8 @@ function FigmaSendPanel({
           `UTM: ${v.utm_content_tag}`,
           `Scores — Voice: ${v.self_score?.voice_compliance} | Brand: ${v.self_score?.visual_brand_fit} | Diff: ${v.self_score?.differentiation} | Term: ${v.self_score?.terminology}`,
           "",
-        ].join("\n")
-      );
+        ].join("\n");
+      });
       imgFolder!.file("brief.txt", briefLines.join("\n"));
 
       const blob = await zip.generateAsync({ type: "blob" });
@@ -1490,10 +2330,10 @@ function FigmaSendPanel({
         {exporting ? (
           <>
             <span className="inline-block w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
-            Rendering {count} mockup{count > 1 ? "s" : ""} to PNG...
+            Rendering {count} mockup{count > 1 ? "s" : ""}...
           </>
         ) : (
-          <>Download {count} PNG{count > 1 ? "s" : ""} + brief (ZIP)</>
+          <>Download {count} mockup{count > 1 ? "s" : ""} + brief (ZIP)</>
         )}
       </button>
 
@@ -1753,6 +2593,7 @@ export default function AdCanvas({ variants, renderContext }: AdCanvasProps) {
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set());
   const [selectedStyle, setSelectedStyle] = useState<AdTheme | "mix" | null>(null);
   const mockupRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const gifExporters = useRef<Map<string, () => Promise<Blob | null>>>(new Map());
 
   // Reset style selection when new variants arrive
   useEffect(() => {
@@ -1852,7 +2693,7 @@ export default function AdCanvas({ variants, renderContext }: AdCanvasProps) {
       </div>
 
       {/* Figma send panel (shows when variants are approved) */}
-      <FigmaSendPanel variants={variants} approvedIds={approvedIds} mockupRefs={mockupRefs} />
+      <FigmaSendPanel variants={variants} approvedIds={approvedIds} mockupRefs={mockupRefs} gifExporters={gifExporters} />
 
       {/* Feedback log (shows after any feedback is submitted) */}
       <FeedbackLog entries={feedbackLog} penalties={themePenalties} />
@@ -1869,6 +2710,7 @@ export default function AdCanvas({ variants, renderContext }: AdCanvasProps) {
             themePenalties={themePenalties}
             forcedTheme={forcedTheme}
             mockupRefs={mockupRefs}
+            gifExporters={gifExporters}
             renderContext={renderContext}
           />
         ))}
