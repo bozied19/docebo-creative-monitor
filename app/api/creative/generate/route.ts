@@ -168,9 +168,18 @@ REQUIRED FIELDS (in addition to the standard variant fields):
     * comparison-versus, identity-persona → word-swap
     * any other hook → word-swap (safe default)
 
-- "stat_value": REQUIRED for stat-pulse. A specific number (e.g. "94%", "3.2x", "$2.4M", "3,800+"). 2-6 characters. Never vague ("fast", "better" are forbidden). OMIT for word-swap.
+- "stat_value": REQUIRED for (a) any stat-pulse variant, and (b) any variant using visual_style="data-as-power" regardless of animation_strategy (the data-as-power layout has a prominent KEY METRIC card that must display a real number). A specific number (e.g. "94%", "3.2x", "$2.4M", "3,800+"). 2-6 characters. Never vague ("fast", "better" are forbidden). Omit only for word-swap / type-on variants on visual styles other than data-as-power.
+  * The stat MUST contextually align with the ad's message — it should quantify the pain, outcome, or proof expressed in creative_overlay. A stat unrelated to the headline breaks the ad. Example: headline "Manual compliance reporting dies here" → stat_value "73%" (of audits missed) or "4min" (new report time), NOT a random "94%" unrelated to the copy.
   * IMPORTANT: In stat-pulse variants, the stat_value renders as the HERO headline (very large, pulsing). Do NOT duplicate it in creative_overlay or overlay_subtext — the renderer will quiet the headline slot so the stat is the single focal point.
-  * overlay_subtext (which renders UNDER the pulsing stat) is the "because" line — it explains what the stat measures in complementary language. Example: stat_value="94%", overlay_subtext="Completion rates. Zero begging required." NOT "94% completion rates" (that would repeat the number).
+  * In data-as-power + word-swap / type-on variants, the stat_value renders only inside the KEY METRIC card (not as a hero), so it is safe — and expected — for the headline and subtext to talk about the same underlying insight in words.
+  * overlay_subtext (which renders UNDER the pulsing stat) is the "because" line — it must LITERALLY EXPLAIN what the stat measures. Apply this test before you write it: a reader seeing only the stat_value and the overlay_subtext must be able to answer "[stat_value] of WHAT?" in one beat. If they can't, the subtext has failed and the ad is broken.
+    - GOOD (answers "of what?"): stat_value="94%", overlay_subtext="Completion rates. Zero begging required." → 94% OF completion rates. Clear.
+    - GOOD: stat_value="73%", overlay_subtext="Of audits fail first review." → 73% OF audits fail. Clear.
+    - GOOD: stat_value="4min", overlay_subtext="From flag to filed evidence." → 4min IS the flag-to-filed time. Clear.
+    - BAD (benefit statement, not explanation): stat_value="73%", overlay_subtext="Regulatory defensibility simplified." → 73% of what? Unknown. Reader is confused — the subtext describes a product outcome, not what the number measures.
+    - BAD: stat_value="3.2x", overlay_subtext="Unify your records today." → 3.2x of what? Reader can't tell. Never pair a stat with a CTA-flavored or benefit-flavored subtext.
+  * Rule of thumb: the subtext should read like a measurement caption or chart label ("Completion rates", "Of audits fail", "Average audit-ready time"), not like a headline or CTA. If it could appear on the X-axis of a chart, it's probably right. If it could appear on a product page, it's probably wrong.
+  * Do NOT repeat the stat in the subtext (e.g. "94% completion rates" duplicates the hero). The stat is already rendered massive above; the subtext only adds the "of what."
 
 - "animation_frames": Array describing the loop. Rules:
     * Total duration (sum of duration_ms) MUST be between 4000 and 5500 ms.
@@ -182,6 +191,7 @@ REQUIRED FIELDS (in addition to the standard variant fields):
     * Each phrase is a complete thought.
     * duration_ms per frame: 1800-2200 (reader needs time).
     * The first frame's overlay_text should match creative_overlay exactly (serves as static fallback).
+    * IMPORTANT: overlay_subtext is NOT rendered inside word-swap GIFs — the typewriter headline carries the full message on its own. If supporting context is needed, fold it into the overlay_text of a subsequent frame rather than into overlay_subtext. Each overlay_text phrase must therefore stand alone as a complete thought.
 
   For stat-pulse: exactly 2 or 4 frames alternating rest and pulse.
     * Rest frame: duration_ms 1800-2400, "stat_pulse": false.
