@@ -879,7 +879,11 @@ export function RebelliousEditorialMockup({ variant, theme, mockupRef, aspectRat
 
 export function DataAsPowerMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
   const subtext = resolveSubtext(variant);
-  const statVal = variant.stat_value || "94%";
+  // The generator prompt now requires stat_value for every data-as-power
+  // variant (stat-pulse, word-swap, and type-on). This em-dash is only a
+  // last-resort safety net for malformed/legacy data — in normal runs
+  // stat_value should always be present.
+  const statVal = variant.stat_value || "—";
 
   return (
     <div
@@ -909,8 +913,8 @@ export function DataAsPowerMockup({ variant, theme, mockupRef, aspectRatio }: St
         className="absolute inset-0 flex flex-col"
         style={{ padding: "6%" }}
       >
-        {/* Top row: Logo + label */}
-        <div className="flex items-center justify-between">
+        {/* Top row: logo only */}
+        <div className="flex items-center">
           <span
             style={{
               color: "#FFFFFF",
@@ -920,17 +924,6 @@ export function DataAsPowerMockup({ variant, theme, mockupRef, aspectRatio }: St
             }}
           >
             docebo
-          </span>
-          <span
-            style={{
-              color: "rgba(255,255,255,0.4)",
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: "clamp(9px, 1.5cqw, 13px)",
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-            }}
-          >
-            Performance Data
           </span>
         </div>
 
@@ -1051,12 +1044,13 @@ export function DataAsPowerMockup({ variant, theme, mockupRef, aspectRatio }: St
               <span
                 key={metric}
                 style={{
-                  color: "rgba(255,255,255,0.5)",
+                  color: "rgba(255,255,255,0.7)",
                   fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: "clamp(7px, 1.3cqw, 11px)",
-                  padding: "1% 2.5%",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: "4px",
+                  fontSize: "clamp(11px, 2cqw, 16px)",
+                  padding: "2% 3.5%",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "6px",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {metric}

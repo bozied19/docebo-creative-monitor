@@ -1153,12 +1153,16 @@ function typingSpeedFor(voice?: string): number {
 type GifAnimState =
   | {
       kind: "word-swap";
-      /** The rest frame the viewer currently sees. */
-      fromIndex: number;
-      /** Set only during a transition to the next frame. */
-      toIndex: number | null;
-      /** Transition progress 0–1. Always 0 when toIndex is null. */
-      progress: number;
+      /** Index of the frame whose headline text is currently animating. */
+      frameIndex: number;
+      /** Characters revealed from frames[frameIndex].overlay_text. */
+      charsRevealed: number;
+      /** Headline opacity. 1 during typing/holding, fades to 0 between frames. */
+      opacity: number;
+      /** Cursor visible during typing + holding only. */
+      showCursor: boolean;
+      /** Beat of the per-frame loop — useful for the encoder sampler. */
+      phase: "typing" | "holding" | "fading";
     }
   | {
       kind: "stat-pulse";
@@ -1196,10 +1200,110 @@ function stripStatFromText(text: string | undefined, stat: string): string {
 /** Placement for the stat-as-headline block, per base layout.
  *  The stat occupies the headline zone (not a side safe zone), so it
  *  reads as the ad's hero element rather than a floating decoration. */
-function statHeadlinePlacementFor(layout: ThemeConfig["layout"]): {
+function statHeadlinePlacementFor(
+  layout: ThemeConfig["layout"],
+  visualStyle?: string,
+): {
   container: React.CSSProperties;
   textAlign: React.CSSProperties["textAlign"];
+  /** Font-size override for the stat-pulse hero stat. When omitted,
+   *  stat-pulse uses its default clamp. */
+  heroFontSize?: string;
+  /** Font-size override for typewriter overlays (word-swap + type-on).
+   *  When omitted, each strategy uses its own default clamp. */
+  typewriterFontSize?: string;
+  /** Overlay text color. Each visual style hard-codes its background,
+   *  so the overlay needs a color that is guaranteed to contrast with
+   *  that fixed bg — independent of whichever theme the picker chose.
+   *  When omitted, callers fall back to theme.headlineColor. */
+  textColor?: string;
 } {
+  // Visual-style-specific placements take priority — each branch is
+  // calibrated to the native headline zone of its mockup so the overlay
+  // lands where the style naturally places its headline.
+  switch (visualStyle) {
+    case "data-as-power":
+      // Cards occupy ~6–31% of the canvas; chip row ~86–94%. Center the
+      // overlay in the 31–89% free band; cap the stat at 20cqw so italic
+      // glyphs clear the card edge with breathing room above and below.
+      return {
+        container: {
+          left: "10%",
+          top: "60%",
+          transform: "translateY(-50%)",
+          maxWidth: "80%",
+        },
+        textAlign: "left",
+        heroFontSize: "clamp(60px, 20cqw, 240px)",
+        textColor: "#FFFFFF", // white on midnight bg
+      };
+    case "minimal-authority":
+      // Base uses a flex:1 spacer that pushes all content (rule, h2,
+      // subtext, CTA) to the bottom. Place the overlay where the native
+      // h2 renders so stat/typewriter align with the rule + CTA below.
+      return {
+        container: {
+          left: "10%",
+          top: "58%",
+          transform: "translateY(-50%)",
+          maxWidth: "80%",
+        },
+        textAlign: "left",
+        heroFontSize: "clamp(60px, 20cqw, 240px)",
+        textColor: "#0A0A0A", // near-black on hardcoded white bg
+      };
+    case "neon-intelligence":
+      // Native headline sits at padding 10% + marginTop 2% + marginLeft 4%.
+      return {
+        container: { left: "14%", top: "14%", maxWidth: "72%" },
+        textAlign: "left",
+        textColor: "#FFFFFF", // white on near-black bg
+      };
+    case "human-contrast":
+      // Native headline is vertically centered inside a 46%-wide left
+      // column; right 46% is a portrait placeholder. Keep the overlay
+      // narrow so it doesn't spill across the image area. Beige bg —
+      // theme.headlineColor already matches, leave textColor unset.
+      return {
+        container: {
+          left: "7%",
+          top: "50%",
+          transform: "translateY(-50%)",
+          maxWidth: "46%",
+        },
+        textAlign: "left",
+        heroFontSize: "clamp(48px, 14cqw, 150px)",
+        typewriterFontSize: "clamp(24px, 6.5cqw, 68px)",
+      };
+    case "rebellious-editorial":
+      // Logo top, large uppercase headline in upper-middle, subtext
+      // right-aligned. Anchor the overlay at ~28% to match the h2 zone.
+      return {
+        container: { left: "7%", top: "28%", maxWidth: "86%" },
+        textAlign: "left",
+        textColor: "#E6DACB", // marble-10 on marble-dark bg
+      };
+    case "digital-rebellion":
+      // Glitch layout with RGB-offset ghost text near the top.
+      return {
+        container: { left: "6%", top: "14%", maxWidth: "88%" },
+        textAlign: "left",
+        textColor: "#FFFFFF", // white on midnight bg
+      };
+    case "system-ui":
+      // Headline renders inside the browser chrome's main area, to the
+      // right of a 22% sidebar (plus padding), below the stat cards and
+      // line chart. Constrain width and font so it fits the panel.
+      return {
+        container: { left: "34%", top: "65%", maxWidth: "58%" },
+        textAlign: "left",
+        heroFontSize: "clamp(30px, 10cqw, 110px)",
+        typewriterFontSize: "clamp(20px, 6cqw, 60px)",
+        textColor: "#FFFFFF", // white on dark-blue bg
+      };
+  }
+  // Fallback: theme-layout-based placement when visualStyle is absent
+  // or unknown (keeps legacy StandardMockup / WaveMockup / etc. working).
   switch (layout) {
     case "cobrand":
       return {
@@ -1217,7 +1321,6 @@ function statHeadlinePlacementFor(layout: ThemeConfig["layout"]): {
         textAlign: "left",
       };
     case "wave":
-      // Wave has a beige band up top; put stat in the navy lower half.
       return {
         container: { left: "10%", top: "52%", maxWidth: "80%" },
         textAlign: "left",
@@ -1264,14 +1367,18 @@ function GifMockup({
         opacity: 1,
         showCursor: true,
       };
-    return { kind: "word-swap", fromIndex: 0, toIndex: null, progress: 0 };
+    return {
+      kind: "word-swap",
+      frameIndex: 0,
+      charsRevealed: 0,
+      opacity: 1,
+      showCursor: true,
+      phase: "typing",
+    };
   });
   const display: GifAnimState = exportState ?? liveState;
 
-  // Discard-ref for base mockups (we don't capture them individually — the
-  // outer wrapper holds the capture ref).
-  const fromBaseRef = useRef<HTMLDivElement>(null);
-  const toBaseRef = useRef<HTMLDivElement>(null);
+  // Discard-ref for the base mockup — the outer wrapper holds the capture ref.
   const baseRefSolo = useRef<HTMLDivElement>(null);
 
   // Live orchestrator — runs only when no exportState is provided.
@@ -1312,8 +1419,8 @@ function GifMockup({
       });
 
     const run = async () => {
-      const TRANSITION_MS = 320;
       const SWELL_MS = 500;
+      const WORD_SWAP_FADE_MS = 400;
       let idx = 0;
 
       // Type-on has a single linear beat sequence — no per-frame loop.
@@ -1389,15 +1496,61 @@ function GifMockup({
         const frame = localFrames[idx];
 
         if (strategy === "word-swap") {
-          setLiveState({ kind: "word-swap", fromIndex: idx, toIndex: null, progress: 0 });
+          const text = frame.overlay_text || variant.creative_overlay || "";
+          const charCount = text.length;
+          const typingSpeed = typingSpeedFor(variant.brand_voice);
+          // Clear the headline at the start of each frame so the next
+          // phrase types in from empty rather than jump-cutting from the
+          // previous frame's completed text.
+          setLiveState({
+            kind: "word-swap",
+            frameIndex: idx,
+            charsRevealed: 0,
+            opacity: 1,
+            showCursor: true,
+            phase: "typing",
+          });
+          // Type char-by-char
+          for (let c = 1; c <= charCount; c++) {
+            if (cancelled) return;
+            setLiveState({
+              kind: "word-swap",
+              frameIndex: idx,
+              charsRevealed: c,
+              opacity: 1,
+              showCursor: true,
+              phase: "typing",
+            });
+            await hold(typingSpeed);
+          }
+          if (cancelled) return;
+          // Hold completed text with cursor — frame.duration_ms controls
+          // how long the viewer has to read before the fade kicks in.
+          setLiveState({
+            kind: "word-swap",
+            frameIndex: idx,
+            charsRevealed: charCount,
+            opacity: 1,
+            showCursor: true,
+            phase: "holding",
+          });
           await hold(frame.duration_ms);
           if (cancelled) return;
-          if (localFrames.length < 2) continue;
-          const nextIdx = (idx + 1) % localFrames.length;
-          await animate(TRANSITION_MS, localEase, (p) =>
-            setLiveState({ kind: "word-swap", fromIndex: idx, toIndex: nextIdx, progress: p }),
-          );
-          idx = nextIdx;
+          // Fade the headline out so the next frame's typing starts
+          // from a visually empty headline slot. Subtext stays visible.
+          if (localFrames.length > 1) {
+            await animate(WORD_SWAP_FADE_MS, easeInOutCubic, (p) =>
+              setLiveState({
+                kind: "word-swap",
+                frameIndex: idx,
+                charsRevealed: charCount,
+                opacity: 1 - p,
+                showCursor: false,
+                phase: "fading",
+              }),
+            );
+          }
+          idx = (idx + 1) % localFrames.length;
         } else {
           // stat-pulse
           const isPulse = frame.stat_pulse === true;
@@ -1429,10 +1582,16 @@ function GifMockup({
     };
   }, [exportState, variant.variant_id, variant.brand_voice, variant.animation_frames, strategy]);
 
-  // Build variants for each layer.
+  // Build variants for each layer. Word-swap now renders its headline
+  // as an overlay (same pattern as type-on and stat-pulse), so the base
+  // always gets a quieted variant with creative_overlay + overlay_subtext
+  // + intro_text cleared — the overlay owns all headline copy.
   const variantForFrame = (idx: number): Variant => {
+    if (strategy === "word-swap") {
+      return { ...variant, creative_overlay: "", overlay_subtext: "", intro_text: "" };
+    }
     const f = frames[idx];
-    if (strategy === "word-swap" && f?.overlay_text) {
+    if (f?.overlay_text) {
       return { ...variant, creative_overlay: f.overlay_text };
     }
     return variant;
@@ -1460,21 +1619,19 @@ function GifMockup({
     }
   };
 
-  // ── Word-swap render ─────────────────────────────────────────────
+  // ── Word-swap render (typewriter per frame) ──────────────────────
+  // Each frame's overlay_text is typed char-by-char, holds with a
+  // cursor, then fades out so the next frame types in from empty.
+  // overlay_subtext is intentionally NOT rendered here — the typewriter
+  // headline carries the full message; any short supporting line would
+  // either repeat the headline's beat or read as orphaned under it.
   if (display.kind === "word-swap") {
-    const { fromIndex, toIndex, progress } = display;
-    const fromVariant = variantForFrame(fromIndex);
-    const transitioning = toIndex !== null && progress > 0;
-
-    // Asymmetric timing: outgoing fades faster than incoming ramps in.
-    // Outgoing: fully gone by progress = 0.5 (160ms of 320ms).
-    // Incoming: starts at progress = 0.1875 (60ms), full by progress = 1.
-    const outP = Math.min(1, progress / 0.5);
-    const inP = Math.max(0, Math.min(1, (progress - 0.1875) / 0.8125));
-    const fromAlpha = 1 - outP;
-    const fromY = -18 * outP; // percent of text height
-    const toAlpha = inP;
-    const toY = 18 * (1 - inP);
+    const { frameIndex, charsRevealed, opacity, showCursor } = display;
+    const frame = frames[frameIndex];
+    const fullText = frame?.overlay_text || variant.creative_overlay || "";
+    const typed = fullText.slice(0, Math.max(0, Math.min(fullText.length, charsRevealed)));
+    const quietedVariant = variantForFrame(frameIndex);
+    const wsPlacement = statHeadlinePlacementFor(theme.layout, variant.visual_style);
 
     return (
       <div
@@ -1485,32 +1642,44 @@ function GifMockup({
           containerType: "inline-size",
         }}
       >
-        {/* From layer */}
+        <div className="absolute inset-0">{renderBase(quietedVariant, baseRefSolo)}</div>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            opacity: fromAlpha,
-            transform: `translateY(${fromY}%)`,
-            willChange: transitioning ? "opacity, transform" : undefined,
+            pointerEvents: "none",
+            textAlign: wsPlacement.textAlign,
+            ...wsPlacement.container,
           }}
         >
-          {renderBase(fromVariant, transitioning ? fromBaseRef : baseRefSolo)}
-        </div>
-        {/* To layer — only during transition */}
-        {transitioning && (
-          <div
+          <h2
             style={{
-              position: "absolute",
-              inset: 0,
-              opacity: toAlpha,
-              transform: `translateY(${toY}%)`,
-              willChange: "opacity, transform",
+              color: wsPlacement.textColor ?? theme.headlineColor,
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 800,
+              fontSize: wsPlacement.typewriterFontSize ?? "clamp(32px, 8cqw, 90px)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.03em",
+              margin: 0,
+              fontStyle: "italic",
+              opacity,
             }}
           >
-            {renderBase(variantForFrame(toIndex!), toBaseRef)}
-          </div>
-        )}
+            {typed}
+            {showCursor && (
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "0.05em",
+                  height: "0.9em",
+                  marginLeft: "0.04em",
+                  verticalAlign: "baseline",
+                  backgroundColor: theme.accentColor,
+                  transform: "translateY(0.05em)",
+                }}
+              />
+            )}
+          </h2>
+        </div>
       </div>
     );
   }
@@ -1531,7 +1700,7 @@ function GifMockup({
       // when overlay_subtext is empty (falsy "" triggers the fallback).
       intro_text: "",
     };
-    const typePlacement = statHeadlinePlacementFor(theme.layout);
+    const typePlacement = statHeadlinePlacementFor(theme.layout, variant.visual_style);
 
     return (
       <div
@@ -1554,10 +1723,10 @@ function GifMockup({
         >
           <h2
             style={{
-              color: theme.headlineColor,
+              color: typePlacement.textColor ?? theme.headlineColor,
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 800,
-              fontSize: "clamp(40px, 13cqw, 150px)",
+              fontSize: typePlacement.typewriterFontSize ?? "clamp(40px, 13cqw, 150px)",
               lineHeight: 1.0,
               letterSpacing: "-0.03em",
               margin: 0,
@@ -1617,7 +1786,7 @@ function GifMockup({
     // when overlay_subtext is empty (falsy "" triggers the fallback).
     intro_text: "",
   };
-  const placement = statHeadlinePlacementFor(theme.layout);
+  const placement = statHeadlinePlacementFor(theme.layout, variant.visual_style);
 
   // Pick a stat color that reads well on the base mockup's background.
   // Visual styles with dark backgrounds need bright, saturated accents —
@@ -1625,7 +1794,8 @@ function GifMockup({
   const VISUAL_STYLE_STAT_COLORS: Record<string, string> = {
     "neon-intelligence": "#54FA77",   // bright green on black
     "digital-rebellion": "#FF5DD8",   // neon pink on midnight
-    "data-as-power": "#54FA77",       // bright green on midnight
+    // data-as-power intentionally omitted — hero stat uses theme.accentColor
+    // so it matches the CTA and trend-bar highlight in the same composition.
     "system-ui": "#4C8DFF",           // blue on dark
     "rebellious-editorial": "#FF5DD8", // pink on marble-dark
     "minimal-authority": "#7E2EE9",   // purple on white
@@ -1669,7 +1839,7 @@ function GifMockup({
               color: statColor,
               fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
               fontWeight: 900,
-              fontSize: "clamp(80px, 28cqw, 360px)",
+              fontSize: placement.heroFontSize ?? "clamp(80px, 28cqw, 360px)",
               lineHeight: 0.95,
               letterSpacing: "-0.04em",
               fontStyle: "italic",
@@ -1788,32 +1958,60 @@ function AdMockup({
     type Sample = { state: GifAnimState; delay_ms: number };
     const samples: Sample[] = [];
 
-    const TRANSITION_MS = 320;
-    const TRANSITION_STEPS = 4; // 80ms per step = ~12fps during motion
     const SWELL_MS = 500;
     const SWELL_STEPS = 6;
+    const WORD_SWAP_FADE_MS = 400;
+    const WORD_SWAP_FADE_STEPS = 4;
 
     if (strategy === "word-swap") {
+      // Word-swap is now a typewriter per frame: type char-by-char,
+      // hold the completed text for frame.duration_ms, then fade out
+      // so the next frame types in from an empty headline slot.
+      const typingSpeed = typingSpeedFor(variant.brand_voice);
       for (let i = 0; i < frames.length; i++) {
-        // Rest at this frame
+        const frame = frames[i];
+        const text = frame.overlay_text || variant.creative_overlay || "";
+        const charCount = text.length;
+        // Typing phase — one sub-frame per character
+        for (let c = 1; c <= charCount; c++) {
+          samples.push({
+            state: {
+              kind: "word-swap",
+              frameIndex: i,
+              charsRevealed: c,
+              opacity: 1,
+              showCursor: true,
+              phase: "typing",
+            },
+            delay_ms: typingSpeed,
+          });
+        }
+        // Hold completed text with cursor for the full frame duration
         samples.push({
-          state: { kind: "word-swap", fromIndex: i, toIndex: null, progress: 0 },
-          delay_ms: frames[i].duration_ms,
+          state: {
+            kind: "word-swap",
+            frameIndex: i,
+            charsRevealed: charCount,
+            opacity: 1,
+            showCursor: true,
+            phase: "holding",
+          },
+          delay_ms: frame.duration_ms,
         });
-        // Transition to next (only if looping — last frame transitions back to 0)
-        const next = (i + 1) % frames.length;
+        // Fade out between frames (skip on single-frame GIFs)
         if (frames.length > 1) {
-          const stepDelay = Math.round(TRANSITION_MS / TRANSITION_STEPS);
-          for (let s = 1; s <= TRANSITION_STEPS; s++) {
-            const rawP = s / TRANSITION_STEPS;
+          const fadeStepDelay = Math.round(WORD_SWAP_FADE_MS / WORD_SWAP_FADE_STEPS);
+          for (let s = 1; s <= WORD_SWAP_FADE_STEPS; s++) {
             samples.push({
               state: {
                 kind: "word-swap",
-                fromIndex: i,
-                toIndex: next,
-                progress: voiceEase(rawP),
+                frameIndex: i,
+                charsRevealed: charCount,
+                opacity: 1 - easeInOutCubic(s / WORD_SWAP_FADE_STEPS),
+                showCursor: false,
+                phase: "fading",
               },
-              delay_ms: stepDelay,
+              delay_ms: fadeStepDelay,
             });
           }
         }
