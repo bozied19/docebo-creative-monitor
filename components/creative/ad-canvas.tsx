@@ -1238,16 +1238,12 @@ function statHeadlinePlacementFor(
         textColor: "#FFFFFF", // white on midnight bg
       };
     case "minimal-authority":
-      // Base uses a flex:1 spacer that pushes all content (rule, h2,
-      // subtext, CTA) to the bottom. Place the overlay where the native
-      // h2 renders so stat/typewriter align with the rule + CTA below.
+      // Native layout now places the headline near the top; the
+      // logo + CTA button sit on a footer row. Anchor the overlay in
+      // the upper zone so the typewriter leads the read, with the
+      // rule, subtext, and footer chrome falling below it.
       return {
-        container: {
-          left: "10%",
-          top: "58%",
-          transform: "translateY(-50%)",
-          maxWidth: "80%",
-        },
+        container: { left: "10%", top: "14%", maxWidth: "80%" },
         textAlign: "left",
         heroFontSize: "clamp(60px, 20cqw, 240px)",
         textColor: "#0A0A0A", // near-black on hardcoded white bg
@@ -1277,11 +1273,20 @@ function statHeadlinePlacementFor(
       };
     case "rebellious-editorial":
       // Logo top, large uppercase headline in upper-middle, subtext
-      // right-aligned. Anchor the overlay at ~28% to match the h2 zone.
+      // right-aligned. Anchor the overlay at ~28% to match the h2 zone
+      // and size it up to the native h2 clamp so the typewriter fills
+      // the editorial hero slot instead of leaving a sparse middle band.
       return {
-        container: { left: "7%", top: "28%", maxWidth: "86%" },
+        container: {
+          left: "7%",
+          top: "28%",
+          maxWidth: "86%",
+          textTransform: "uppercase", // match native editorial treatment
+        },
         textAlign: "left",
         textColor: "#E6DACB", // marble-10 on marble-dark bg
+        heroFontSize: "clamp(42px, 12cqw, 140px)",
+        typewriterFontSize: "clamp(32px, 11cqw, 120px)",
       };
     case "digital-rebellion":
       // Glitch layout with RGB-offset ghost text near the top.

@@ -880,10 +880,10 @@ export function RebelliousEditorialMockup({ variant, theme, mockupRef, aspectRat
 export function DataAsPowerMockup({ variant, theme, mockupRef, aspectRatio }: StyleRendererProps) {
   const subtext = resolveSubtext(variant);
   // The generator prompt now requires stat_value for every data-as-power
-  // variant (stat-pulse, word-swap, and type-on). This em-dash is only a
+  // variant (stat-pulse, word-swap, and type-on). This hyphen is only a
   // last-resort safety net for malformed/legacy data — in normal runs
   // stat_value should always be present.
-  const statVal = variant.stat_value || "—";
+  const statVal = variant.stat_value || "-";
 
   return (
     <div
@@ -1323,29 +1323,12 @@ export function MinimalAuthorityMockup({ variant, theme, mockupRef, aspectRatio 
         }}
       />
 
-      {/* Content — flex column, whitespace via flex-grow spacer */}
+      {/* Content — headline at top, footer row (logo + CTA) at bottom */}
       <div
         className="absolute inset-0 flex flex-col"
         style={{ padding: "8% 10%" }}
       >
-        {/* Logo — top left, understated */}
-        <span
-          style={{
-            color: "#0033A0",
-            fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
-            fontWeight: 700,
-            fontSize: "clamp(13px, 2.5cqw, 20px)",
-            letterSpacing: "-0.01em",
-            opacity: 0.6,
-          }}
-        >
-          docebo
-        </span>
-
-        {/* Whitespace spacer — pushes content to bottom */}
-        <div style={{ flex: 1 }} />
-
-        {/* Headline block */}
+        {/* Headline block — first thing the viewer reads */}
         <h2
           style={{
             color: "#0A0A0A",
@@ -1388,19 +1371,38 @@ export function MinimalAuthorityMockup({ variant, theme, mockupRef, aspectRatio 
           </p>
         )}
 
-        {/* CTA — bottom right, minimal */}
-        <div className="flex justify-end" style={{ marginTop: "6%" }}
-      >
-        <span
-          style={{
-            color: theme.accentColor || "#7E2EE9",
-            fontFamily: "'Figtree', 'Inter', sans-serif",
-            fontWeight: 500,
-            fontSize: "clamp(11px, 2cqw, 16px)",
-          }}
-        >
-          {variant.cta_text} →
-        </span>
+        {/* Whitespace spacer — pushes footer to bottom */}
+        <div style={{ flex: 1 }} />
+
+        {/* Footer row: enlarged logo left, CTA button right */}
+        <div className="flex items-center justify-between">
+          <span
+            style={{
+              color: "#0033A0",
+              fontFamily: "'Special Gothic Expanded', 'Figtree', 'Inter', sans-serif",
+              fontWeight: 700,
+              fontSize: "clamp(20px, 4.5cqw, 40px)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            docebo
+          </span>
+
+          <span
+            style={{
+              color: "#0A0A0A",
+              fontFamily: "'Figtree', 'Inter', sans-serif",
+              fontWeight: 600,
+              fontSize: "clamp(12px, 2.2cqw, 18px)",
+              backgroundColor: theme.accentColor || "#7E2EE9",
+              padding: "clamp(8px, 1.6cqw, 14px) clamp(16px, 3.2cqw, 26px)",
+              borderRadius: "clamp(6px, 1.2cqw, 10px)",
+              display: "inline-block",
+              letterSpacing: "-0.005em",
+            }}
+          >
+            {variant.cta_text} →
+          </span>
         </div>
       </div>
     </div>
