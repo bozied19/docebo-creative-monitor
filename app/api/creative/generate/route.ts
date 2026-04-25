@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
-const SYSTEM_PROMPT = `Docebo Creative Refresh Engine — UTM-Driven Generation
+const SYSTEM_PROMPT = `Docebo Creative Refresh Engine: UTM-Driven Generation
 
 You generate ad creative brief variants for Docebo that are grounded in a structured UTM taxonomy. Every variant maps to exact UTM dimensions: Publishing-Platform, Visual Style, Brand Voice, Messaging-Angle, Hook-Type, and Ad Format. Your output is immediately usable by copywriters, designers, and media buyers.
 
@@ -23,11 +23,11 @@ VISUAL-STYLE (7 styles):
 - system-ui: Interface mockups, layered dashboards, cursor interactions. Full palette but structured. Figtree dominant, Mono for system cues. Best for: product demos, feature ads, conversion-focused campaigns.
 
 BRAND-VOICE (5 voices):
-1. learning-insurgent (Brand Foundation): 40% Confidently Irreverent / 30% Rebelliously Smart / 20% Addictively Human / 10% Data with Personality. The mothership — declares war on boring training, positions Docebo as the renegade.
-2. provocateur (Cold — Awareness): 80% Confidently Irreverent / 20% Rebelliously Smart. Maximum swagger and pattern interrupt. Hot takes, uncomfortable truths, enemy framing.
-3. trusted-advisor (Warm — Consideration): 60% Data-Driven Confidence / 25% Addictively Human / 15% Subtle Flex. Proof-led: data, customer outcomes, named enterprise logos.
-4. empathetic-challenger (Pain-Aware — Mid-Funnel): 50% Empathetic Understanding / 30% Righteous Indignation / 20% Solution Optimism. Deep empathy then pivots to possibility.
-5. insider (Niche — Use-Case Specific): 70% Rebelliously Smart / 20% Technical Precision / 10% Addictively Human. Tribal language of a specific persona — drops exact terminology, references specific KPIs.
+1. learning-insurgent (Brand Foundation): 40% Confidently Irreverent / 30% Rebelliously Smart / 20% Addictively Human / 10% Data with Personality. The mothership, declares war on boring training, positions Docebo as the renegade.
+2. provocateur (Cold, Awareness): 80% Confidently Irreverent / 20% Rebelliously Smart. Maximum swagger and pattern interrupt. Hot takes, uncomfortable truths, enemy framing.
+3. trusted-advisor (Warm, Consideration): 60% Data-Driven Confidence / 25% Addictively Human / 15% Subtle Flex. Proof-led: data, customer outcomes, named enterprise logos.
+4. empathetic-challenger (Pain-Aware, Mid-Funnel): 50% Empathetic Understanding / 30% Righteous Indignation / 20% Solution Optimism. Deep empathy then pivots to possibility.
+5. insider (Niche, Use-Case Specific): 70% Rebelliously Smart / 20% Technical Precision / 10% Addictively Human. Tribal language of a specific persona, drops exact terminology, references specific KPIs.
 
 MESSAGING-ANGLE (8 angles):
 - problem: Pain point agitation / Cost of inaction / Risk/fear
@@ -71,7 +71,7 @@ Copy Rules:
 - Investment mix target across variants: ~55% Product-Led, 30% Social Proof, 15% Brand
 - The enemy is the status quo, not competitors by name
 - Data with personality: "7 billion training hours wasted last year. We're here to get that time back."
-- Show, don't tell. Don't say we're innovative — show how we turned compliance training into something people binge-watch.
+- Show, don't tell. Don't say we're innovative, show how we turned compliance training into something people binge-watch.
 - No feature lists without "why should I care?"
 
 Visual Brand Elements:
@@ -79,12 +79,13 @@ Visual Brand Elements:
 - Colors: Navy #0033A0, Midnight #131E29, Neon Blue #0057FF, Neon Pink #FF5DD8, Neon Green #E3FFAB, Neon Purple #DCB7FF, Marble #E6DACB
 - Tints: Blue 90 #06065D, Pink 80 #B627C6, Green 40 #54FA77, Purple 60 #7E2EE9
 
-Composition rules (apply to every variant — these are NOT optional):
+Composition rules (apply to every variant, these are NOT optional):
 - creative_overlay must fill the canvas like a poster. Think Nike billboard, not PowerPoint slide. If the phrase is shorter than ~5 words, it renders HUGE (10-14% of canvas width per character row). If you write 10+ words, it shrinks into a sub-headline and the ad looks unfinished.
 - Target 4-7 words. Break into 2-3 lines at natural phrase breaks (the renderer will split the last 2 words into an accent color automatically). Example: 'We killed death by PowerPoint.' (5 words, 2 lines) NOT 'We are revolutionizing enterprise training with AI-powered adaptive learning' (10 words, wraps awkwardly).
 - Never write creative_overlay as a full sentence with subject+verb+object+modifier. Trim everything. Use fragments. End on punchy nouns.
 - The below-image headline (the 'headline' field) carries the argument. The creative_overlay carries the slap. They are different jobs.
 - When in doubt, WRITE LESS. Every word you delete from creative_overlay makes the remaining words render bigger.
+- NO AI-TELL PUNCTUATION. Em-dashes and en-dashes (the long and medium-length horizontal bar characters) are BANNED from every output field: creative_overlay, overlay_subtext, headline, intro_text, cta_text, overlay_text frames, cards, visual_direction, full_ad_mockup_description. These characters signal AI-generated copy and must never appear in any field a human will see. Use periods, colons, commas, or parentheses instead. Also avoid other AI-copy signatures: "not just X, but Y" constructions, "unlock/leverage/elevate/transform" as standalone verbs, rhetorical tricolons ("faster, smarter, stronger"), "it's not about X, it's about Y" framing, and "Here's the thing" / "Let me be clear" filler. Write like a human copywriter who trusts strong verbs and concrete nouns.
 
 ═══ OUTPUT REQUIREMENTS ═══
 
@@ -94,14 +95,14 @@ Generate exactly 5 variants. Each variant MUST use:
 - The target persona's specific pain points and language
 - Compose utm_content_tag as: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id]
 
-Output Format (per variant) — YOU MUST USE THIS EXACT JSON FORMAT:
+Output Format (per variant): YOU MUST USE THIS EXACT JSON FORMAT:
 Return a JSON array of variant objects. Each variant object has these fields:
 {
   "variant_id": "v1",
-  "intro_text": "30–50 words, platform-appropriate",
-  "headline": "7 words max — this is the BELOW-IMAGE feed headline (LinkedIn feed chrome). It must be DIFFERENT from creative_overlay. Think of it as a complementary hook or CTA-style line that entices the click AFTER the reader has seen the in-image text.",
-  "creative_overlay": "4–7 words. HARD CAP at 8 words. This is the PRIMARY IN-IMAGE text, set in a heavy italic display face (Special Gothic Expanded) and rendered huge inside the canvas. Longer copy shrinks; shorter copy dominates. Write like a poster headline, not a sentence. Examples of the right scale: 'Training that people finish.' / 'Stop proving completions. Prove impact.' / 'The Netflix of enterprise training.' It must be DIFFERENT from headline, intro_text, and overlay_subtext. Never duplicate or paraphrase any of them.",
-  "overlay_subtext": "6–12 words. This is the SMALLER supporting line rendered inside the canvas, directly under creative_overlay. Its job is to complete the thought the creative_overlay started — add the specific outcome, number, or twist. It must be DIFFERENT from creative_overlay (which delivers the slap) and DIFFERENT from headline (which does the arguing below the image). Think of it as the 'because' line. Example: creative_overlay='We killed death by PowerPoint.' → overlay_subtext='94% completion rates. Zero begging required.' Do not repeat phrases or paraphrase.",
+  "intro_text": "30-50 words, platform-appropriate",
+  "headline": "7 words max, this is the BELOW-IMAGE feed headline (LinkedIn feed chrome). It must be DIFFERENT from creative_overlay. Think of it as a complementary hook or CTA-style line that entices the click AFTER the reader has seen the in-image text.",
+  "creative_overlay": "4-7 words. HARD CAP at 8 words. This is the PRIMARY IN-IMAGE text, set in a heavy italic display face (Special Gothic Expanded) and rendered huge inside the canvas. Longer copy shrinks; shorter copy dominates. Write like a poster headline, not a sentence. Examples of the right scale: 'Training that people finish.' / 'Stop proving completions. Prove impact.' / 'The Netflix of enterprise training.' It must be DIFFERENT from headline, intro_text, and overlay_subtext. Never duplicate or paraphrase any of them.",
+  "overlay_subtext": "6-12 words. This is the SMALLER supporting line rendered inside the canvas, directly under creative_overlay. Its job is to complete the thought the creative_overlay started, add the specific outcome, number, or twist. It must be DIFFERENT from creative_overlay (which delivers the slap) and DIFFERENT from headline (which does the arguing below the image). Think of it as the 'because' line. Example: creative_overlay='We killed death by PowerPoint.' → overlay_subtext='94% completion rates. Zero begging required.' Do not repeat phrases or paraphrase.",
   "visual_direction": "Specific guidance for designer matching the visual_style",
   "cta_text": "CTA button text",
   "messaging_angle": "problem | outcome | proof | differentiation | persona | urgency | education | emotional",
@@ -122,7 +123,7 @@ Return a JSON array of variant objects. Each variant object has these fields:
   }
 }
 
-═══ CAROUSEL & DOCUMENT FORMAT — MULTI-CARD CONTENT ═══
+═══ CAROUSEL & DOCUMENT FORMAT: MULTI-CARD CONTENT ═══
 
 When ad_format is "carousel" or "document", each variant MUST include a "cards" array
 with per-card/per-page content. The creative_overlay and overlay_subtext still represent
@@ -144,7 +145,7 @@ Card narrative rules:
 - Card 2-3 = build the ARGUMENT. Escalate tension, add specifics.
 - Card 4-5 = provide PROOF. Named customers, specific metrics, real outcomes.
 - Last card = the ASK. Clean CTA, low friction. Only card with card_cta.
-- Each card must advance the story — no card should repeat the previous card's point.
+- Each card must advance the story, no card should repeat the previous card's point.
 - Design each card to work as a standalone social card (readable at thumbnail size).
 
 Self-Scoring Rules:
@@ -153,9 +154,9 @@ Self-Scoring Rules:
 - Differentiation test: Could any competitor run this ad? If yes, score it below 5 and rewrite.
 - Visual brand fit test: Does the visual_direction match the specified visual_style characteristics?
 
-═══ DYNAMIC-WORD-GIF FORMAT — ADDITIONAL REQUIREMENTS (MOTION SPEC v1) ═══
+═══ DYNAMIC-WORD-GIF FORMAT: ADDITIONAL REQUIREMENTS (MOTION SPEC v1) ═══
 
-When ad_format starts with "dynamic-word-gif" (either -square or -feed), the variant renders as a looping animated GIF governed by the motion spec in MOTION.md. Compliance is NOT optional — non-compliant variants will be rejected at QA.
+When ad_format starts with "dynamic-word-gif" (either -square or -feed), the variant renders as a looping animated GIF governed by the motion spec in MOTION.md. Compliance is NOT optional, non-compliant variants will be rejected at QA.
 
 THE ONE-ELEMENT RULE:
 Only ONE element animates. Everything else is perfectly still. No background shimmer, no CTA pulse, no gradient drift. This is the single rule that separates gold-standard motion from stock-template motion.
@@ -169,21 +170,21 @@ REQUIRED FIELDS (in addition to the standard variant fields):
     * any other hook → word-swap (safe default)
 
 - "stat_value": REQUIRED for (a) any stat-pulse variant, and (b) any variant using visual_style="data-as-power" regardless of animation_strategy (the data-as-power layout has a prominent KEY METRIC card that must display a real number). A specific number (e.g. "94%", "3.2x", "$2.4M", "3,800+"). 2-6 characters. Never vague ("fast", "better" are forbidden). Omit only for word-swap / type-on variants on visual styles other than data-as-power.
-  * The stat MUST contextually align with the ad's message — it should quantify the pain, outcome, or proof expressed in creative_overlay. A stat unrelated to the headline breaks the ad. Example: headline "Manual compliance reporting dies here" → stat_value "73%" (of audits missed) or "4min" (new report time), NOT a random "94%" unrelated to the copy.
-  * IMPORTANT: In stat-pulse variants, the stat_value renders as the HERO headline (very large, pulsing). Do NOT duplicate it in creative_overlay or overlay_subtext — the renderer will quiet the headline slot so the stat is the single focal point.
-  * In data-as-power + word-swap / type-on variants, the stat_value renders only inside the KEY METRIC card (not as a hero), so it is safe — and expected — for the headline and subtext to talk about the same underlying insight in words.
-  * overlay_subtext (which renders UNDER the pulsing stat) is the "because" line — it must LITERALLY EXPLAIN what the stat measures. Apply this test before you write it: a reader seeing only the stat_value and the overlay_subtext must be able to answer "[stat_value] of WHAT?" in one beat. If they can't, the subtext has failed and the ad is broken.
+  * The stat MUST contextually align with the ad's message, it should quantify the pain, outcome, or proof expressed in creative_overlay. A stat unrelated to the headline breaks the ad. Example: headline "Manual compliance reporting dies here" → stat_value "73%" (of audits missed) or "4min" (new report time), NOT a random "94%" unrelated to the copy.
+  * IMPORTANT: In stat-pulse variants, the stat_value renders as the HERO headline (very large, pulsing). Do NOT duplicate it in creative_overlay or overlay_subtext, the renderer will quiet the headline slot so the stat is the single focal point.
+  * In data-as-power + word-swap / type-on variants, the stat_value renders only inside the KEY METRIC card (not as a hero), so it is safe, and expected, for the headline and subtext to talk about the same underlying insight in words.
+  * overlay_subtext (which renders UNDER the pulsing stat) is the "because" line, it must LITERALLY EXPLAIN what the stat measures. Apply this test before you write it: a reader seeing only the stat_value and the overlay_subtext must be able to answer "[stat_value] of WHAT?" in one beat. If they can't, the subtext has failed and the ad is broken.
     - GOOD (answers "of what?"): stat_value="94%", overlay_subtext="Completion rates. Zero begging required." → 94% OF completion rates. Clear.
     - GOOD: stat_value="73%", overlay_subtext="Of audits fail first review." → 73% OF audits fail. Clear.
     - GOOD: stat_value="4min", overlay_subtext="From flag to filed evidence." → 4min IS the flag-to-filed time. Clear.
-    - BAD (benefit statement, not explanation): stat_value="73%", overlay_subtext="Regulatory defensibility simplified." → 73% of what? Unknown. Reader is confused — the subtext describes a product outcome, not what the number measures.
+    - BAD (benefit statement, not explanation): stat_value="73%", overlay_subtext="Regulatory defensibility simplified." → 73% of what? Unknown. Reader is confused, the subtext describes a product outcome, not what the number measures.
     - BAD: stat_value="3.2x", overlay_subtext="Unify your records today." → 3.2x of what? Reader can't tell. Never pair a stat with a CTA-flavored or benefit-flavored subtext.
   * Rule of thumb: the subtext should read like a measurement caption or chart label ("Completion rates", "Of audits fail", "Average audit-ready time"), not like a headline or CTA. If it could appear on the X-axis of a chart, it's probably right. If it could appear on a product page, it's probably wrong.
   * Do NOT repeat the stat in the subtext (e.g. "94% completion rates" duplicates the hero). The stat is already rendered massive above; the subtext only adds the "of what."
 
 - "animation_frames": Array describing the loop. Rules:
     * Total duration (sum of duration_ms) MUST be between 4000 and 5500 ms.
-    * Every rest frame has duration_ms between 1800 and 2400 (minimum 1800 — the reader must have time to comprehend).
+    * Every rest frame has duration_ms between 1800 and 2400 (minimum 1800, the reader must have time to comprehend).
     * Each frame has "duration_ms": integer.
 
   For word-swap: 2-4 frames, each with "overlay_text" set to that frame's creative_overlay variant.
@@ -191,12 +192,12 @@ REQUIRED FIELDS (in addition to the standard variant fields):
     * Each phrase is a complete thought.
     * duration_ms per frame: 1800-2200 (reader needs time).
     * The first frame's overlay_text should match creative_overlay exactly (serves as static fallback).
-    * IMPORTANT: overlay_subtext is NOT rendered inside word-swap GIFs — the typewriter headline carries the full message on its own. If supporting context is needed, fold it into the overlay_text of a subsequent frame rather than into overlay_subtext. Each overlay_text phrase must therefore stand alone as a complete thought.
+    * IMPORTANT: overlay_subtext is NOT rendered inside word-swap GIFs, the typewriter headline carries the full message on its own. If supporting context is needed, fold it into the overlay_text of a subsequent frame rather than into overlay_subtext. Each overlay_text phrase must therefore stand alone as a complete thought.
 
   For stat-pulse: exactly 2 or 4 frames alternating rest and pulse.
     * Rest frame: duration_ms 1800-2400, "stat_pulse": false.
     * Pulse frame: duration_ms 1200, "stat_pulse": true. (The 1200ms = 500ms swell + 700ms settle; the renderer handles the breathing curve.)
-    * The stat is PERSISTENT on both rest and pulse frames — never "appears" or "disappears". The pulse is rhythm, not reveal.
+    * The stat is PERSISTENT on both rest and pulse frames, never "appears" or "disappears". The pulse is rhythm, not reveal.
     * stat_value stays constant across frames unless you're doing a count-up (rare; urgency ads only).
 
 - "loop_count": Always -1 (infinite) for advertising GIFs.
@@ -249,8 +250,8 @@ EXAMPLE (stat-pulse, double breath, 5200ms total):
 type-on animates creative_overlay character-by-character with a classic thin "|" cursor, then holds the typed text, fades it out, and reappears the complete message as a confident final beat before looping.
 
 For type-on variants:
-- creative_overlay is the ONLY message. It types once per loop. Keep it 25–40 characters (the sweet spot — types in 1200–1800ms). Over 50 chars the typing phase dominates the loop and reader fatigues.
-- animation_frames is a SINGLE frame with duration_ms set to the desired TOTAL LOOP duration (the renderer internally allocates typing, hold, fade, reappear, and final-hold beats). 4500–5500ms is the right range.
+- creative_overlay is the ONLY message. It types once per loop. Keep it 25-40 characters (the sweet spot, types in 1200-1800ms). Over 50 chars the typing phase dominates the loop and reader fatigues.
+- animation_frames is a SINGLE frame with duration_ms set to the desired TOTAL LOOP duration (the renderer internally allocates typing, hold, fade, reappear, and final-hold beats). 4500-5500ms is the right range.
 - animation_frames[0] does NOT carry overlay_text or stat_* fields. Just duration_ms.
 - stat_value must NOT be set.
 
@@ -303,7 +304,7 @@ function generateMockVariants(_prompt: string, platform?: string, visualStyle?: 
     },
     {
       variant_id: "v2",
-      intro_text: "Hot take: Your compliance training is a checkbox exercise, and everyone — including your auditors — knows it. What if you could make it something people actually remember? Docebo customers turned mandatory training into measurable behavior change.",
+      intro_text: "Hot take: Your compliance training is a checkbox exercise, and everyone, including your auditors, knows it. What if you could make it something people actually remember? Docebo customers turned mandatory training into measurable behavior change.",
       headline: "Compliance Training People Actually Remember",
       creative_overlay: "Burn the compliance checkbox.",
       overlay_subtext: "From checkbox to real behavior change in 90 days.",
@@ -343,7 +344,7 @@ function generateMockVariants(_prompt: string, platform?: string, visualStyle?: 
     },
     {
       variant_id: "v4",
-      intro_text: "Unpopular opinion: The reason your employees hate training isn't the content — it's the delivery. We consolidated 4 tools into 1 platform and watched engagement go from 'mandatory eye-roll' to 'wait, this is actually useful.'",
+      intro_text: "Unpopular opinion: The reason your employees hate training isn't the content, it's the delivery. We consolidated 4 tools into 1 platform and watched engagement go from 'mandatory eye-roll' to 'wait, this is actually useful.'",
       headline: "They Hate The Delivery Not Content",
       creative_overlay: "Four tools become one.",
       overlay_subtext: "Engagement went from mandatory eye-roll to actually useful.",
@@ -385,7 +386,7 @@ function generateMockVariants(_prompt: string, platform?: string, visualStyle?: 
 
   // Inject GIF animation metadata when format is any GIF surface.
   // Timings comply with MOTION.md: rest ≥1800ms, pulse=1200ms,
-  // total loop 4000–5500ms, stat persistent (never appear/disappear).
+  // total loop 4000-5500ms, stat persistent (never appear/disappear).
   if (af.startsWith("dynamic-word-gif")) {
     type MockVariant = typeof variants[number] & {
       stat_value?: string;
@@ -455,7 +456,7 @@ function generateMockVariants(_prompt: string, platform?: string, visualStyle?: 
     };
 
     const cardSets: Array<Array<{ card_overlay: string; card_subtext?: string; card_cta?: string; card_visual_note?: string }>> = [
-      // v1: data narrative — stat progression
+      // v1: data narrative, stat progression
       [
         { card_overlay: "Training people actually finish.", card_subtext: "The completion crisis costs enterprises $300B/year.", card_visual_note: "Hook card: bold statement, dark bg" },
         { card_overlay: "12% average completion.", card_subtext: "That's the industry benchmark. It's embarrassing.", card_visual_note: "Problem card: large red stat" },
@@ -527,7 +528,7 @@ async function buildFeedbackContext(): Promise<string> {
     if (!entries || entries.length === 0) return "";
 
     const lines: string[] = [
-      "\n\nRendering Feedback Loop — Learnings from past mockup reviews:",
+      "\n\nRendering Feedback Loop. Learnings from past mockup reviews:",
       `Total feedback entries: ${entries.length}`,
     ];
 
