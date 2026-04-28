@@ -9,7 +9,10 @@ out/
 .env*.local
 
 # feedback data (generated at runtime)
-data/
+data/*
+# but DO ship the reference examples (brand DNA + approved ad images)
+!data/reference-examples/
+!data/reference-examples/**
 
 # misc
 .DS_Store
