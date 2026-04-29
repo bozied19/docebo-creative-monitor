@@ -1,3 +1,4 @@
+@import "../data/design-system/colors_and_type.css";
 @import "tailwindcss";
 
 @theme {

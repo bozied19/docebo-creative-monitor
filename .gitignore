@@ -13,6 +13,9 @@ data/*
 # but DO ship the reference examples (brand DNA + approved ad images)
 !data/reference-examples/
 !data/reference-examples/**
+# and the Phoenix Design System (tokens, templates, assets)
+!data/design-system/
+!data/design-system/**
 
 # misc
 .DS_Store
