@@ -115,7 +115,7 @@ function PhoenixFrame({ children }: { children: React.ReactNode }) {
           width: 1080,
           height: 1080,
           transformOrigin: "top left",
-          transform: "scale(calc(100cqw / 1080))",
+          transform: "scale(calc(100cqw / 1080px))",
         }}
       >
         {children}

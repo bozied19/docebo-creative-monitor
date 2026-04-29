@@ -2,11 +2,9 @@
 
 import {
   Wordmark,
-  Eyebrow,
   HeroHeadline,
   PillCTA,
   Rock,
-  DateChip,
 } from "./PhoenixBanner";
 
 /* All templates render into a fixed 1080x1080 art board. The PhoenixRenderer
@@ -21,8 +19,6 @@ export interface PhoenixTemplateProps {
   cta?: string;
   /** Numeric stat for stat-led layouts (DataAsPower). */
   stat?: string;
-  /** Optional eyebrow text override. */
-  eyebrow?: string;
   /** Partner name for co-brand layouts. */
   partner?: string;
 }
@@ -34,13 +30,15 @@ const FRAME: React.CSSProperties = {
   overflow: "hidden",
 };
 
+const SUBTEXT_SIZE = 38;
+
 /* ── 1. WebinarNavyPink — navy + pink rock + circuit grid ────────── */
 export function WebinarNavyPink({
   overlay,
   subtext,
   cta,
-  eyebrow,
 }: PhoenixTemplateProps) {
+  const heroSize = pickHeroSize(overlay, { short: 96, medium: 76, long: 60 });
   return (
     <div style={{ ...FRAME, background: "#06065D" }}>
       <div
@@ -58,21 +56,20 @@ export function WebinarNavyPink({
       <div style={{ position: "absolute", left: 88, top: 88 }}>
         <Wordmark color="#fff" size={56} />
       </div>
-      <div style={{ position: "absolute", left: 88, top: 280, width: 720 }}>
-        <Eyebrow color="#FF5DD8" style={{ marginBottom: 28 }}>
-          {eyebrow ?? "— WEBINAR · LIVE EVENT"}
-        </Eyebrow>
-        <HeroHeadline size={92}>{overlay}</HeroHeadline>
+      <div style={{ position: "absolute", left: 88, top: 280, width: 540 }}>
+        <HeroHeadline size={heroSize} style={{ overflowWrap: "break-word" }}>
+          {overlay}
+        </HeroHeadline>
         {subtext && (
           <div
             style={{
               marginTop: 36,
               fontFamily: "var(--ff-body)",
               fontWeight: 500,
-              fontSize: 28,
-              color: "rgba(255,255,255,0.78)",
+              fontSize: SUBTEXT_SIZE,
+              color: "rgba(255,255,255,0.85)",
               lineHeight: 1.35,
-              maxWidth: 680,
+              maxWidth: 540,
             }}
           >
             {subtext}
@@ -91,8 +88,8 @@ export function DULiveSpeakers({
   overlay,
   subtext,
   cta,
-  eyebrow,
 }: PhoenixTemplateProps) {
+  const heroSize = pickHeroSize(overlay, { short: 110, medium: 92, long: 72 });
   return (
     <div style={{ ...FRAME, background: "#E6DACB" }}>
       <div
@@ -110,10 +107,11 @@ export function DULiveSpeakers({
         <Wordmark color="#06065D" size={48} />
       </div>
       <div style={{ position: "absolute", left: 88, top: 240, width: 900 }}>
-        <Eyebrow color="#7E2EE9" style={{ marginBottom: 28 }}>
-          {eyebrow ?? "— EDITORIAL · ON BRAND"}
-        </Eyebrow>
-        <HeroHeadline color="#06065D" size={104}>
+        <HeroHeadline
+          color="#06065D"
+          size={heroSize}
+          style={{ overflowWrap: "break-word" }}
+        >
           {overlay}
         </HeroHeadline>
         {subtext && (
@@ -122,8 +120,8 @@ export function DULiveSpeakers({
               marginTop: 36,
               fontFamily: "var(--ff-body)",
               fontWeight: 500,
-              fontSize: 28,
-              color: "rgba(6,6,93,0.72)",
+              fontSize: SUBTEXT_SIZE,
+              color: "rgba(6,6,93,0.78)",
               lineHeight: 1.35,
               maxWidth: 880,
             }}
@@ -145,9 +143,9 @@ export function DataAsPower({
   subtext,
   cta,
   stat,
-  eyebrow,
 }: PhoenixTemplateProps) {
   const heroStat = stat ?? extractStat(overlay) ?? "94%";
+  const overlaySize = pickHeroSize(overlay, { short: 64, medium: 52, long: 42 });
   return (
     <div style={{ ...FRAME, background: "#131E29" }}>
       <div
@@ -162,10 +160,7 @@ export function DataAsPower({
       <div style={{ position: "absolute", left: 88, top: 88 }}>
         <Wordmark color="#fff" size={48} />
       </div>
-      <div style={{ position: "absolute", left: 88, top: 230, width: 920 }}>
-        <Eyebrow color="#54FA77" style={{ marginBottom: 28 }}>
-          {eyebrow ?? "— THE DATA"}
-        </Eyebrow>
+      <div style={{ position: "absolute", left: 88, top: 240, width: 920 }}>
         <div
           style={{
             fontFamily: "var(--ff-display)",
@@ -183,11 +178,12 @@ export function DataAsPower({
           style={{
             fontFamily: "var(--ff-display)",
             fontStyle: "italic",
-            fontSize: 60,
+            fontSize: overlaySize,
             color: "#fff",
             marginTop: 24,
             letterSpacing: "-0.02em",
             lineHeight: 1.05,
+            overflowWrap: "break-word",
           }}
         >
           {overlay}
@@ -196,8 +192,8 @@ export function DataAsPower({
           <div
             style={{
               fontFamily: "var(--ff-body)",
-              fontSize: 26,
-              color: "rgba(255,255,255,0.65)",
+              fontSize: SUBTEXT_SIZE,
+              color: "rgba(255,255,255,0.75)",
               marginTop: 28,
               lineHeight: 1.4,
               maxWidth: 880,
@@ -214,25 +210,26 @@ export function DataAsPower({
   );
 }
 
-/* ── 4. RebelliousEditorial — marble dark + uppercase + asterisk ── */
+/* ── 4. RebelliousEditorial — midnight + uppercase + asterisk ──── */
 export function RebelliousEditorial({
   overlay,
   subtext,
   cta,
 }: PhoenixTemplateProps) {
+  const heroSize = pickHeroSize(overlay, { short: 110, medium: 88, long: 68 });
   return (
-    <div style={{ ...FRAME, background: "#2A2923", color: "#fff" }}>
+    <div style={{ ...FRAME, background: "#131E29", color: "#fff" }}>
       <div style={{ position: "absolute", left: 88, top: 88 }}>
         <Wordmark color="#fff" size={44} />
       </div>
       <div
         style={{
           position: "absolute",
-          right: -40,
-          top: 20,
+          right: 60,
+          top: 60,
           fontFamily: "var(--ff-display)",
           fontStyle: "italic",
-          fontSize: 540,
+          fontSize: 320,
           color: "#FF5DD8",
           lineHeight: 1,
           letterSpacing: "-0.05em",
@@ -241,17 +238,18 @@ export function RebelliousEditorial({
       >
         *
       </div>
-      <div style={{ position: "absolute", left: 88, top: 280, width: 920 }}>
+      <div style={{ position: "absolute", left: 88, top: 300, width: 920 }}>
         <h1
           style={{
             fontFamily: "var(--ff-display)",
             fontStyle: "italic",
             fontWeight: 400,
             textTransform: "uppercase",
-            fontSize: 140,
+            fontSize: heroSize,
             lineHeight: 0.95,
             letterSpacing: "-0.03em",
             whiteSpace: "pre-line",
+            overflowWrap: "break-word",
             margin: 0,
           }}
         >
@@ -263,12 +261,12 @@ export function RebelliousEditorial({
           style={{
             position: "absolute",
             left: 88,
-            bottom: 220,
-            width: 760,
+            bottom: 200,
+            width: 820,
             fontFamily: "var(--ff-serif)",
             fontStyle: "italic",
-            fontSize: 26,
-            color: "rgba(255,255,255,0.7)",
+            fontSize: SUBTEXT_SIZE,
+            color: "rgba(255,255,255,0.78)",
             lineHeight: 1.4,
           }}
         >
@@ -287,9 +285,9 @@ export function CoBrandPartner({
   overlay,
   subtext,
   cta,
-  eyebrow,
   partner,
 }: PhoenixTemplateProps) {
+  const heroSize = pickHeroSize(overlay, { short: 96, medium: 76, long: 60 });
   return (
     <div style={{ ...FRAME, background: "#E6DACB" }}>
       <div style={{ position: "absolute", right: -180, top: 0 }}>
@@ -329,11 +327,12 @@ export function CoBrandPartner({
           </>
         )}
       </div>
-      <div style={{ position: "absolute", left: 88, top: 280, width: 720 }}>
-        <Eyebrow color="#7E2EE9" style={{ marginBottom: 28 }}>
-          {eyebrow ?? (partner ? "— PARTNER" : "— EDITORIAL")}
-        </Eyebrow>
-        <HeroHeadline color="#06065D" size={96}>
+      <div style={{ position: "absolute", left: 88, top: 280, width: 540 }}>
+        <HeroHeadline
+          color="#06065D"
+          size={heroSize}
+          style={{ overflowWrap: "break-word" }}
+        >
           {overlay}
         </HeroHeadline>
         {subtext && (
@@ -342,10 +341,10 @@ export function CoBrandPartner({
               marginTop: 36,
               fontFamily: "var(--ff-body)",
               fontWeight: 500,
-              fontSize: 26,
-              color: "rgba(6,6,93,0.72)",
+              fontSize: SUBTEXT_SIZE,
+              color: "rgba(6,6,93,0.78)",
               lineHeight: 1.4,
-              maxWidth: 700,
+              maxWidth: 540,
             }}
           >
             {subtext}
@@ -355,11 +354,20 @@ export function CoBrandPartner({
       <div style={{ position: "absolute", left: 88, bottom: 88 }}>
         <PillCTA mode="solid-navy">{cta ?? "Discover how"}</PillCTA>
       </div>
-      <div style={{ position: "absolute", right: 88, bottom: 88 }}>
-        <DateChip date="" time={undefined} color="#06065D" />
-      </div>
     </div>
   );
+}
+
+/* Pick a hero font size based on character count so long headlines
+   don't overflow the content box at the chosen display weight. */
+function pickHeroSize(
+  text: string,
+  sizes: { short: number; medium: number; long: number },
+): number {
+  const len = (text ?? "").length;
+  if (len <= 18) return sizes.short;
+  if (len <= 32) return sizes.medium;
+  return sizes.long;
 }
 
 /* Try to find a stat-shaped substring (e.g. "3.2x", "94%") in the overlay

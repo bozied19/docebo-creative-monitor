@@ -9,6 +9,8 @@ import type { Variant, CanvasRenderContext } from "./refresh-engine";
 import { BRAND_VOICE_OPTIONS, isGifFormat, type BrandVoiceOption } from "./refresh-engine";
 import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard, resolveSubtext, LogoBar, SocialProofBadge, MetricStrip } from "./visual-styles";
 import { PhoenixRenderer } from "./phoenix/PhoenixRenderer";
+import { scoreVariant } from "./phoenix/score";
+import { PhoenixScoreBadge, PhoenixScoreIssues } from "./phoenix/PhoenixScoreBadge";
 
 /* ── Feedback types ────────────────────────────────────────────── */
 interface FeedbackEntry {
@@ -1920,6 +1922,8 @@ function AdMockup({
   const [exportState, setExportState] = useState<GifAnimState | null>(null);
   const [exportingGif, setExportingGif] = useState(false);
   const [showPhoenix, setShowPhoenix] = useState(false);
+  const [scoreExpanded, setScoreExpanded] = useState(false);
+  const scoreResult = scoreVariant(variant, theme);
 
   // Register this mockup's DOM ref so FigmaSendPanel can render it to PNG
   useEffect(() => {
@@ -2262,27 +2266,34 @@ function AdMockup({
     <div className={`rounded-lg border overflow-hidden transition-colors ${approved ? "border-docebo-bright-green/50 bg-docebo-bright-green/5" : "border-docebo-border bg-docebo-card/30"}`}>
       {/* Approve bar */}
       <div className={`flex items-center justify-between px-3 py-1.5 ${approved ? "bg-docebo-bright-green/15" : "bg-docebo-card/40"}`}>
-        <button
-          onClick={onToggleApprove}
-          className={`flex items-center gap-2 text-xs font-medium px-2 py-1 rounded transition-colors cursor-pointer ${
-            approved
-              ? "text-docebo-bright-green"
-              : "text-docebo-muted hover:text-white"
-          }`}
-        >
-          <span className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
-            approved
-              ? "bg-docebo-bright-green border-docebo-bright-green text-docebo-midnight"
-              : "border-docebo-muted hover:border-white/50"
-          }`}>
-            {approved && (
-              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </span>
-          {approved ? "Approved for Figma" : "Approve for Figma"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleApprove}
+            className={`flex items-center gap-2 text-xs font-medium px-2 py-1 rounded transition-colors cursor-pointer ${
+              approved
+                ? "text-docebo-bright-green"
+                : "text-docebo-muted hover:text-white"
+            }`}
+          >
+            <span className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
+              approved
+                ? "bg-docebo-bright-green border-docebo-bright-green text-docebo-midnight"
+                : "border-docebo-muted hover:border-white/50"
+            }`}>
+              {approved && (
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            {approved ? "Approved for Figma" : "Approve for Figma"}
+          </button>
+          <PhoenixScoreBadge
+            result={scoreResult}
+            expanded={scoreExpanded}
+            onToggle={() => setScoreExpanded((v) => !v)}
+          />
+        </div>
         <div className="flex items-center gap-1.5">
           {!isGif && (
             <button
@@ -2311,6 +2322,7 @@ function AdMockup({
           )}
         </div>
       </div>
+      {scoreExpanded && <PhoenixScoreIssues result={scoreResult} />}
       {/* Variant header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-docebo-border/30">
         <div className="flex items-center gap-2 flex-wrap">
