@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useState, useEffect } from "react";
-import { toPng, toCanvas } from "html-to-image";
+import { toPng, toCanvas, getFontEmbedCSS } from "html-to-image";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { GIFEncoder, quantize, applyPalette } from "gifenc";
@@ -2150,6 +2150,22 @@ function AdMockup({
       // the animation and neon brand accents don't get quantized away.
       let globalPalette: number[][] | null = null;
 
+      // Pre-compute the font-embed CSS once. Otherwise html-to-image walks
+      // every stylesheet's @import rules and fetches every .woff2 on each
+      // toCanvas call — with 5 Google-Fonts @imports in colors_and_type.css
+      // that can hang or take 30s+ before the first frame appears.
+      let fontEmbedCSS: string | undefined;
+      try {
+        fontEmbedCSS = await Promise.race([
+          getFontEmbedCSS(mockupRef.current, {}),
+          new Promise<string>((_, reject) =>
+            setTimeout(() => reject(new Error("font embed timeout")), 8000),
+          ),
+        ]);
+      } catch (e) {
+        console.warn("Font embed CSS unavailable, capturing without:", e);
+      }
+
       for (const sample of samples) {
         setExportState(sample.state);
         // Wait two paints so React commits the frame before capture.
@@ -2157,7 +2173,11 @@ function AdMockup({
           requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
         );
         if (!mockupRef.current) break;
-        const canvas = await toCanvas(mockupRef.current, { pixelRatio: 1 });
+        const canvas = await toCanvas(mockupRef.current, {
+          pixelRatio: 1,
+          fontEmbedCSS,
+          skipFonts: !fontEmbedCSS,
+        });
         const ctx = canvas.getContext("2d");
         if (!ctx) continue;
         const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
