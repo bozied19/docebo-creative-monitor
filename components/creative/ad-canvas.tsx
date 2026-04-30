@@ -8,7 +8,7 @@ import { GIFEncoder, quantize, applyPalette } from "gifenc";
 import type { Variant, CanvasRenderContext } from "./refresh-engine";
 import { BRAND_VOICE_OPTIONS, isGifFormat, type BrandVoiceOption } from "./refresh-engine";
 import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard, resolveSubtext, LogoBar, SocialProofBadge, MetricStrip } from "./visual-styles";
-import { PhoenixRenderer } from "./phoenix/PhoenixRenderer";
+import { PhoenixRenderer, compatibleTemplatesFor, TEMPLATE_LABEL } from "./phoenix/PhoenixRenderer";
 import { scoreVariant } from "./phoenix/score";
 import { PhoenixScoreBadge, PhoenixScoreIssues } from "./phoenix/PhoenixScoreBadge";
 
@@ -1923,7 +1923,11 @@ function AdMockup({
   const [exportingGif, setExportingGif] = useState(false);
   const [showPhoenix, setShowPhoenix] = useState(false);
   const [scoreExpanded, setScoreExpanded] = useState(false);
+  const [templateIndex, setTemplateIndex] = useState(0);
   const scoreResult = scoreVariant(variant, theme);
+  const phoenixCandidates = compatibleTemplatesFor(variant, theme);
+  const currentTemplateKey =
+    phoenixCandidates[templateIndex % phoenixCandidates.length];
 
   // Register this mockup's DOM ref so FigmaSendPanel can render it to PNG
   useEffect(() => {
@@ -2208,7 +2212,14 @@ function AdMockup({
 
   const renderMockup = () => {
     if (showPhoenix) {
-      return <PhoenixRenderer variant={variant} theme={theme} mockupRef={mockupRef} />;
+      return (
+        <PhoenixRenderer
+          variant={variant}
+          theme={theme}
+          templateIndex={templateIndex}
+          mockupRef={mockupRef}
+        />
+      );
     }
 
     let mockupContent: React.ReactElement;
@@ -2295,6 +2306,18 @@ function AdMockup({
           />
         </div>
         <div className="flex items-center gap-1.5">
+          {!isGif && showPhoenix && phoenixCandidates.length > 1 && (
+            <button
+              onClick={() => setTemplateIndex((i) => i + 1)}
+              title={`Audition: ${TEMPLATE_LABEL[currentTemplateKey]} (${(templateIndex % phoenixCandidates.length) + 1}/${phoenixCandidates.length})`}
+              className="text-xs px-2 py-1 rounded bg-docebo-blue/20 text-docebo-light-blue hover:bg-docebo-blue/40 hover:text-white transition-colors cursor-pointer font-mono"
+            >
+              🎲 {TEMPLATE_LABEL[currentTemplateKey]}{" "}
+              <span className="opacity-60">
+                {(templateIndex % phoenixCandidates.length) + 1}/{phoenixCandidates.length}
+              </span>
+            </button>
+          )}
           {!isGif && (
             <button
               onClick={togglePhoenix}
