@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "sync:evidence": "tsx lib/supabase/sync-evidence.ts",
+    "sync:evidence:dry": "tsx lib/supabase/sync-evidence.ts --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
+    "@supabase/supabase-js": "^2.105.3",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -21,10 +24,13 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
-    "@types/node": "25.5.0"
+    "@types/node": "25.5.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0"
   }
 }
