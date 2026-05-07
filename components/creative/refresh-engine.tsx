@@ -726,6 +726,9 @@ export interface Variant {
   publishing_platform: string;
   /** Ad format from the 6-format taxonomy */
   ad_format: string;
+  /** Persona id (one of PERSONA_OPTIONS), e.g. "ld-leader". Carried as a
+   *  top-level field so the LP-URL builder doesn't have to parse the UTM tag. */
+  persona?: string;
   /** Composed UTM tag: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id] */
   utm_content_tag: string;
   gemini_image_prompt: string;

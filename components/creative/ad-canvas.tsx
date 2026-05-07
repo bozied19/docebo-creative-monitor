@@ -11,6 +11,7 @@ import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard, re
 import { PhoenixRenderer, compatibleTemplatesFor, TEMPLATE_LABEL } from "./phoenix/PhoenixRenderer";
 import { scoreVariant } from "./phoenix/score";
 import { PhoenixScoreBadge, PhoenixScoreIssues } from "./phoenix/PhoenixScoreBadge";
+import { buildLpUrlForVariant } from "@/lib/lp-url-builder";
 
 /* ── Feedback types ────────────────────────────────────────────── */
 interface FeedbackEntry {
@@ -2428,6 +2429,31 @@ function AdMockup({
           utm: {variant.utm_content_tag}
         </p>
       </div>
+
+      {/* Matching landing page link. Hidden when NEXT_PUBLIC_LOVABLE_LP_BASE_URL
+          is not set (buildLpUrlForVariant returns null) or persona is missing. */}
+      {(() => {
+        const lpUrl = buildLpUrlForVariant(variant);
+        if (!lpUrl) return null;
+        return (
+          <div className="px-3 py-2 border-t border-docebo-border/30">
+            <a
+              href={lpUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-docebo-pink/10 hover:bg-docebo-pink/20 border border-docebo-pink/30 hover:border-docebo-pink/50 text-docebo-pink transition-colors"
+              title="Open the Lovable landing page that mirrors this ad's persona, angle, and hook"
+            >
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-docebo-pink shrink-0" aria-hidden="true" />
+              <span className="font-medium">View matching landing page</span>
+              <span aria-hidden="true">→</span>
+            </a>
+            <p className="text-[10px] text-docebo-muted/60 mt-1 font-mono break-all">
+              {lpUrl}
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Evidence trace — claimed-only provenance from Gong-call evidence pool.
           Shown only when the variant came from an evidence-backed persona. */}

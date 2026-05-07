@@ -753,6 +753,11 @@ function generateMockVariants(_prompt: string, platform?: string, visualStyle?: 
     }
   }
 
+  // Carry persona on every mock variant (matches the live-API post-process loop).
+  for (const v of variants) {
+    (v as { persona?: string }).persona = p;
+  }
+
   return variants;
 }
 
@@ -939,9 +944,13 @@ This campaign needs a creative refresh. ${userMessage}`;
         v.hook_type = v.hook_type || "question";
         v.messaging_sub_angle = v.messaging_sub_angle || messaging_sub_angle || "";
 
+        // Carry persona on the variant so downstream consumers (LP URL builder,
+        // attribution UI) don't have to parse it out of the UTM tag.
+        const p = persona || "brand";
+        v.persona = p;
+
         // Compose utm_content_tag from structured fields
         // Format: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id]
-        const p = persona || "brand";
         v.utm_content_tag = [
           v.visual_style,
           v.ad_format,
