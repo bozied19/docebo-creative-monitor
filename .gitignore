@@ -16,6 +16,9 @@ data/*
 # and the Phoenix Design System (tokens, templates, assets)
 !data/design-system/
 !data/design-system/**
+# and the persona evidence library (Gong-call extracts feeding ad copy)
+!data/persona-evidence/
+!data/persona-evidence/**
 
 # misc
 .DS_Store

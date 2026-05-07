@@ -1,0 +1,168 @@
+{
+  "persona_id": "ld-leader",
+  "persona_label": "L&D Leader",
+  "evidence_summary": {
+    "row_count": 15,
+    "primary_segment": "Mid-Market",
+    "primary_employee_range": "200-1500",
+    "primary_region": "NA",
+    "last_refreshed": "2026-05-06",
+    "source": "Gong call analysis Feb-May 2026"
+  },
+  "headline_pain": {
+    "summary": "Can't measure who's actually using it",
+    "confidence": "strong-pattern",
+    "frequency_label": "60% of conversations"
+  },
+  "pain_quotes": [
+    {
+      "quote": "the first question we had was, well, how many people are using it? And that has proven to be a monumental undertaking. That is, that is still pretty much unanswered.",
+      "attribution": "Brian Crews · Georgia 811 · 55 employees",
+      "use_case": "replace-incumbent",
+      "incumbent": "homegrown",
+      "tags": ["measurement", "active-users", "reporting"]
+    },
+    {
+      "quote": "we have people who have like years of classes that they've taken and certifications they may have. Would you guys be able to port that over to show in their historical transcript?",
+      "attribution": "Savannah DeCuir · Keesler Federal Credit Union · 662 employees",
+      "use_case": "replace-incumbent",
+      "incumbent": "unnamed legacy LMS",
+      "tags": ["transcript-migration", "audit", "compliance"]
+    },
+    {
+      "quote": "this is almost double what we pay currently. And so it's a shock. only 30 courses for 23,000 a year. I thought that with your partnership, we would be able to get a lower cost on the content.",
+      "attribution": "Kerri Novak · GadellNet · 200 employees",
+      "use_case": "replace-incumbent-with-content",
+      "incumbent": "LinkedIn Learning + GoOne",
+      "tags": ["pricing-shock", "content-bundle"]
+    },
+    {
+      "quote": "we're trying to like move and expand our training and our capabilities in the LMS space. And I don't think that ispring can do that.",
+      "attribution": "Arwa Alshubi · A&D Mortgage · 114 employees",
+      "use_case": "replace-incumbent",
+      "incumbent": "iSpring",
+      "tags": ["scale", "outgrowing-incumbent"]
+    },
+    {
+      "quote": "majority of it is in Salesforce. So having the ability to cross training along with the reporting and seeing the correlation would be a nice clutch for us.",
+      "attribution": "Marie Mcameron · Tillman Fiber · 17 employees",
+      "use_case": "skills-and-reporting",
+      "incumbent": null,
+      "tags": ["salesforce-integration", "reporting"]
+    },
+    {
+      "quote": "I keep getting told it's impossible. And I know that it's not possible.",
+      "attribution": "Aaron Bandy · Paul Davis Restoration",
+      "use_case": "blended-learning",
+      "incumbent": "current Docebo deployment via corporate",
+      "tags": ["frustration", "limitations"]
+    },
+    {
+      "quote": "we're not going to have a 10 person team running this effort. It's going to be probably one person and part of one person or part of a bunch of people.",
+      "attribution": "Madalyn Romano · LHRIC · 574 employees",
+      "use_case": "consolidation",
+      "incumbent": "Glide + Skillsoft",
+      "tags": ["small-team", "consolidation"]
+    },
+    {
+      "quote": "Our LMS right now that we have is kind of lacking a lot of the more modernization that we're looking for. There's not one piece of AI. It's kind of concerning at this point in time.",
+      "attribution": "Annette DiGuiseppi · PKF O'Connor Davies · 1500 employees",
+      "use_case": "modernization",
+      "incumbent": "LCvista",
+      "tags": ["ai-gap", "vendor-stagnation"]
+    },
+    {
+      "quote": "right now, the learning onboarding, continuation, training, compliance, things like that. It's not really in a set platform that's trackable and manageable. It's more like spreadsheet based and email confirmations.",
+      "attribution": "Ashley Doyle · Ascendant Financial",
+      "use_case": "greenfield",
+      "incumbent": "spreadsheets",
+      "tags": ["greenfield", "scale"]
+    },
+    {
+      "quote": "Our library is very limited, which is why I'm looking for something that people don't feel like they've already watched this or seen this before.",
+      "attribution": "Suzanne Hessing · Eastern Warehouse Distributors · 407 employees",
+      "use_case": "replace-incumbent",
+      "incumbent": "Pryor Learning",
+      "tags": ["closed-library", "long-tenured-learners"]
+    }
+  ],
+  "decision_criteria": [
+    { "criterion": "Reporting beyond completion (active users, drop-off, retention)", "frequency_label": "universal" },
+    { "criterion": "SSO + group-membership sync (Azure AD, Okta)", "frequency_label": "strong-pattern" },
+    { "criterion": "Authoring for non-technical users", "frequency_label": "common" },
+    { "criterion": "HRIS integration (Paycom, Paylocity, BambooHR, Workday)", "frequency_label": "common" },
+    { "criterion": "Salesforce integration for cross-system correlation", "frequency_label": "less-common" },
+    { "criterion": "Leader-driven assignment workflows", "frequency_label": "outlier-but-loud" },
+    { "criterion": "AI-driven content recommendations and authoring", "frequency_label": "strong-pattern" },
+    { "criterion": "Transcript portability from incumbent", "frequency_label": "common" }
+  ],
+  "language_they_use": [
+    "active monthly users",
+    "completion rate",
+    "drop-off analytics",
+    "audit-ready",
+    "transcript portability",
+    "leader-driven assignment",
+    "endless options to continue to improve",
+    "tied to business outcomes",
+    "consolidation",
+    "outgrowing the platform",
+    "cross-system correlation"
+  ],
+  "headline_ready_quotes": [
+    "I keep getting told it's impossible. And I know that it's not possible.",
+    "we don't have a learning management system, of any sort.",
+    "this platform would provide us endless options to continue to improve and build out for the next several years.",
+    "it's like a huge upgrade to the nothing that we have."
+  ],
+  "competitive_triggers": [
+    { "incumbent": "iSpring", "switch_reason": "doesn't scale beyond quizzes, no robust learner experience tracking", "row_count": 1 },
+    { "incumbent": "LinkedIn Learning", "switch_reason": "engagement low without top-down push, no Japanese, content-bundle pricing", "row_count": 3 },
+    { "incumbent": "Bai", "switch_reason": "clunky authoring, vendor explicitly not investing in improvements", "row_count": 2 },
+    { "incumbent": "Pryor Learning", "switch_reason": "closed library, no external content allowed, long-tenured learners feel they've seen everything", "row_count": 1 },
+    { "incumbent": "TalentLMS", "switch_reason": "outgrowing scale around 3000 users", "row_count": 1 },
+    { "incumbent": "LCvista", "switch_reason": "stagnating on enhancements, no AI features", "row_count": 1 },
+    { "incumbent": "Articulate / Storyline", "switch_reason": "static documents not LMS, separate licensing fee", "row_count": 2 },
+    { "incumbent": "GoOne", "switch_reason": "so much outdated content", "row_count": 1 },
+    { "incumbent": "Skillsoft", "switch_reason": "fragmented across departments, expensive", "row_count": 2 },
+    { "incumbent": "Moodle", "switch_reason": "manual long-form quiz grading, no adaptive pathing", "row_count": 1 }
+  ],
+  "use_case_distribution": [
+    { "use_case": "replace-incumbent", "frequency_label": "most" },
+    { "use_case": "skills-and-career-pathing", "frequency_label": "common" },
+    { "use_case": "compliance-and-audit", "frequency_label": "common" },
+    { "use_case": "onboarding-scaled", "frequency_label": "common" },
+    { "use_case": "greenfield-no-lms", "frequency_label": "outlier" },
+    { "use_case": "consolidation-many-tools-to-one", "frequency_label": "common" }
+  ],
+  "ask_yourself_prompts": [
+    "List every place L&D data lives today. Who owns the consolidation? Same person evaluating the LMS?",
+    "Is your platform being asked to fix a program-design problem? If yes, the platform won't be the answer.",
+    "Who's still in the room 90 days after the contract is signed? That's your real committee."
+  ],
+  "ask_next_vendor_prompts": [
+    "Show me a report distinguishing active learners from inactive in the last 30 days. Branch by branch.",
+    "If we leave you in 3 years, what data comes out, in what format, with what metadata?",
+    "Show me last-updated dates on every course. What's the refresh SLA for security, AWS, compliance?",
+    "Can a direct manager assign a course to their team without going through L&D admin? Show me the manager view."
+  ],
+  "pricing_pattern": {
+    "common_mistake": "Compared current LMS spend against new LMS + content bundle (apples to oranges)",
+    "what_they_should_compare": "Current LMS + content stack (LinkedIn Learning, OpenSesame, Skillsoft, GoOne) vs new bundle",
+    "typical_sticker_shock": "~2x current spend",
+    "advice": "Before any pricing conversation, pull a separate line-item for what content costs today."
+  },
+  "evaluation_committee": {
+    "size_range": "2-6",
+    "median": 3,
+    "common_pattern": "Most bring 2+ stakeholders. Day after signing, it's usually 1 person running it.",
+    "confidence": "strong-pattern"
+  },
+  "avoid_framing": [
+    "feature-first messaging without a 'why should I care'",
+    "LMS-centric framing (frame business outcome, not platform)",
+    "engagement metrics as outcomes (board wants revenue/retention impact)",
+    "promising 'all-in-one' without naming the specific incumbents being replaced",
+    "demoing 'general overview' (the buyers who pre-loaded specific asks got demos that landed)"
+  ]
+}

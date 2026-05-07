@@ -1,0 +1,166 @@
+{
+  "persona_id": "customer-ed",
+  "persona_label": "Customer Education",
+  "evidence_summary": {
+    "row_count": 12,
+    "primary_segment": "Mid-Market to Major",
+    "primary_employee_range": "30-15000",
+    "primary_region": "NA",
+    "last_refreshed": "2026-05-06",
+    "source": "Gong call analysis Feb-May 2026"
+  },
+  "headline_pain": {
+    "summary": "Replacing fragmented tooling that can't deliver differentiated experiences to customers, partners, and internal audiences from one source of truth",
+    "confidence": "strong-pattern",
+    "frequency_label": "majority of conversations"
+  },
+  "pain_quotes": [
+    {
+      "quote": "70 percent of the calls that we get are training related when we're supposed to be a technical team. We've had let's say about three different training programs for these clients to go to. It was like three separate websites we've had, but honestly they've kind of all failed.",
+      "attribution": "Lindsey Wuest · Cubex LLC · veterinary software",
+      "use_case": "support-deflection",
+      "incumbent": "three previous failed programs",
+      "tags": ["support-burden", "ticket-deflection", "previous-failures"]
+    },
+    {
+      "quote": "the ability to customize the UI, branding layout at an end user, non developer level. The key first way customers will interact with the LMS is going to be full SSO integration. We don't want them to create any other account.",
+      "attribution": "Dimitri Hasandras · Bloomberg Industry Group · 1920 employees",
+      "use_case": "in-app-personalization",
+      "incumbent": null,
+      "tags": ["sso", "branding", "non-developer-customization"]
+    },
+    {
+      "quote": "we need an external facing platform for learning to be able to get our customers, our partners, the specific knowledge that they need. Those will be our partners and then our customers. The third audience are our internal employees.",
+      "attribution": "Nicole Reis · Ketch · 43 employees",
+      "use_case": "three-audience-platform",
+      "incumbent": "Seismic + Lessonly",
+      "tags": ["multi-audience", "extended-enterprise"]
+    },
+    {
+      "quote": "I am basically the content creator. So what I worry about most is how quickly I can create content, how quickly I can change it if needed. We would like to be able to use just one software to do everything.",
+      "attribution": "Sarah Chaudhry · flare.io · 53 employees",
+      "use_case": "consolidation",
+      "incumbent": "LearnUpon + Easy Generator",
+      "tags": ["one-tool", "content-velocity"]
+    },
+    {
+      "quote": "the research says that it can be a multi month process of getting to implement configuration. It's intended for really big enterprise. We're just starting out, it's going to take a bit to sort of ramp up.",
+      "attribution": "Yitzchak Meirovich · SysAid · 130 employees",
+      "use_case": "fast-launch",
+      "incumbent": "evaluating Skilljar",
+      "tags": ["startup-stage", "implementation-speed"]
+    },
+    {
+      "quote": "Onboarding is a very manual process. Once that partnership signs on, we need to chase them down to get onboarded. Sometimes a firm has one attorney, sometimes 30 attorneys. The chase is different for all.",
+      "attribution": "Stephen Gomez · The Expert Institute",
+      "use_case": "onboarding-automation",
+      "incumbent": "manual + Salesforce triggers + Zoom live",
+      "tags": ["manual-onboarding", "automation"]
+    },
+    {
+      "quote": "I want to be able to just have someone go through a single certification course. That sort of MVP. They need nuance, but eventually I want it to be nuanced to them where they can have walmart specific materials versus base certification for our strategics.",
+      "attribution": "Lisa Hillmann · Gradial · 50 employees",
+      "use_case": "tiered-customer-experiences",
+      "incumbent": null,
+      "tags": ["mvp-then-nuance", "strategic-vs-commercial"]
+    },
+    {
+      "quote": "we have multiple different things, right? We got pro software, hrmp, our client users. So you got internal, you got client users. And then on top of client users, you got all kinds of accesses that's needed. Restrictions, security around that.",
+      "attribution": "Shiv Bardolia · HRP · 73 employees",
+      "use_case": "multi-tenant-content-management",
+      "incumbent": "Articulate + Storylane",
+      "tags": ["multi-tenant", "permissions"]
+    },
+    {
+      "quote": "I would not want to build all of this stuff in talent LMS just to switch in a year.",
+      "attribution": "Maureen Ellis · K12Plus · 7 employees",
+      "use_case": "scale-from-day-one",
+      "incumbent": "TalentLMS",
+      "tags": ["outgrowing-incumbent", "right-platform-day-one"]
+    },
+    {
+      "quote": "Right now we're doing a pay per upload price model. With wanting to grow the academy and add more content, it's hard because every time we upload something, it costs a certain amount.",
+      "attribution": "Victoria Burnie · Canadian Institute of Mining · 525 employees",
+      "use_case": "association-academy",
+      "incumbent": "unnamed pay-per-upload LMS",
+      "tags": ["pricing-model", "growth-constrained"]
+    }
+  ],
+  "decision_criteria": [
+    { "criterion": "Multi-audience differentiated experiences (internal, customer, partner)", "frequency_label": "universal" },
+    { "criterion": "SSO-first integration (no second account creation)", "frequency_label": "strong-pattern" },
+    { "criterion": "HubSpot / CRM as source of truth for user provisioning", "frequency_label": "common" },
+    { "criterion": "Salesforce integration for support-ticket deflection mapping", "frequency_label": "strong-pattern" },
+    { "criterion": "AI authoring + translation for content velocity", "frequency_label": "common" },
+    { "criterion": "Branding and UI customization at non-developer level", "frequency_label": "strong-pattern" },
+    { "criterion": "Active-user pricing (vs pay-per-upload or per-seat)", "frequency_label": "common" },
+    { "criterion": "Credly / digital credentialing integration", "frequency_label": "common" }
+  ],
+  "language_they_use": [
+    "ticket deflection",
+    "time-to-value",
+    "monetize training",
+    "customer education",
+    "extended enterprise",
+    "external-facing",
+    "multi-tenant",
+    "differentiated experiences",
+    "self-service customers",
+    "partner enablement",
+    "headless learning",
+    "in-app companion",
+    "tier them, not just tell them"
+  ],
+  "headline_ready_quotes": [
+    "70 percent of the calls we get are training related, when we're supposed to be a technical team.",
+    "Three separate websites. They've kind of all failed.",
+    "I would not want to build all of this stuff in TalentLMS just to switch in a year.",
+    "Onboarding is a very manual process. The chase is different for all."
+  ],
+  "competitive_triggers": [
+    { "incumbent": "Skilljar", "switch_reason": "missing depth, Salesforce integration limits, evaluating against multi-tenant", "row_count": 2 },
+    { "incumbent": "TalentLMS", "switch_reason": "outgrowing at ~3000 users, scale plateau", "row_count": 1 },
+    { "incumbent": "LearnUpon", "switch_reason": "external authoring tool dependency, can't reuse content across audiences", "row_count": 1 },
+    { "incumbent": "Seismic + Lessonly", "switch_reason": "manual partner-login provisioning, doesn't scale to self-serve", "row_count": 1 },
+    { "incumbent": "Easy Generator", "switch_reason": "external authoring forces context switch, want one platform", "row_count": 1 },
+    { "incumbent": "Articulate + Storylane", "switch_reason": "multi-tenant permissions break at scale, no AI authoring", "row_count": 1 }
+  ],
+  "use_case_distribution": [
+    { "use_case": "support-ticket-deflection", "frequency_label": "strong-pattern" },
+    { "use_case": "multi-audience-extended-enterprise", "frequency_label": "most" },
+    { "use_case": "monetize-training-program", "frequency_label": "common" },
+    { "use_case": "partner-customer-certification", "frequency_label": "common" },
+    { "use_case": "onboarding-automation", "frequency_label": "common" },
+    { "use_case": "association-academy-growth", "frequency_label": "outlier" }
+  ],
+  "ask_yourself_prompts": [
+    "Are you trying to ship one experience or three? If three, are your incumbent's permissions actually multi-tenant or just user groups?",
+    "What percent of your support tickets are training-related? That's the deflection number you're betting on.",
+    "Is the customer creating a second account to access training? If yes, that's your churn risk."
+  ],
+  "ask_next_vendor_prompts": [
+    "Show me how a Walmart-specific learner sees something different from a commercial customer in the same login.",
+    "Show me the support-ticket-to-course mapping. How does deflection actually get measured?",
+    "Show me content authored once, served three different ways to three different audiences without duplication.",
+    "What's the SSO model for partners I haven't onboarded yet? Self-serve registration or manual invite?"
+  ],
+  "pricing_pattern": {
+    "common_mistake": "Pricing per-seat when actual usage is bursty (training events, certification cycles)",
+    "what_they_should_compare": "Active-user model vs per-upload vs per-seat against their actual usage curve",
+    "typical_sticker_shock": "Pay-per-upload constrains content growth; per-seat overcharges for bursty usage",
+    "advice": "Pull last 6 months of training-touchpoint logs. Map to user-month buckets before evaluating any pricing model."
+  },
+  "evaluation_committee": {
+    "size_range": "1-4",
+    "median": 2,
+    "common_pattern": "Often a single content owner driving discovery, plus integration/IT validator and exec sponsor for budget",
+    "confidence": "common-thread"
+  },
+  "avoid_framing": [
+    "HR-centric language (this is revenue, not retention)",
+    "compliance-first narratives (compliance is internal, not customer-facing)",
+    "LMS-as-platform pitch (the content IS the product)",
+    "feature lists without ticket-deflection or revenue-uplift math",
+    "promising fast implementation without a startup-tier package"
+  ]
+}

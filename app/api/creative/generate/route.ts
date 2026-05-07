@@ -1,5 +1,149 @@
 import { NextRequest, NextResponse } from "next/server";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
+
+interface PersonaEvidence {
+  persona_id: string;
+  persona_label: string;
+  evidence_summary?: {
+    row_count?: number;
+    primary_segment?: string;
+    primary_employee_range?: string;
+    primary_region?: string;
+    last_refreshed?: string;
+    source?: string;
+    evidence_density?: string;
+  };
+  headline_pain?: { summary?: string; confidence?: string; frequency_label?: string };
+  pain_quotes?: Array<{ quote: string; attribution?: string; use_case?: string; incumbent?: string | null; tags?: string[] }>;
+  decision_criteria?: Array<{ criterion: string; frequency_label?: string }>;
+  language_they_use?: string[];
+  headline_ready_quotes?: string[];
+  competitive_triggers?: Array<{ incumbent: string; switch_reason?: string; row_count?: number }>;
+  use_case_distribution?: Array<{ use_case: string; frequency_label?: string }>;
+  ask_yourself_prompts?: string[];
+  ask_next_vendor_prompts?: string[];
+  pricing_pattern?: { common_mistake?: string; what_they_should_compare?: string; typical_sticker_shock?: string; advice?: string };
+  evaluation_committee?: { size_range?: string; median?: number; common_pattern?: string; confidence?: string };
+  avoid_framing?: string[];
+}
+
+async function loadPersonaEvidence(personaId: string): Promise<PersonaEvidence | null> {
+  try {
+    const filePath = path.join(process.cwd(), "data", "persona-evidence", `${personaId}.json`);
+    const raw = await fs.readFile(filePath, "utf8");
+    return JSON.parse(raw) as PersonaEvidence;
+  } catch {
+    return null;
+  }
+}
+
+function sampleN<T>(arr: T[], n: number): T[] {
+  if (arr.length <= n) return [...arr];
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, n);
+}
+
+function formatEvidenceForPrompt(ev: PersonaEvidence): string {
+  const lines: string[] = [];
+  const ctx = ev.evidence_summary;
+
+  lines.push(`═══ TARGET PERSONA EVIDENCE: ${ev.persona_label.toUpperCase()} ═══`);
+  if (ctx) {
+    const parts = [
+      ctx.row_count ? `${ctx.row_count} prospect calls` : null,
+      ctx.primary_segment ? `${ctx.primary_segment}` : null,
+      ctx.primary_employee_range ? `${ctx.primary_employee_range} employees` : null,
+      ctx.primary_region ? ctx.primary_region : null,
+      ctx.source ? `(${ctx.source})` : null,
+    ].filter(Boolean);
+    if (parts.length) lines.push(`Sample: ${parts.join(" · ")}`);
+  }
+
+  if (ev.headline_pain?.summary) {
+    const tag = [ev.headline_pain.confidence, ev.headline_pain.frequency_label].filter(Boolean).join(", ");
+    lines.push("", `Headline pain${tag ? ` (${tag})` : ""}:`, ev.headline_pain.summary);
+  }
+
+  if (ev.pain_quotes?.length) {
+    const sampled = sampleN(ev.pain_quotes, 3);
+    lines.push("", "Verbatim pain quotes from real prospects (mirror, paraphrase, or echo the rhythm — do not sanitize):");
+    for (const q of sampled) {
+      const meta = [q.use_case, q.incumbent ? `replacing ${q.incumbent}` : null].filter(Boolean).join(" · ");
+      lines.push(`- "${q.quote}"`);
+      if (q.attribution) lines.push(`  — ${q.attribution}${meta ? ` · ${meta}` : ""}`);
+    }
+  }
+
+  if (ev.language_they_use?.length) {
+    lines.push("", "Words they actually use (mirror this vocabulary, do not translate to marketer-speak):");
+    lines.push(ev.language_they_use.join(", "));
+  }
+
+  if (ev.headline_ready_quotes?.length) {
+    lines.push("", "Headline-ready verbatim quotes (any of these can become creative_overlay or headline directly):");
+    for (const q of ev.headline_ready_quotes) lines.push(`- "${q}"`);
+  }
+
+  if (ev.decision_criteria?.length) {
+    lines.push("", "Top decision criteria (what they actually evaluate on):");
+    for (const dc of ev.decision_criteria) {
+      lines.push(`- ${dc.criterion}${dc.frequency_label ? ` (${dc.frequency_label})` : ""}`);
+    }
+  }
+
+  if (ev.competitive_triggers?.length) {
+    lines.push("", "Common incumbents being replaced (use exact incumbent names in switch-style ads):");
+    for (const ct of ev.competitive_triggers) {
+      lines.push(`- ${ct.incumbent}${ct.switch_reason ? ` — ${ct.switch_reason}` : ""}`);
+    }
+  }
+
+  if (ev.use_case_distribution?.length) {
+    lines.push("", "Use case distribution across this evidence pool:");
+    for (const uc of ev.use_case_distribution) {
+      lines.push(`- ${uc.use_case}${uc.frequency_label ? ` (${uc.frequency_label})` : ""}`);
+    }
+  }
+
+  if (ev.pricing_pattern) {
+    const pp = ev.pricing_pattern;
+    lines.push("", "Pricing trap to acknowledge or sidestep in copy:");
+    if (pp.common_mistake) lines.push(`Common mistake: ${pp.common_mistake}`);
+    if (pp.what_they_should_compare) lines.push(`Right comparison: ${pp.what_they_should_compare}`);
+    if (pp.typical_sticker_shock) lines.push(`Typical sticker shock: ${pp.typical_sticker_shock}`);
+    if (pp.advice) lines.push(`Advice surfaced by buyers: ${pp.advice}`);
+  }
+
+  if (ev.evaluation_committee) {
+    const ec = ev.evaluation_committee;
+    const ecParts = [
+      ec.size_range ? `range ${ec.size_range}` : null,
+      ec.median ? `median ${ec.median}` : null,
+      ec.common_pattern,
+    ].filter(Boolean);
+    if (ecParts.length) lines.push("", `Evaluation committee: ${ecParts.join(" · ")}`);
+  }
+
+  if (ev.avoid_framing?.length) {
+    lines.push("", "Avoid framing:");
+    for (const a of ev.avoid_framing) lines.push(`- ${a}`);
+  }
+
+  lines.push(
+    "",
+    "Write every variant as if a real prospect from this evidence pool will see it in their feed.",
+    "Mirror their language. Hit their named pain. Reference outcomes they actually measure.",
+    "Do not translate their words into marketer-speak. Do not use generic learning language unless the evidence shows they use it.",
+  );
+
+  return lines.join("\n");
+}
 
 const SYSTEM_PROMPT = `Docebo Creative Refresh Engine: UTM-Driven Generation
 
@@ -271,6 +415,40 @@ EXAMPLE (type-on, shorter message, 4500ms loop):
   ],
   "loop_count": -1
 
+═══ EVIDENCE PROVENANCE: REQUIRED WHEN PERSONA EVIDENCE IS PRESENT ═══
+
+When the user message contains a "TARGET PERSONA EVIDENCE" block (verbatim Gong-call quotes, language patterns, decision criteria, competitive triggers, etc.), every variant MUST include an "evidence_used" object that self-reports which evidence piece inspired each copy field.
+
+evidence_used schema (per variant):
+{
+  "evidence_used": {
+    "creative_overlay":  { "source_type": "...", "source_excerpt": "...", "attribution": "..." },
+    "headline":          { "source_type": "...", "source_excerpt": "...", "attribution": "..." },
+    "overlay_subtext":   { "source_type": "...", "source_excerpt": "...", "attribution": "..." },
+    "intro_text":        { "source_type": "...", "source_excerpt": "...", "attribution": "..." },
+    "cta_text":          { "source_type": "...", "source_excerpt": "...", "attribution": "..." }
+  }
+}
+
+source_type vocabulary (use exactly one per field):
+- pain_quote               → field drew from a verbatim pain quote
+- headline_ready_quote     → field drew from a "headline-ready" verbatim quote
+- language_they_use        → field mirrored a vocabulary phrase the persona uses
+- decision_criterion       → field reflected a named decision criterion
+- competitive_trigger      → field referenced an incumbent / switch reason
+- ask_yourself_prompt      → field echoed a self-reflection prompt
+- ask_next_vendor_prompt   → field echoed a vendor-question prompt
+- pricing_pattern          → field referenced the pricing-trap insight
+- headline_pain_summary    → field paraphrased the headline pain summary
+- none                     → no evidence directly drove this field (use sparingly; CTAs sometimes legitimately use this)
+
+Rules for evidence_used:
+- source_excerpt is the SPECIFIC verbatim phrase from the evidence block that inspired this field. Quote it exactly as it appeared in the evidence — do not paraphrase the source itself.
+- attribution: include only when source_type is pain_quote or headline_ready_quote and the evidence block named a speaker / company. Format: "Speaker · Company" exactly as shown in the evidence. Omit attribution for language / criterion / trigger / pattern types.
+- Be honest. If creative_overlay was inspired by the language vocabulary list (not a specific quote), use source_type "language_they_use" with the matching phrase as source_excerpt. Don't claim a quote inspired you when it didn't.
+- If a field genuinely drew from no evidence (e.g. a generic CTA), set source_type "none" and source_excerpt to "".
+- The evidence_used object is REQUIRED whenever a TARGET PERSONA EVIDENCE block was provided. If no evidence block was present, omit evidence_used entirely.
+
 CRITICAL: Your response must be ONLY a valid JSON array of variant objects. No markdown, no explanation, no preamble. Just the JSON array.`;
 
 function generateMockVariants(_prompt: string, platform?: string, visualStyle?: string, brandVoice?: string, adFormat?: string, messagingAngle?: string, _hookType?: string, persona?: string): object[] {
@@ -514,6 +692,67 @@ function generateMockVariants(_prompt: string, platform?: string, visualStyle?: 
     }
   }
 
+  // Mock evidence_used: only meaningful when an evidence-backed persona was
+  // selected. Sourced from ld-leader.json so dev-mode demos still show the
+  // Evidence trace panel populated with real Gong-call attributions.
+  const EVIDENCE_BACKED_PERSONAS = new Set([
+    "ld-leader", "customer-ed", "pro-dev", "hr-leader", "partnerships", "it-leader",
+  ]);
+  if (EVIDENCE_BACKED_PERSONAS.has(p)) {
+    type EvidenceTrace = { source_type: string; source_excerpt: string; attribution?: string };
+    type EvidenceUsed = {
+      creative_overlay?: EvidenceTrace;
+      headline?: EvidenceTrace;
+      overlay_subtext?: EvidenceTrace;
+      intro_text?: EvidenceTrace;
+      cta_text?: EvidenceTrace;
+    };
+    type EvidenceVariant = typeof variants[number] & { evidence_used?: EvidenceUsed };
+
+    const mockEvidence: EvidenceUsed[] = [
+      {
+        creative_overlay: { source_type: "language_they_use", source_excerpt: "endless options to continue to improve" },
+        headline: { source_type: "headline_pain_summary", source_excerpt: "Can't measure who's actually using it" },
+        overlay_subtext: { source_type: "decision_criterion", source_excerpt: "Reporting beyond completion (active users, drop-off, retention)" },
+        intro_text: { source_type: "pain_quote", source_excerpt: "the first question we had was, well, how many people are using it? And that has proven to be a monumental undertaking.", attribution: "Brian Crews · Georgia 811" },
+        cta_text: { source_type: "ask_next_vendor_prompt", source_excerpt: "Show me a report distinguishing active learners from inactive in the last 30 days." },
+      },
+      {
+        creative_overlay: { source_type: "headline_ready_quote", source_excerpt: "I keep getting told it's impossible. And I know that it's not possible.", attribution: "Aaron Bandy · Paul Davis Restoration" },
+        headline: { source_type: "language_they_use", source_excerpt: "tied to business outcomes" },
+        overlay_subtext: { source_type: "decision_criterion", source_excerpt: "Authoring for non-technical users" },
+        intro_text: { source_type: "competitive_trigger", source_excerpt: "Bai — clunky authoring, vendor explicitly not investing in improvements" },
+        cta_text: { source_type: "none", source_excerpt: "" },
+      },
+      {
+        creative_overlay: { source_type: "language_they_use", source_excerpt: "audit-ready" },
+        headline: { source_type: "pain_quote", source_excerpt: "we have people who have like years of classes that they've taken and certifications they may have. Would you guys be able to port that over?", attribution: "Savannah DeCuir · Keesler Federal Credit Union" },
+        overlay_subtext: { source_type: "headline_pain_summary", source_excerpt: "Can't measure who's actually using it" },
+        intro_text: { source_type: "ask_yourself_prompt", source_excerpt: "Is your platform being asked to fix a program-design problem? If yes, the platform won't be the answer." },
+        cta_text: { source_type: "language_they_use", source_excerpt: "transcript portability" },
+      },
+      {
+        creative_overlay: { source_type: "competitive_trigger", source_excerpt: "Bai, LinkedIn Learning, iSpring, Pryor — incumbents being replaced for capability gaps" },
+        headline: { source_type: "pain_quote", source_excerpt: "this is almost double what we pay currently. And so it's a shock.", attribution: "Kerri Novak · GadellNet" },
+        overlay_subtext: { source_type: "pricing_pattern", source_excerpt: "Buyers compared current LMS spend vs new LMS + content bundle (apples to oranges)." },
+        intro_text: { source_type: "decision_criterion", source_excerpt: "HRIS integration (Paycom, Paylocity, BambooHR, Workday)" },
+        cta_text: { source_type: "ask_next_vendor_prompt", source_excerpt: "If we leave you in 3 years, what data comes out, in what format, with what metadata?" },
+      },
+      {
+        creative_overlay: { source_type: "language_they_use", source_excerpt: "leader-driven assignment" },
+        headline: { source_type: "ask_yourself_prompt", source_excerpt: "Who's still in the room 90 days after the contract is signed? That's your real committee." },
+        overlay_subtext: { source_type: "decision_criterion", source_excerpt: "Reporting beyond completion (active users, drop-off, retention)" },
+        intro_text: { source_type: "pain_quote", source_excerpt: "we're trying to like move and expand our training and our capabilities in the LMS space. And I don't think that ispring can do that.", attribution: "Arwa Alshubi · A&D Mortgage" },
+        cta_text: { source_type: "none", source_excerpt: "" },
+      },
+    ];
+
+    for (let i = 0; i < variants.length; i++) {
+      const v = variants[i] as EvidenceVariant;
+      v.evidence_used = mockEvidence[i % mockEvidence.length];
+    }
+  }
+
   return variants;
 }
 
@@ -615,8 +854,13 @@ export async function POST(req: NextRequest) {
 
     let userMessage = prompt;
 
-    if (persona && PERSONA_CONTEXT[persona]) {
-      userMessage += `\n\nTarget Persona Direction: ${PERSONA_CONTEXT[persona]}\nWrite every variant as if this persona will see it in their feed. Use their language, hit their pain points, and reference outcomes they actually measure. Do not use generic learning language unless the persona uses it.`;
+    if (persona) {
+      const evidence = await loadPersonaEvidence(persona);
+      if (evidence) {
+        userMessage += `\n\n${formatEvidenceForPrompt(evidence)}`;
+      } else if (PERSONA_CONTEXT[persona]) {
+        userMessage += `\n\nTarget Persona Direction: ${PERSONA_CONTEXT[persona]}\nWrite every variant as if this persona will see it in their feed. Use their language, hit their pain points, and reference outcomes they actually measure. Do not use generic learning language unless the persona uses it.`;
+      }
     }
 
     // Inject UTM dimension overrides

@@ -769,6 +769,38 @@ export interface Variant {
     /** Card-specific visual note for the designer. */
     card_visual_note?: string;
   }>;
+  /** Per-field provenance trace. When the request included a persona with a
+   *  Gong-evidence file, the model self-reports which evidence piece inspired
+   *  each copy field. "claimed only" — not text-verified. Fields where
+   *  no evidence was used carry source_type "none". */
+  evidence_used?: {
+    creative_overlay?: EvidenceTrace;
+    headline?: EvidenceTrace;
+    overlay_subtext?: EvidenceTrace;
+    intro_text?: EvidenceTrace;
+    cta_text?: EvidenceTrace;
+  };
+}
+
+export type EvidenceSourceType =
+  | "pain_quote"
+  | "headline_ready_quote"
+  | "language_they_use"
+  | "decision_criterion"
+  | "competitive_trigger"
+  | "ask_yourself_prompt"
+  | "ask_next_vendor_prompt"
+  | "pricing_pattern"
+  | "headline_pain_summary"
+  | "none";
+
+export interface EvidenceTrace {
+  source_type: EvidenceSourceType;
+  /** Verbatim phrase from the evidence pool that inspired this field.
+   *  Empty string when source_type is "none". */
+  source_excerpt: string;
+  /** Speaker / company attribution when source is a quote. */
+  attribution?: string;
 }
 
 /** Props passed to the canvas for format-aware rendering */
@@ -785,20 +817,27 @@ interface RefreshEngineProps {
   onVariantsGenerated: (variants: Variant[], renderContext: CanvasRenderContext) => void;
 }
 
-/* ── Persona options (unchanged) ───────────────────────────────── */
+/* ── Persona options ───────────────────────────────────────────────
+   evidenceBacked === true means a JSON file exists at
+   data/persona-evidence/<id>.json and the API will inject verbatim
+   Gong-call evidence into the prompt. Personas without evidence fall
+   back to a static blurb in route.ts and are disabled in the UI so the
+   demo always renders ads grounded in real prospect language. To enable
+   a new persona, drop a file at data/persona-evidence/<id>.json and
+   flip this flag. */
 const PERSONA_OPTIONS = [
-  { id: "brand", label: "Brand", group: "Brand & Learning", desc: "Big bold statements. Broad appeal across all Docebo audiences." },
-  { id: "ld-leader", label: "L&D Leader", group: "Brand & Learning", desc: "CLO, VP/Director of L&D. Learning ROI, workforce readiness, vendor consolidation." },
-  { id: "pro-dev", label: "Professional Development", group: "Brand & Learning", desc: "Skills frameworks, Kirkpatrick measurement, career pathing." },
-  { id: "hr-leader", label: "HR Leader", group: "Brand & Learning", desc: "CHRO, CPO, VP of HR. People strategy, HRIS integration, retention, compliance." },
-  { id: "enablement", label: "Revenue & Enablement", group: "Go-to-market", desc: "CRO, CSO, Sales Enablement. Pipeline, win rates, Salesforce, rep ramp." },
-  { id: "customer-ed", label: "Customer Education", group: "Go-to-market", desc: "Monetization, support deflection, time-to-value, NRR." },
-  { id: "partnerships", label: "Partner Enablement", group: "Go-to-market", desc: "Partner certification, revenue attribution, ecosystem growth." },
-  { id: "franchise", label: "Franchise & Frontline", group: "Operations & Compliance", desc: "Device policy, offline learning, brand consistency at scale." },
-  { id: "compliance", label: "Compliance", group: "Operations & Compliance", desc: "Audit readiness, automated assignment, regulatory defensibility." },
-  { id: "finance", label: "Finance", group: "Operations & Compliance", desc: "CFO, VP Finance. TCO transparency, ROI defensibility, AI spend governance." },
-  { id: "it-leader", label: "IT", group: "Operations & Compliance", desc: "CIO, CTO, VP IT. Security, SSO, API architecture, AI governance." },
-  { id: "operations", label: "Operations", group: "Operations & Compliance", desc: "COO, Head of Ops. Scalability, frontline readiness, time-to-productivity." },
+  { id: "brand", label: "Brand", group: "Brand & Learning", desc: "Big bold statements. Broad appeal across all Docebo audiences.", evidenceBacked: false },
+  { id: "ld-leader", label: "L&D Leader", group: "Brand & Learning", desc: "CLO, VP/Director of L&D. Learning ROI, workforce readiness, vendor consolidation.", evidenceBacked: true },
+  { id: "pro-dev", label: "Professional Development", group: "Brand & Learning", desc: "Skills frameworks, Kirkpatrick measurement, career pathing.", evidenceBacked: true },
+  { id: "hr-leader", label: "HR Leader", group: "Brand & Learning", desc: "CHRO, CPO, VP of HR. People strategy, HRIS integration, retention, compliance.", evidenceBacked: true },
+  { id: "enablement", label: "Revenue & Enablement", group: "Go-to-market", desc: "CRO, CSO, Sales Enablement. Pipeline, win rates, Salesforce, rep ramp.", evidenceBacked: false },
+  { id: "customer-ed", label: "Customer Education", group: "Go-to-market", desc: "Monetization, support deflection, time-to-value, NRR.", evidenceBacked: true },
+  { id: "partnerships", label: "Partner Enablement", group: "Go-to-market", desc: "Partner certification, revenue attribution, ecosystem growth.", evidenceBacked: true },
+  { id: "franchise", label: "Franchise & Frontline", group: "Operations & Compliance", desc: "Device policy, offline learning, brand consistency at scale.", evidenceBacked: false },
+  { id: "compliance", label: "Compliance", group: "Operations & Compliance", desc: "Audit readiness, automated assignment, regulatory defensibility.", evidenceBacked: false },
+  { id: "finance", label: "Finance", group: "Operations & Compliance", desc: "CFO, VP Finance. TCO transparency, ROI defensibility, AI spend governance.", evidenceBacked: false },
+  { id: "it-leader", label: "IT", group: "Operations & Compliance", desc: "CIO, CTO, VP IT. Security, SSO, API architecture, AI governance.", evidenceBacked: true },
+  { id: "operations", label: "Operations", group: "Operations & Compliance", desc: "COO, Head of Ops. Scalability, frontline readiness, time-to-productivity.", evidenceBacked: false },
 ];
 
 const PERSONA_GROUPS = ["Brand & Learning", "Go-to-market", "Operations & Compliance"] as const;
@@ -1110,6 +1149,12 @@ export default function RefreshEngine({
                 </button>
               )}
             </div>
+            <div className="mb-2 flex items-center gap-2 px-2 py-1.5 rounded-md bg-docebo-pink/5 border border-docebo-pink/20">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-docebo-pink shrink-0" aria-hidden="true" />
+              <p className="text-[10px] text-docebo-muted leading-snug">
+                <span className="text-docebo-pink font-medium">Gong evidence</span> personas inject verbatim prospect quotes, named incumbents, and real decision criteria. Personas without evidence are disabled for this demo.
+              </p>
+            </div>
             <div className="space-y-3">
               {PERSONA_GROUPS.map((group) => (
                 <div key={group}>
@@ -1120,33 +1165,54 @@ export default function RefreshEngine({
                     {PERSONA_OPTIONS.filter((p) => p.group === group).map((p) => {
                       const active = selectedPersona === p.id;
                       const isBrand = p.id === "brand";
+                      const isDisabled = !p.evidenceBacked;
                       return (
                         <button
                           key={p.id}
-                          onClick={() => setSelectedPersona(active ? null : p.id)}
-                          className={`text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue ${
-                            isBrand && !active
+                          onClick={() => {
+                            if (isDisabled) return;
+                            setSelectedPersona(active ? null : p.id);
+                          }}
+                          disabled={isDisabled}
+                          aria-disabled={isDisabled}
+                          title={isDisabled ? "No Gong-call evidence yet for this persona — disabled for demo" : undefined}
+                          className={`text-left px-2.5 py-2 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue relative ${
+                            isDisabled
+                              ? "cursor-not-allowed opacity-40 border-docebo-border/40 bg-docebo-card/10"
+                              : "cursor-pointer"
+                          } ${
+                            !isDisabled && isBrand && !active
                               ? "col-span-2 border-dashed border-docebo-electric-purple/30 bg-docebo-electric-purple/5 hover:border-docebo-electric-purple/50 hover:bg-docebo-electric-purple/10"
                               : ""
                           } ${
-                            active
+                            !isDisabled && active
                               ? isBrand
                                 ? "col-span-2 border-docebo-electric-purple/50 bg-docebo-electric-purple/15 shadow-[0_0_8px_rgba(126,46,233,0.15)]"
                                 : "border-docebo-blue/50 bg-docebo-blue/15 shadow-[0_0_8px_rgba(0,87,255,0.15)]"
-                              : !isBrand
+                              : !isDisabled && !isBrand
                                 ? "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60"
                                 : ""
                           }`}
                         >
-                          <p className={`text-xs font-medium ${
-                            active
-                              ? isBrand ? "text-docebo-purple" : "text-docebo-light-blue"
-                              : "text-white/80"
-                          }`}>
-                            {p.label}
-                          </p>
+                          <div className="flex items-start justify-between gap-1.5">
+                            <p className={`text-xs font-medium ${
+                              active
+                                ? isBrand ? "text-docebo-purple" : "text-docebo-light-blue"
+                                : "text-white/80"
+                            }`}>
+                              {p.label}
+                            </p>
+                            {p.evidenceBacked && (
+                              <span
+                                className="text-[8px] font-mono uppercase tracking-wider px-1 py-px rounded bg-docebo-pink/15 text-docebo-pink shrink-0"
+                                title="Backed by verbatim Gong-call evidence"
+                              >
+                                Gong
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
-                            {p.desc}
+                            {isDisabled ? "No Gong-call evidence yet — disabled for demo." : p.desc}
                           </p>
                         </button>
                       );

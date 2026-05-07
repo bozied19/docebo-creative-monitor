@@ -2429,6 +2429,47 @@ function AdMockup({
         </p>
       </div>
 
+      {/* Evidence trace — claimed-only provenance from Gong-call evidence pool.
+          Shown only when the variant came from an evidence-backed persona. */}
+      {variant.evidence_used && Object.values(variant.evidence_used).some((t) => t && t.source_type !== "none") && (
+        <details open className="px-3 py-2 border-t border-docebo-pink/20 bg-docebo-pink/5">
+          <summary className="text-xs cursor-pointer hover:text-white flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-docebo-pink shrink-0" aria-hidden="true" />
+            <span className="text-docebo-pink font-medium">Gong evidence trace</span>
+            <span className="text-docebo-muted">— which prospect calls fed this ad</span>
+          </summary>
+          <div className="mt-2 space-y-2">
+            {[
+              { key: "creative_overlay", label: "In-image headline" },
+              { key: "headline", label: "Below-image headline" },
+              { key: "overlay_subtext", label: "In-image subtext" },
+              { key: "intro_text", label: "Body / intro text" },
+              { key: "cta_text", label: "CTA" },
+            ].map((field) => {
+              const trace = variant.evidence_used?.[field.key as keyof NonNullable<typeof variant.evidence_used>];
+              if (!trace || trace.source_type === "none" || !trace.source_excerpt) return null;
+              return (
+                <div key={field.key} className="border-l-2 border-docebo-pink/40 pl-2">
+                  <p className="text-[10px] uppercase tracking-wider text-docebo-muted/70 font-mono">
+                    {field.label}
+                  </p>
+                  <p className="text-xs text-white/85 italic mt-0.5 leading-snug">
+                    &ldquo;{trace.source_excerpt}&rdquo;
+                  </p>
+                  <p className="text-[10px] text-docebo-muted mt-0.5">
+                    <span className="text-docebo-pink/80 font-mono">{trace.source_type.replace(/_/g, " ")}</span>
+                    {trace.attribution && <> · {trace.attribution}</>}
+                  </p>
+                </div>
+              );
+            })}
+            <p className="text-[10px] text-docebo-muted/60 italic mt-2">
+              Claimed-only provenance. The model self-reports which evidence inspired each field; not text-verified.
+            </p>
+          </div>
+        </details>
+      )}
+
       {/* Collapsible details */}
       <details className="px-3 py-2 border-t border-docebo-border/30">
         <summary className="text-xs text-docebo-muted cursor-pointer hover:text-white">
