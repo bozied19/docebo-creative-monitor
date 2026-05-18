@@ -42,13 +42,14 @@ function predictHeroSize(overlay: string, templateKey: string): number {
   const len = overlay.length;
   const sizes =
     templateKey === "rebellious-editorial" || templateKey === "digital-rebellion"
-      ? { short: 110, medium: 88, long: 68 }
+      ? { short: 110, medium: 88, long: 68, xlong: 56 }
       : templateKey === "human-contrast"
-      ? { short: 110, medium: 92, long: 72 }
-      : { short: 96, medium: 76, long: 60 };
+      ? { short: 110, medium: 92, long: 72, xlong: 60 }
+      : { short: 96, medium: 76, long: 60, xlong: 50 };
   if (len <= 18) return sizes.short;
   if (len <= 32) return sizes.medium;
-  return sizes.long;
+  if (len <= 45) return sizes.long;
+  return sizes.xlong;
 }
 
 /* Heuristic glyph-width estimate. Special Gothic Expanded italic averages

@@ -66,7 +66,7 @@ export function WebinarNavyPink({
   cta,
   palette,
 }: PhoenixTemplateProps) {
-  const heroSize = pickHeroSize(overlay, { short: 96, medium: 76, long: 60 });
+  const heroSize = pickHeroSize(overlay, { short: 96, medium: 76, long: 60, xlong: 50 });
   return (
     <div style={{ ...FRAME, background: palette.bg }}>
       <div
@@ -123,7 +123,7 @@ export function DULiveSpeakers({
   cta,
   palette,
 }: PhoenixTemplateProps) {
-  const heroSize = pickHeroSize(overlay, { short: 110, medium: 92, long: 72 });
+  const heroSize = pickHeroSize(overlay, { short: 110, medium: 92, long: 72, xlong: 60 });
   return (
     <div style={{ ...FRAME, background: palette.bg }}>
       <div
@@ -180,7 +180,7 @@ export function DataAsPower({
   palette,
 }: PhoenixTemplateProps) {
   const heroStat = stat ?? extractStat(overlay) ?? "94%";
-  const overlaySize = pickHeroSize(overlay, { short: 64, medium: 52, long: 42 });
+  const overlaySize = pickHeroSize(overlay, { short: 64, medium: 52, long: 42, xlong: 36 });
   return (
     <div style={{ ...FRAME, background: palette.bg }}>
       <div
@@ -255,7 +255,7 @@ export function RebelliousEditorial({
   cta,
   palette,
 }: PhoenixTemplateProps) {
-  const heroSize = pickHeroSize(overlay, { short: 110, medium: 88, long: 68 });
+  const heroSize = pickHeroSize(overlay, { short: 110, medium: 88, long: 68, xlong: 56 });
   return (
     <div style={{ ...FRAME, background: palette.bg, color: palette.fg }}>
       <div style={{ position: "absolute", left: 88, top: 88 }}>
@@ -285,8 +285,8 @@ export function RebelliousEditorial({
             fontWeight: 400,
             textTransform: "uppercase",
             fontSize: heroSize,
-            lineHeight: 0.95,
-            letterSpacing: "-0.03em",
+            lineHeight: 1.05,
+            letterSpacing: "-0.02em",
             whiteSpace: "pre-line",
             overflowWrap: "break-word",
             margin: 0,
@@ -327,7 +327,7 @@ export function CoBrandPartner({
   partner,
   palette,
 }: PhoenixTemplateProps) {
-  const heroSize = pickHeroSize(overlay, { short: 96, medium: 76, long: 60 });
+  const heroSize = pickHeroSize(overlay, { short: 96, medium: 76, long: 60, xlong: 50 });
   return (
     <div style={{ ...FRAME, background: palette.bg }}>
       <div style={{ position: "absolute", right: -180, top: 0 }}>
@@ -405,7 +405,7 @@ export function PhoenixTitle({
   cta,
   palette,
 }: PhoenixTemplateProps) {
-  const heroSize = pickHeroSize(overlay, { short: 120, medium: 92, long: 72 });
+  const heroSize = pickHeroSize(overlay, { short: 120, medium: 92, long: 72, xlong: 60 });
   return (
     <div style={{ ...FRAME, background: palette.bg, color: palette.fg }}>
       <div
@@ -757,7 +757,7 @@ export function PhoenixCTA({
   cta,
   palette,
 }: PhoenixTemplateProps) {
-  const heroSize = pickHeroSize(overlay, { short: 140, medium: 108, long: 80 });
+  const heroSize = pickHeroSize(overlay, { short: 140, medium: 108, long: 80, xlong: 66 });
   return (
     <div style={{ ...FRAME, background: palette.bg, color: palette.fg }}>
       <div style={{ position: "absolute", right: -120, bottom: -120 }}>
@@ -802,15 +802,19 @@ export function PhoenixCTA({
 /* ───────────────── helpers ───────────────── */
 
 /* Pick a hero font size based on character count so long headlines
-   don't overflow the content box at the chosen display weight. */
+   don't overflow the content box at the chosen display weight. The
+   optional xlong tier (>45 chars) keeps very long headlines from
+   wrapping to 6+ lines and crowding the subtext / CTA — callers that
+   don't supply xlong fall back to long, preserving prior behavior. */
 function pickHeroSize(
   text: string,
-  sizes: { short: number; medium: number; long: number },
+  sizes: { short: number; medium: number; long: number; xlong?: number },
 ): number {
   const len = (text ?? "").length;
   if (len <= 18) return sizes.short;
   if (len <= 32) return sizes.medium;
-  return sizes.long;
+  if (len <= 45 || sizes.xlong === undefined) return sizes.long;
+  return sizes.xlong;
 }
 
 /* Split a "this vs that" overlay into before/after halves for the
