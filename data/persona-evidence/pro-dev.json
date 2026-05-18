@@ -1,0 +1,167 @@
+{
+  "persona_id": "pro-dev",
+  "persona_label": "Professional Development",
+  "evidence_summary": {
+    "row_count": 16,
+    "primary_segment": "Major to Enterprise",
+    "primary_employee_range": "1500-100000",
+    "primary_region": "NA + EMEA",
+    "last_refreshed": "2026-05-06",
+    "source": "Gong call analysis Feb-May 2026 (skills + 365Talents track)"
+  },
+  "headline_pain": {
+    "summary": "Skills lives in spreadsheets. Reporting stops at completion rates. Career pathing isn't connected to learning.",
+    "confidence": "strong-pattern",
+    "frequency_label": "majority of skills-track calls"
+  },
+  "pain_quotes": [
+    {
+      "quote": "the only reporting option I have right now on training and hence skills is completion rates. So who has completed what? And that's it.",
+      "attribution": "Agnete Purup · Flugger · 2600 employees",
+      "use_case": "skills-reporting",
+      "incumbent": null,
+      "tags": ["completion-only", "no-skills-data"]
+    },
+    {
+      "quote": "There's two pieces of it. One is skills being entered into Docebo to push content to the user. And two, there's a whole different skills system that I need for career development.",
+      "attribution": "Marc Deraney · McGraw-Hill Education · 7387 employees",
+      "use_case": "skills-architecture",
+      "incumbent": null,
+      "tags": ["dual-skills-system", "career-development"]
+    },
+    {
+      "quote": "the skills efforts across Eaton are largely manual. We need to go skills, we should be doing skills at scale and in a more standard and more tech enabled way.",
+      "attribution": "Anna Ewing · EATON · 101000 employees",
+      "use_case": "enterprise-skills-architecture",
+      "incumbent": "manual",
+      "tags": ["manual-today", "scale", "taxonomy-needed"]
+    },
+    {
+      "quote": "I'm concerned about you can just go on log a load of skills that you may or may not actually have. And then we're at risk of people going 'but look I've got all the skills that you said I would need for this role.'",
+      "attribution": "Heather Bustin · Softcat · 2768 employees",
+      "use_case": "skills-validation",
+      "incumbent": null,
+      "tags": ["self-assessment-gaming", "validation", "manager-attestation"]
+    },
+    {
+      "quote": "We know it's not lateral. We want to encourage and enable people to build transferable skills, cross functional skills.",
+      "attribution": "Adam Ballhaussen · Varicent · 330 employees",
+      "use_case": "non-linear-career-pathing",
+      "incumbent": "Lattice",
+      "tags": ["non-lateral", "transferable", "internal-mobility"]
+    },
+    {
+      "quote": "If you have an opening within the organization, you will be able to find the skills you need within the organization before even thinking to go outside for external recruitment.",
+      "attribution": "Kenneth Adamek · GE Appliances · 13600 employees",
+      "use_case": "internal-talent-marketplace",
+      "incumbent": null,
+      "tags": ["internal-mobility", "skills-first-hiring", "retention"]
+    },
+    {
+      "quote": "I think one of the things I'm a huge advocate of is the kind of the two pillar of behavior plus skill. I think the two things together.",
+      "attribution": "Jon Kelly · Giacom World Networks · 89 employees",
+      "use_case": "behavior-plus-skill",
+      "incumbent": null,
+      "tags": ["dual-pillar", "evidence-based-skills"]
+    },
+    {
+      "quote": "The career pathing and the succession planning piece needs to be able to talk to the performance management piece.",
+      "attribution": "Jennifer Gossett · CMX Cinemas · 3500 employees",
+      "use_case": "career-pathing-integrated",
+      "incumbent": "Schoox in evaluation",
+      "tags": ["succession-planning", "performance-mgmt", "paycom"]
+    },
+    {
+      "quote": "We came up with a sort of top 10. There were a number of different things but we came up with the top 10 things like project management, communication, skills.",
+      "attribution": "Jessica Papen · MPB · 81 employees",
+      "use_case": "skills-taxonomy-build",
+      "incumbent": "Hibob skills module not adopted",
+      "tags": ["taxonomy-design", "small-team", "global-reporting"]
+    },
+    {
+      "quote": "Basically, we want to tell Docebo: James needs at least initially, James needs these X skills based on his job role. And we want that to map to available courses so that Docebo can recommend them automatically.",
+      "attribution": "Shreya Bhattacharya · Booking.com · 15777 employees",
+      "use_case": "skills-to-content-automation",
+      "incumbent": null,
+      "tags": ["techwolf", "auto-recommendation", "job-profile-mapping"]
+    }
+  ],
+  "decision_criteria": [
+    { "criterion": "Skills validation beyond self-assessment (manager attestation, spaced retrieval testing)", "frequency_label": "strong-pattern" },
+    { "criterion": "Career pathing that supports non-linear / transferable skill journeys", "frequency_label": "common" },
+    { "criterion": "Skills-to-content auto-mapping (no manual tagging)", "frequency_label": "strong-pattern" },
+    { "criterion": "Workday / HRIS integration for job-profile alignment", "frequency_label": "strong-pattern" },
+    { "criterion": "365Talents integration maturity and roadmap", "frequency_label": "common" },
+    { "criterion": "Manager dashboards for team skill visibility", "frequency_label": "common" },
+    { "criterion": "Internal mobility / talent marketplace", "frequency_label": "common" },
+    { "criterion": "Multilingual content for global rollouts", "frequency_label": "common" }
+  ],
+  "language_they_use": [
+    "skills taxonomy",
+    "skills proficiency",
+    "skills gap",
+    "career pathing",
+    "internal mobility",
+    "succession planning",
+    "skills-first hiring",
+    "transferable skills",
+    "behavior plus skill",
+    "manager attestation",
+    "spaced retrieval",
+    "Kirkpatrick Level 3",
+    "evidence-based skills",
+    "skills at scale",
+    "dynamic employee skills visibility"
+  ],
+  "headline_ready_quotes": [
+    "The only reporting option I have right now is completion rates. That's it.",
+    "We want to encourage and enable people to build transferable skills.",
+    "Find the skills inside before going outside.",
+    "We need to go skills. At scale. Tech-enabled."
+  ],
+  "competitive_triggers": [
+    { "incumbent": "Lattice", "switch_reason": "doesn't support non-linear career pathing, only lateral", "row_count": 1 },
+    { "incumbent": "Workday Skills", "switch_reason": "skills hierarchy doesn't mirror org structure or role-based development", "row_count": 1 },
+    { "incumbent": "Schoox", "switch_reason": "evaluating against, doesn't connect career pathing to performance management", "row_count": 1 },
+    { "incumbent": "Hibob skills module", "switch_reason": "available but not adopted, no global reporting", "row_count": 1 },
+    { "incumbent": "Manual / spreadsheets", "switch_reason": "skills efforts largely manual, can't scale", "row_count": 4 }
+  ],
+  "use_case_distribution": [
+    { "use_case": "skills-taxonomy-build", "frequency_label": "most" },
+    { "use_case": "skills-to-content-automation", "frequency_label": "strong-pattern" },
+    { "use_case": "internal-mobility-talent-marketplace", "frequency_label": "common" },
+    { "use_case": "career-pathing-non-linear", "frequency_label": "common" },
+    { "use_case": "manager-attestation-validation", "frequency_label": "common" },
+    { "use_case": "behavior-plus-skill-evidencing", "frequency_label": "common" }
+  ],
+  "ask_yourself_prompts": [
+    "If a manager validates a skill, do they have any data behind that judgment? Or is it gut feel dressed up?",
+    "When you say 'skills', do you mean the same thing as recruiting, performance, and L&D? If not, you have a taxonomy problem before you have a platform problem.",
+    "Is your career pathing model built for who already left, or for who you want to keep?"
+  ],
+  "ask_next_vendor_prompts": [
+    "Show me how a manager validates a peer's skill competency. What's the audit trail?",
+    "Show me a non-linear career path that doesn't fit the lateral / vertical box.",
+    "Show me how completing a course actually moves the proficiency level. What's the evidence-update flow?",
+    "How does your taxonomy stay in sync with our internal job architecture as roles change?"
+  ],
+  "pricing_pattern": {
+    "common_mistake": "Treating skills as an LMS add-on instead of a separate platform-class investment",
+    "what_they_should_compare": "Docebo + 365Talents bundle vs separate skills intelligence platform vs internal-build cost",
+    "typical_sticker_shock": "Skills capability often priced as premium tier; combined with content libraries can stack quickly",
+    "advice": "Get explicit on whether skills lives in HRIS, performance, L&D, or all three. The bill changes by 3-5x depending on the answer."
+  },
+  "evaluation_committee": {
+    "size_range": "3-7",
+    "median": 4,
+    "common_pattern": "L&D lead + HR business partner + HRIS owner + at least one C-level sponsor for skills strategy",
+    "confidence": "common-thread"
+  },
+  "avoid_framing": [
+    "compliance-first framing (this is talent strategy, not regulatory)",
+    "generic competency frameworks without org-specific taxonomy",
+    "skills as a feature instead of an architecture decision",
+    "implying skills can launch without manager-attestation workflow design",
+    "promising AI auto-tagging without describing how the taxonomy is curated"
+  ]
+}

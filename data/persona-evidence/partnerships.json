@@ -1,0 +1,133 @@
+{
+  "persona_id": "partnerships",
+  "persona_label": "Partner Enablement",
+  "evidence_summary": {
+    "row_count": 6,
+    "primary_segment": "Mid-Market to Major",
+    "primary_employee_range": "30-3900",
+    "primary_region": "NA",
+    "last_refreshed": "2026-05-06",
+    "source": "Gong call analysis Feb-May 2026"
+  },
+  "headline_pain": {
+    "summary": "Partner ramp depends on travel, manual logins, and shadow training spreadsheets. Doesn't scale to global, multi-language, multi-tier partner motions.",
+    "confidence": "common-thread",
+    "frequency_label": "majority of partner-track conversations"
+  },
+  "pain_quotes": [
+    {
+      "quote": "It's all reactive instead of proactive on the trainings. It'd be nice to have something that pushes out, every 30 days or once they start the 30 60 90 where there's automated stuff. That's non existent right now. They have their four day in person onboarding but then after that, it's pick or choose who does what.",
+      "attribution": "Charles Taft · Organizers Direct Industries",
+      "use_case": "automated-30-60-90-paths",
+      "incumbent": "manual / instructor-led after initial 4-day",
+      "tags": ["reactive", "no-automation", "dealer-onboarding"]
+    },
+    {
+      "quote": "Travel is expensive, but it also means that our partners don't come up to speed necessarily as quickly as we would like. And of course, the global thing matters. We've got customers in French speaking Africa, and the middle east.",
+      "attribution": "Dael Bartlett · Proxim Wireless · 183 employees",
+      "use_case": "global-partner-ramp",
+      "incumbent": "travel-heavy partner training",
+      "tags": ["travel-cost", "multi-language", "global-rollout"]
+    },
+    {
+      "quote": "I think that's part of why we were going with you guys. I want to be able to just have someone go through a single certification course. They need nuance, but eventually like, I want it to be nuanced to them where they can have walmart specific materials versus base certification. For our strategics.",
+      "attribution": "Lisa Hillmann · Gradial · 50 employees",
+      "use_case": "tiered-partner-experiences",
+      "incumbent": null,
+      "tags": ["strategic-vs-commercial", "multi-tenant", "co-branded"]
+    },
+    {
+      "quote": "we need an external facing platform for learning to be able to get our customers, our partners, the specific knowledge that they need in order to either deliver our platform from a services perspective. Those will be our partners and then our customers.",
+      "attribution": "Nicole Reis · Ketch · 43 employees",
+      "use_case": "partner-and-customer-platform",
+      "incumbent": "Seismic + Lessonly",
+      "tags": ["self-serve-partner-login", "scale", "manual-doesnt-work"]
+    },
+    {
+      "quote": "Salesforce is the primary major integration that we need. So this is to pass along data from Salesforce and to the LMS and the LMS back to Salesforce. In Skilljar, ringcentral is not an integration in there, but to complete the course, the user has to attend the webinar at least before it even marks that specific lesson complete.",
+      "attribution": "Nino Demonteverde · RingCentral · 3900 employees",
+      "use_case": "salesforce-bi-directional-partner-sync",
+      "incumbent": "Skilljar",
+      "tags": ["bidirectional-sync", "webinar-gating", "multi-tenant-cross-domain"]
+    },
+    {
+      "quote": "we kind of spoke to those guys and said, hey, could we pay you to put our freelancers on those courses to give us accreditation? They said no, you need to be working for a club. So one of the actual reasons why I wanted to do this is to put together our own which is specifically to us so they can put it on their CV.",
+      "attribution": "Tom Elliott · Sports Interactive · 189 employees",
+      "use_case": "build-own-accreditation",
+      "incumbent": "external accreditation gatekeepers",
+      "tags": ["accreditation", "ce-credit", "freelancer-training"]
+    }
+  ],
+  "decision_criteria": [
+    { "criterion": "Salesforce bidirectional sync for partner provisioning + revenue attribution", "frequency_label": "strong-pattern" },
+    { "criterion": "Self-serve partner registration (no manual login provisioning)", "frequency_label": "strong-pattern" },
+    { "criterion": "Multi-tenant content with strategic vs commercial differentiation", "frequency_label": "common" },
+    { "criterion": "Multilingual content delivery (FR, AR, ES, JA, etc.)", "frequency_label": "common" },
+    { "criterion": "ILT recording for asynchronous reuse + travel cost reduction", "frequency_label": "common" },
+    { "criterion": "Webinar attendance gating tied to course completion", "frequency_label": "outlier-but-loud" },
+    { "criterion": "Badging / accreditation / CE-credit support for partner CVs", "frequency_label": "common" },
+    { "criterion": "Engagement / usage analytics by tier and partner", "frequency_label": "strong-pattern" }
+  ],
+  "language_they_use": [
+    "partner-sourced revenue",
+    "deal registration",
+    "revenue attribution",
+    "certification completion",
+    "partner ramp time",
+    "tier progression",
+    "co-branded experience",
+    "self-serve partner login",
+    "channel enablement",
+    "field certification",
+    "extended enterprise"
+  ],
+  "headline_ready_quotes": [
+    "Travel is expensive. Partners don't come up to speed.",
+    "It's all reactive instead of proactive on the trainings.",
+    "They said no, you need to be working for a club.",
+    "I want it nuanced to them. Walmart specific. Strategic specific."
+  ],
+  "competitive_triggers": [
+    { "incumbent": "Skilljar", "switch_reason": "limited Salesforce integration depth, weak multi-tenant partner cross-domain, webinar-gating workarounds", "row_count": 1 },
+    { "incumbent": "Seismic + Lessonly", "switch_reason": "manual partner-login provisioning, doesn't scale to self-serve", "row_count": 1 },
+    { "incumbent": "Travel-heavy in-person", "switch_reason": "high cost, slow ramp, doesn't reach French Africa / ME / APAC partners", "row_count": 2 },
+    { "incumbent": "Manual / instructor-led only", "switch_reason": "non-existent automation after initial onboarding, dealer pick-and-choose", "row_count": 1 }
+  ],
+  "use_case_distribution": [
+    { "use_case": "dealer-channel-onboarding-30-60-90", "frequency_label": "common" },
+    { "use_case": "global-partner-multi-language", "frequency_label": "common" },
+    { "use_case": "tiered-strategic-vs-commercial-experiences", "frequency_label": "common" },
+    { "use_case": "salesforce-driven-partner-provisioning", "frequency_label": "strong-pattern" },
+    { "use_case": "co-branded-accreditation-program", "frequency_label": "common" }
+  ],
+  "ask_yourself_prompts": [
+    "How many of your partners are getting the same generic training experience? Could a Walmart partner click through and tell they're a Walmart partner?",
+    "What's your travel-driven training cost per partner per year? That's your bundle's first ROI line.",
+    "Who at your company actually owns partner training quality vs. partner channel sales? Often two people, often misaligned."
+  ],
+  "ask_next_vendor_prompts": [
+    "Show me Salesforce passing partner data IN to provision an account, and partner training data OUT to update the account record. Both directions, in real time.",
+    "Show me the same course content rendering differently to a strategic partner vs a commercial partner. Same login session, different experience.",
+    "Show me the partner self-registration flow. No internal admin involvement.",
+    "How does webinar attendance gate course completion? Walk me through it without code."
+  ],
+  "pricing_pattern": {
+    "common_mistake": "Pricing partner training as L&D add-on instead of a revenue-attribution play",
+    "what_they_should_compare": "Travel-driven partner training cost + manual ops time vs platform fee + automated provisioning",
+    "typical_sticker_shock": "Multi-tenant + extended-enterprise pricing tier surprises buyers comparing single-tenant baselines",
+    "advice": "Lead with partner-sourced revenue lift, not learner-seat math. The partnerships team wants pipeline, not seat counts."
+  },
+  "evaluation_committee": {
+    "size_range": "2-4",
+    "median": 2,
+    "common_pattern": "Partner enablement lead + Salesforce / RevOps + sometimes VP Marketing or CRO sponsor",
+    "confidence": "common-thread"
+  },
+  "avoid_framing": [
+    "internal L&D language (this is GTM, not HR)",
+    "one-size-fits-all framing (every partner-tier deserves a different experience)",
+    "ignoring travel-cost / global-reach pain (it's the activating wedge)",
+    "selling 'extended enterprise' as a feature instead of a pricing/architecture decision",
+    "promising self-serve provisioning without showing the Salesforce-trigger workflow"
+  ]
+}

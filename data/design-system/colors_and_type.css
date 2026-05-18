@@ -1,0 +1,329 @@
+/* ══════════════════════════════════════════════════════════════════
+   DOCEBO PHOENIX BRAND — TOKENS
+   Source: Docebo Brand Guide PDF, "2026 Phoenix Social Asset Reskin" Figma,
+   bozied19/docebo-creative-monitor codebase.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Webfonts (Google Fonts substitutions for any unlicensed faces) ── */
+/* Figtree (body) — exact match, Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap");
+/* Lora (editorial italics, quotes) — exact match */
+@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap");
+/* IBM Plex Mono (CTAs, monospace stat labels) — exact match */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap");
+/* Mulish (large display fallback for some banner sizes) — exact match */
+@import url("https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,400;0,700;0,800;0,900&display=swap");
+/* Special Gothic Expanded One (the Phoenix display face) — exact match (variant in Figma is "Special Gothic Expanded One Regular") */
+@import url("https://fonts.googleapis.com/css2?family=Special+Gothic+Expanded+One&display=swap");
+
+:root {
+  /* ── PRIMARY PHOENIX PALETTE (Brand Guide page 14) ──────────── */
+  --phx-marble: #2A2923;            /* primary black, "Marble" — backgrounds, body text on light */
+  --phx-neon-blue: #0057FF;         /* Pantone 285C — primary brand blue */
+  --phx-neon-pink: #FF5DD8;         /* Pantone 231C — energetic accent */
+  --phx-neon-green: #E3FFAB;        /* Pantone 7486C @ 50% — soft pistachio accent */
+  --phx-neon-lavender: #DCB7FF;     /* Pantone 530C — soft purple accent */
+  --phx-marble-10: #E6DACB;         /* Pantone 7527C — warm beige bg */
+  --phx-white: #FFFFFF;
+
+  /* ── SECONDARY / DEEPER TONES (Brand Guide page 14–15) ─────── */
+  --phx-deep-navy: #06065D;         /* Pantone 2768C — deepest blue */
+  --phx-magenta: #B627C6;           /* Pantone 2353C — saturated pink */
+  --phx-bright-green: #54FA77;      /* Pantone 2256C @ 80% — vivid lime */
+  --phx-purple: #7E2EE9;            /* Pantone 266C @ 90% — vivid purple */
+  --phx-light-blue: #4C8DFF;        /* Pantone 292C — sky blue */
+  --phx-navy: #0033A0;              /* Pantone 286C — workhorse navy bg */
+  --phx-midnight: #131E29;          /* near-black blue, dark UI bg */
+
+  /* ── 6-STEP TONAL SCALES (Brand Guide page 16) ─────────────── */
+  /* Marble (warm neutrals) */
+  --phx-marble-50: #F6F5F2;
+  --phx-marble-100: #EBE6DD;
+  --phx-marble-200: #E1DBD2;
+  --phx-marble-500: #807B74;
+  --phx-marble-700: #56534E;
+  --phx-marble-900: #2A2923;
+
+  /* Green */
+  --phx-green-50: #E3FFAB;
+  --phx-green-100: #9EFF86;
+  --phx-green-500: #54FA77;
+  --phx-green-700: #1EB83F;
+  --phx-green-800: #106D24;
+  --phx-green-900: #053812;
+
+  /* Blue */
+  --phx-blue-50: #DBF2FF;
+  --phx-blue-100: #A4DFFF;
+  --phx-blue-300: #57BEFF;
+  --phx-blue-500: #2E8CFF;
+  --phx-blue-700: #0057FF;
+  --phx-blue-900: #002B80;
+
+  /* Purple / lavender */
+  --phx-purple-50: #E9D7FF;
+  --phx-purple-100: #DCB7FF;
+  --phx-purple-500: #7E2EE9;
+  --phx-purple-700: #5D1EBC;
+  --phx-purple-800: #3C0F7D;
+  --phx-purple-900: #210846;
+
+  /* Pink / magenta */
+  --phx-pink-50: #FFD1F0;
+  --phx-pink-100: #FF9FE5;
+  --phx-pink-500: #FF5DD8;
+  --phx-pink-700: #B627C6;
+  --phx-pink-800: #6B1575;
+  --phx-pink-900: #4D0E52;
+
+  /* ── SEMANTIC TOKENS ───────────────────────────────────────── */
+  --bg-1: var(--phx-navy);              /* default ad bg */
+  --bg-2: var(--phx-midnight);          /* dark UI bg (data-as-power) */
+  --bg-3: var(--phx-marble-10);         /* warm beige bg */
+  --bg-4: var(--phx-marble-50);         /* warmest off-white */
+  --bg-5: var(--phx-white);             /* clean white */
+  --bg-rebel: var(--phx-marble-900);    /* near-black warm rebel bg */
+
+  --fg-on-dark-1: var(--phx-white);
+  --fg-on-dark-2: rgba(255, 255, 255, 0.7);
+  --fg-on-dark-3: rgba(255, 255, 255, 0.5);
+
+  --fg-on-light-1: var(--phx-navy);     /* navy text on beige/white is the canonical pairing */
+  --fg-on-light-2: var(--phx-marble-900);
+  --fg-on-light-3: var(--phx-marble-700);
+
+  --accent-pink: var(--phx-neon-pink);
+  --accent-green: var(--phx-bright-green);
+  --accent-lavender: var(--phx-neon-lavender);
+  --accent-purple: var(--phx-purple);
+  --accent-blue: var(--phx-neon-blue);
+
+  /* ── BORDER / DIVIDERS ─────────────────────────────────────── */
+  --border-on-dark: rgba(255, 255, 255, 0.10);
+  --border-on-dark-strong: rgba(255, 255, 255, 0.18);
+  --border-on-light: rgba(0, 51, 160, 0.18);
+
+  /* ── RADIUS ────────────────────────────────────────────────── */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+
+  /* ── ELEVATION / SHADOW ────────────────────────────────────── */
+  --shadow-1: 0 1px 2px rgba(6, 6, 96, 0.08);
+  --shadow-2: 0 6px 18px rgba(6, 6, 96, 0.10);
+  --shadow-3: 0 18px 48px rgba(6, 6, 96, 0.18);
+  --glow-pink: 0 0 32px rgba(255, 93, 216, 0.45);
+  --glow-blue: 0 0 32px rgba(0, 87, 255, 0.45);
+  --glow-green: 0 0 32px rgba(84, 250, 119, 0.45);
+  --glow-lavender: 0 0 32px rgba(220, 183, 255, 0.55);
+
+  /* ── SPACING SCALE (4-pt baseline) ─────────────────────────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+  --sp-10: 128px;
+
+  /* ── TYPOGRAPHY — FONT STACKS ──────────────────────────────── */
+  /* Display: italic, expanded, used for hero headlines on every ad
+     unit. The Figma uses "Special Gothic Expanded One" Regular ONLY,
+     and *italics* are achieved via CSS font-style: italic.            */
+  --ff-display: "Special Gothic Expanded One", "Mulish", "Figtree", "Inter", sans-serif;
+
+  /* Body: workhorse sans, all weights 300–900 in use across the system. */
+  --ff-body: "Figtree", "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Editorial: serif italic, used in pull-quotes + Rebellious Editorial. */
+  --ff-serif: "Lora", Georgia, "Times New Roman", serif;
+
+  /* Mono: CTA pills, stat labels, technical chrome. */
+  --ff-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, "Menlo", monospace;
+
+  /* Display fallback for huge banner sizes (300–400px) where Special
+     Gothic doesn't ship enough weights. The Figma uses Mulish Bold. */
+  --ff-display-banner: "Mulish", "Figtree", "Inter", sans-serif;
+
+  /* ── TYPOGRAPHY — SEMANTIC ROLES ───────────────────────────── */
+  /* Hero — the Phoenix in-image headline (italic display).         */
+  --t-hero-size: clamp(48px, 8vw, 130px);
+  --t-hero-line: 0.95;
+  --t-hero-tracking: -0.03em;
+  --t-hero-weight: 400; /* Special Gothic Expanded One ships only 400 */
+
+  /* H1 / display titles for slides + UI hero units. */
+  --t-h1-size: clamp(40px, 5.5vw, 80px);
+  --t-h1-line: 1.0;
+  --t-h1-tracking: -0.02em;
+  --t-h1-weight: 700;
+
+  /* H2 — section titles, on-image secondary headlines. */
+  --t-h2-size: clamp(30px, 3.4vw, 56px);
+  --t-h2-line: 1.05;
+  --t-h2-tracking: -0.015em;
+  --t-h2-weight: 700;
+
+  /* H3 — card titles, small ad units. */
+  --t-h3-size: clamp(22px, 2.2vw, 32px);
+  --t-h3-line: 1.15;
+  --t-h3-tracking: -0.01em;
+  --t-h3-weight: 600;
+
+  /* H4 — eyebrow titles. */
+  --t-h4-size: 18px;
+  --t-h4-line: 1.25;
+  --t-h4-tracking: -0.005em;
+  --t-h4-weight: 600;
+
+  /* Body — paragraph copy. */
+  --t-body-size: 16px;
+  --t-body-line: 1.5;
+  --t-body-tracking: 0;
+  --t-body-weight: 400;
+
+  /* Small — captions, metadata, supporting copy. */
+  --t-small-size: 14px;
+  --t-small-line: 1.45;
+  --t-small-weight: 500;
+
+  /* Eyebrow — uppercase mono label above hero text. */
+  --t-eyebrow-size: 12px;
+  --t-eyebrow-line: 1.2;
+  --t-eyebrow-tracking: 0.08em;
+  --t-eyebrow-weight: 600;
+
+  /* Quote — Lora italic for testimonial bodies. */
+  --t-quote-size: clamp(20px, 2.4vw, 36px);
+  --t-quote-line: 1.3;
+  --t-quote-weight: 400;
+}
+
+/* ── BASE ELEMENT MAPPINGS ─────────────────────────────────── */
+/* These set sensible defaults for any Docebo Phoenix surface. Override
+   by re-declaring the relevant --t-* var in a scoped class.        */
+
+.phx-base, .phx-base * { box-sizing: border-box; }
+
+.phx-base {
+  font-family: var(--ff-body);
+  font-size: var(--t-body-size);
+  line-height: var(--t-body-line);
+  color: var(--fg-on-light-1);
+  background: var(--bg-5);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.phx-hero {
+  font-family: var(--ff-display);
+  font-size: var(--t-hero-size);
+  line-height: var(--t-hero-line);
+  letter-spacing: var(--t-hero-tracking);
+  font-style: italic;
+  font-weight: var(--t-hero-weight);
+  margin: 0;
+}
+
+.phx-h1 {
+  font-family: var(--ff-display);
+  font-size: var(--t-h1-size);
+  line-height: var(--t-h1-line);
+  letter-spacing: var(--t-h1-tracking);
+  font-weight: var(--t-h1-weight);
+  font-style: italic;
+  margin: 0;
+}
+
+.phx-h2 {
+  font-family: var(--ff-body);
+  font-size: var(--t-h2-size);
+  line-height: var(--t-h2-line);
+  letter-spacing: var(--t-h2-tracking);
+  font-weight: var(--t-h2-weight);
+  margin: 0;
+}
+
+.phx-h3 {
+  font-family: var(--ff-body);
+  font-size: var(--t-h3-size);
+  line-height: var(--t-h3-line);
+  letter-spacing: var(--t-h3-tracking);
+  font-weight: var(--t-h3-weight);
+  margin: 0;
+}
+
+.phx-h4 {
+  font-family: var(--ff-body);
+  font-size: var(--t-h4-size);
+  line-height: var(--t-h4-line);
+  letter-spacing: var(--t-h4-tracking);
+  font-weight: var(--t-h4-weight);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.phx-body {
+  font-family: var(--ff-body);
+  font-size: var(--t-body-size);
+  line-height: var(--t-body-line);
+  font-weight: var(--t-body-weight);
+  margin: 0;
+}
+
+.phx-small {
+  font-family: var(--ff-body);
+  font-size: var(--t-small-size);
+  line-height: var(--t-small-line);
+  font-weight: var(--t-small-weight);
+  margin: 0;
+}
+
+.phx-eyebrow {
+  font-family: var(--ff-mono);
+  font-size: var(--t-eyebrow-size);
+  line-height: var(--t-eyebrow-line);
+  letter-spacing: var(--t-eyebrow-tracking);
+  font-weight: var(--t-eyebrow-weight);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.phx-quote {
+  font-family: var(--ff-serif);
+  font-size: var(--t-quote-size);
+  line-height: var(--t-quote-line);
+  font-weight: var(--t-quote-weight);
+  font-style: italic;
+  margin: 0;
+}
+
+.phx-mono {
+  font-family: var(--ff-mono);
+  font-weight: 500;
+}
+
+/* ── DOCEBO WORDMARK (text-only) ───────────────────────────── */
+/* The Phoenix wordmark is set in Special Gothic Expanded One italic.
+   The .docebo-wordmark class renders the lowercase "docebo" exactly
+   as it appears in every banner, with the optical kerning calibrated
+   to the Figma. Use --color to recolor (default: currentColor).      */
+.phx-wordmark {
+  font-family: var(--ff-display);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  display: inline-block;
+}
+.phx-wordmark::before { content: "docebo"; }
+
+/* ── UTILS ─────────────────────────────────────────────────── */
+.phx-italic { font-style: italic; }
+.phx-uppercase { text-transform: uppercase; }

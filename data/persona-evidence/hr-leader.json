@@ -1,0 +1,150 @@
+{
+  "persona_id": "hr-leader",
+  "persona_label": "HR Leader",
+  "evidence_summary": {
+    "row_count": 8,
+    "primary_segment": "Mid-Market to Major",
+    "primary_employee_range": "270-24000",
+    "primary_region": "NA + EMEA",
+    "last_refreshed": "2026-05-06",
+    "source": "Gong call analysis Feb-May 2026"
+  },
+  "headline_pain": {
+    "summary": "Building a learning function from scratch (or replacing a stagnating one) while wiring it into the HRIS as the source of truth — and getting board-mandated engagement metrics to actually move",
+    "confidence": "common-thread",
+    "frequency_label": "majority of HR-buyer conversations"
+  },
+  "pain_quotes": [
+    {
+      "quote": "right now, I think the biggest thing for us is there's a gap right now since we don't have a contract with anyone. So people do ask about hey, my LinkedIn learning isn't working. When are we going to get an LMS up and running?",
+      "attribution": "Antonia Roros · Nikon Europe · 23832 employees",
+      "use_case": "lms-gap-after-churn",
+      "incumbent": "LinkedIn Learning (churned Feb)",
+      "tags": ["churned", "noticeable-gap", "ai-ask-from-employees"]
+    },
+    {
+      "quote": "it's like a huge upgrade to the nothing that we have. So really starting from the bottom, you can only go up.",
+      "attribution": "Tiffany White · Blitt & Gaines Law Offices · 278 employees",
+      "use_case": "greenfield-first-lms",
+      "incumbent": "nothing",
+      "tags": ["greenfield", "first-lms"]
+    },
+    {
+      "quote": "Bai that we're using right now doesn't have a really great platform for creating content. It's clunky, but we're making it work. They've told us they're not planning on making it better.",
+      "attribution": "Shelana Corrigan · CPM Federal Credit Union · 172 employees",
+      "use_case": "vendor-stagnation",
+      "incumbent": "Bai",
+      "tags": ["clunky-authoring", "vendor-stagnation", "board-mandated-engagement"]
+    },
+    {
+      "quote": "Sometimes we have an employee out on FMLA, and their poor managers are just getting blown up by Bai saying they're overdue on all this annual training. And we don't have a good way to stop that.",
+      "attribution": "Shelana Corrigan · CPM Federal Credit Union · 172 employees",
+      "use_case": "manager-notification-overload",
+      "incumbent": "Bai",
+      "tags": ["fmla", "manager-burnout", "compliance-noise"]
+    },
+    {
+      "quote": "we currently have only as an LMS platform LRN, with focus on compliance. I really want to upgrade the training experience and content for the employees. We're going through the same journey to IPO and this is for next year.",
+      "attribution": "Ana Orozco · Smardt · 323 employees",
+      "use_case": "ipo-readiness-l&d",
+      "incumbent": "LRN",
+      "tags": ["ipo-readiness", "global-rollout", "china-access"]
+    },
+    {
+      "quote": "We've been around for quite a while as a brand and our stores are also at least 20 years old. We have never had an LMS. So when we've had training, it's typically home developed, home built facilitated by somebody.",
+      "attribution": "Swati Buddhavarapu · J. Jill · 1123 employees",
+      "use_case": "first-lms-tenured-org",
+      "incumbent": "homegrown",
+      "tags": ["greenfield", "tenured-org", "leadership-academy"]
+    },
+    {
+      "quote": "c'est un gros gros problème pour nous actuellement c'est que, du coup on ne peut pas faire la création des comptes de façon automatique parce qu'on est obligé de créer le compte avec le mail de la personne qui est non nominative.",
+      "attribution": "Luana Bernardes · a2micile.com · 10000 employees",
+      "use_case": "non-nominative-account-provisioning",
+      "incumbent": "BizzDis",
+      "tags": ["sso-blocker", "non-nominative-emails", "automation-gap", "fr-language"]
+    },
+    {
+      "quote": "This is coming from our board of directors. So this is not changing anytime soon. Our board really want staff to be engaged in learning and that's why they've set this goal.",
+      "attribution": "Shelana Corrigan · CPM Federal Credit Union · 172 employees",
+      "use_case": "board-mandated-engagement",
+      "incumbent": "Bai",
+      "tags": ["board-mandate", "engagement-target", "9.5-hours-per-month"]
+    }
+  ],
+  "decision_criteria": [
+    { "criterion": "HRIS integration with auto-profile creation (Paycom, Paylocity, Workday, BambooHR, UKG, ADP, core)", "frequency_label": "universal" },
+    { "criterion": "SSO with proper account provisioning (handles non-nominative emails, FMLA, role changes)", "frequency_label": "strong-pattern" },
+    { "criterion": "Content library inclusion (LinkedIn Learning content, OpenSesame, Coursera, Skillsoft)", "frequency_label": "strong-pattern" },
+    { "criterion": "Multi-language support (incl. Japanese, French, Spanish, Russian)", "frequency_label": "common" },
+    { "criterion": "Custom dashboards for board / executive reporting", "frequency_label": "common" },
+    { "criterion": "Manager notification flexibility (auto-suppress during FMLA / leave)", "frequency_label": "outlier-but-loud" },
+    { "criterion": "BI integration (Power BI, Redshift) to tie L&D to business outcomes", "frequency_label": "common" },
+    { "criterion": "Compliance + statutory training library (BICS, SIA, manual handling, COSHH, food safety)", "frequency_label": "common" }
+  ],
+  "language_they_use": [
+    "single source of truth",
+    "HRIS integration",
+    "auto-provisioning",
+    "compliance defensibility",
+    "people strategy",
+    "board engagement target",
+    "data governance",
+    "internal mobility",
+    "workforce readiness",
+    "administrator reduction",
+    "Netflix-style learning",
+    "all-in-one stop shop"
+  ],
+  "headline_ready_quotes": [
+    "When are we going to get an LMS up and running?",
+    "It's like a huge upgrade to the nothing that we have.",
+    "They've told us they're not planning on making it better.",
+    "Their poor managers are just getting blown up."
+  ],
+  "competitive_triggers": [
+    { "incumbent": "LinkedIn Learning", "switch_reason": "churned Feb, no Japanese, engagement low without top-down push, content-bundle pricing concerns", "row_count": 2 },
+    { "incumbent": "Bai", "switch_reason": "clunky authoring, vendor explicitly not investing, manager notification overload during FMLA", "row_count": 2 },
+    { "incumbent": "LRN", "switch_reason": "compliance-only focus, can't drive engagement or skills strategy", "row_count": 1 },
+    { "incumbent": "BizzDis", "switch_reason": "couldn't solve non-nominative email account-creation, blocking automation", "row_count": 1 },
+    { "incumbent": "Homegrown / nothing", "switch_reason": "no LMS at all, training is instructor-led PowerPoint", "row_count": 2 }
+  ],
+  "use_case_distribution": [
+    { "use_case": "greenfield-first-lms", "frequency_label": "common" },
+    { "use_case": "replace-stagnating-incumbent", "frequency_label": "common" },
+    { "use_case": "ipo-or-major-corp-event-readiness", "frequency_label": "outlier" },
+    { "use_case": "leadership-academy-launch", "frequency_label": "common" },
+    { "use_case": "compliance-and-statutory", "frequency_label": "common" },
+    { "use_case": "global-multi-language-rollout", "frequency_label": "common" }
+  ],
+  "ask_yourself_prompts": [
+    "When you say 'integrated with our HRIS', do you mean profile-sync only, or full bi-directional including title changes, leave status, and termination?",
+    "Has anyone on your team mapped what 'engagement' means to your board vs. what your platform measures? Those are usually different numbers.",
+    "If your incumbent told you they're not investing in improvements, when does that show up in the renewal conversation? Probably not when they want it to."
+  ],
+  "ask_next_vendor_prompts": [
+    "Show me what happens to manager notifications when an employee goes on FMLA. Walk me through the suppression logic.",
+    "Show me how you provision an account when the employee email is a shared branch alias instead of a personal address.",
+    "Show me the BI export. Can my CHRO get this into Power BI without involving IT every month?",
+    "Walk me through your Japanese content library. Not the UI translation, the actual courses."
+  ],
+  "pricing_pattern": {
+    "common_mistake": "Comparing LMS-only price vs incumbent without including the content stack the incumbent included",
+    "what_they_should_compare": "LMS + content libraries + integration costs vs incumbent's full bundle including LinkedIn / OpenSesame / Skillsoft already paid",
+    "typical_sticker_shock": "All-in-one ask drives execs to scrutinize separate content fees on top of LMS",
+    "advice": "Pre-stage the conversation: presidents want one stop shop. Bring the bundle math in slide 1, not slide 14."
+  },
+  "evaluation_committee": {
+    "size_range": "2-5",
+    "median": 3,
+    "common_pattern": "HR lead + CHRO/VP HR + sometimes CEO/President for budget. IT often joins for HRIS validation.",
+    "confidence": "common-thread"
+  },
+  "avoid_framing": [
+    "LMS-centric pitch (frame as people strategy / workforce readiness)",
+    "training-only language (HR thinks people, retention, mobility)",
+    "underestimating board / president visibility on this purchase",
+    "ignoring multi-language requirements that look optional but are go/no-go (Japanese, French, Russian)",
+    "promising 'all-in-one' without naming the content libraries that come with it"
+  ]
+}

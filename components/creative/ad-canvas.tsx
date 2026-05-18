@@ -1,13 +1,17 @@
 "use client";
 
 import { useRef, useCallback, useState, useEffect } from "react";
-import { toPng, toCanvas } from "html-to-image";
+import { toPng, toCanvas, getFontEmbedCSS } from "html-to-image";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { GIFEncoder, quantize, applyPalette } from "gifenc";
 import type { Variant, CanvasRenderContext } from "./refresh-engine";
 import { BRAND_VOICE_OPTIONS, isGifFormat, type BrandVoiceOption } from "./refresh-engine";
 import { renderVisualStyle, hasStyleRenderer, wrapForFormat, renderMultiCard, resolveSubtext, LogoBar, SocialProofBadge, MetricStrip } from "./visual-styles";
+import { PhoenixRenderer, compatibleTemplatesFor, TEMPLATE_LABEL } from "./phoenix/PhoenixRenderer";
+import { scoreVariant } from "./phoenix/score";
+import { PhoenixScoreBadge, PhoenixScoreIssues } from "./phoenix/PhoenixScoreBadge";
+import { buildLpUrlForVariant } from "@/lib/lp-url-builder";
 
 /* ── Feedback types ────────────────────────────────────────────── */
 interface FeedbackEntry {
@@ -270,61 +274,6 @@ const STYLE_OPTIONS: { theme: AdTheme; label: string; desc: string }[] = [
   { theme: "cobrand-navy-green", label: "Co-Brand Navy", desc: "Partner layout, navy + lime banner" },
   { theme: "cobrand-beige", label: "Co-Brand Beige", desc: "Partner layout, beige + lime banner" },
 ];
-
-/* ── AI render helpers ──────────────────────────────────────────── */
-
-type GeminiAspect = "1:1" | "16:9" | "9:16" | "4:3" | "3:4" | "4:5";
-
-function aspectRatioForFormat(adFormat?: string): GeminiAspect {
-  if (!adFormat) return "1:1";
-  if (adFormat === "dynamic-word-gif-feed") return "16:9";
-  if (adFormat === "article-newsletter") return "16:9";
-  return "1:1";
-}
-
-function archetypeHintFor(variant: Variant): string | undefined {
-  const vs = variant.visual_style;
-  const hook = variant.hook_type;
-  const angle = variant.messaging_angle;
-  if (hook === "data-stat" || vs === "data-as-power") return "stat-ring";
-  if (vs === "human-contrast") return "photo-panel";
-  if (vs === "system-ui") return "split-ui";
-  if (vs === "minimal-authority" && angle === "proof") return "cobrand";
-  if (vs === "rebellious-editorial") return "newsletter";
-  if (vs === "minimal-authority") return "minimal";
-  return undefined;
-}
-
-function composeAiPrompt(variant: Variant): string {
-  const lines = [
-    `Visual style: ${variant.visual_style}.`,
-    `Ad format: ${variant.ad_format}.`,
-    `Publishing platform: ${variant.publishing_platform}.`,
-    `Brand voice: ${variant.brand_voice}.`,
-    `Messaging angle: ${variant.messaging_angle} (${variant.messaging_sub_angle}).`,
-    `Hook type: ${variant.hook_type}.`,
-    "",
-    "TEXT TO RENDER INSIDE THE IMAGE (verbatim, no paraphrasing):",
-    `- Primary headline (huge, in-image): "${variant.creative_overlay}"`,
-  ];
-  if (variant.overlay_subtext) {
-    lines.push(`- Supporting line (smaller, under headline): "${variant.overlay_subtext}"`);
-  }
-  if (variant.stat_value) {
-    lines.push(`- Hero stat: "${variant.stat_value}"`);
-  }
-  if (variant.cta_text && variant.ad_format !== "document") {
-    lines.push(`- CTA pill text: "${variant.cta_text}"`);
-  }
-  lines.push("- Wordmark: lowercase 'docebo' in white, in a corner.");
-  lines.push("");
-  lines.push("DESIGNER NOTES:");
-  lines.push(variant.visual_direction);
-  lines.push("");
-  lines.push("ORIGINAL IMAGE PROMPT:");
-  lines.push(variant.gemini_image_prompt);
-  return lines.join("\n");
-}
 
 /* ── Style Picker (shown before rendering) ──────────────────────── */
 function StylePicker({
@@ -1973,10 +1922,13 @@ function AdMockup({
     variant.animation_frames.length > 0;
   const [exportState, setExportState] = useState<GifAnimState | null>(null);
   const [exportingGif, setExportingGif] = useState(false);
-  const [aiRenderUrl, setAiRenderUrl] = useState<string | null>(null);
-  const [aiRenderError, setAiRenderError] = useState<string | null>(null);
-  const [aiRendering, setAiRendering] = useState(false);
-  const [showCss, setShowCss] = useState(false);
+  const [showPhoenix, setShowPhoenix] = useState(false);
+  const [scoreExpanded, setScoreExpanded] = useState(false);
+  const [templateIndex, setTemplateIndex] = useState(0);
+  const scoreResult = scoreVariant(variant, theme);
+  const phoenixCandidates = compatibleTemplatesFor(variant, theme);
+  const currentTemplateKey =
+    phoenixCandidates[templateIndex % phoenixCandidates.length];
 
   // Register this mockup's DOM ref so FigmaSendPanel can render it to PNG
   useEffect(() => {
@@ -2199,6 +2151,22 @@ function AdMockup({
       // the animation and neon brand accents don't get quantized away.
       let globalPalette: number[][] | null = null;
 
+      // Pre-compute the font-embed CSS once. Otherwise html-to-image walks
+      // every stylesheet's @import rules and fetches every .woff2 on each
+      // toCanvas call — with 5 Google-Fonts @imports in colors_and_type.css
+      // that can hang or take 30s+ before the first frame appears.
+      let fontEmbedCSS: string | undefined;
+      try {
+        fontEmbedCSS = await Promise.race([
+          getFontEmbedCSS(mockupRef.current, {}),
+          new Promise<string>((_, reject) =>
+            setTimeout(() => reject(new Error("font embed timeout")), 8000),
+          ),
+        ]);
+      } catch (e) {
+        console.warn("Font embed CSS unavailable, capturing without:", e);
+      }
+
       for (const sample of samples) {
         setExportState(sample.state);
         // Wait two paints so React commits the frame before capture.
@@ -2206,7 +2174,11 @@ function AdMockup({
           requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
         );
         if (!mockupRef.current) break;
-        const canvas = await toCanvas(mockupRef.current, { pixelRatio: 1 });
+        const canvas = await toCanvas(mockupRef.current, {
+          pixelRatio: 1,
+          fontEmbedCSS,
+          skipFonts: !fontEmbedCSS,
+        });
         const ctx = canvas.getContext("2d");
         if (!ctx) continue;
         const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -2255,62 +2227,19 @@ function AdMockup({
     }
   }, [encodeGifBlob, variant.variant_id, index]);
 
-  const handleAiRender = useCallback(async () => {
-    setAiRendering(true);
-    setAiRenderError(null);
-    try {
-      const aspect = aspectRatioForFormat(variant.ad_format);
-      const archetype = archetypeHintFor(variant);
-      const composedPrompt = composeAiPrompt(variant);
-      const res = await fetch("/api/creative/render-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: composedPrompt,
-          visual_style: variant.visual_style,
-          archetype_hint: archetype,
-          aspect_ratio: aspect,
-          variant_id: variant.variant_id,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.data_url) {
-        throw new Error(json.error || `HTTP ${res.status}`);
-      }
-      setAiRenderUrl(json.data_url);
-      setShowCss(false);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setAiRenderError(msg);
-    } finally {
-      setAiRendering(false);
-    }
-  }, [variant]);
-
-  const handleDownloadAi = useCallback(() => {
-    if (!aiRenderUrl) return;
-    const link = document.createElement("a");
-    link.download = `docebo-ad-${variant.variant_id || index + 1}-ai.png`;
-    link.href = aiRenderUrl;
-    link.click();
-  }, [aiRenderUrl, variant.variant_id, index]);
+  const togglePhoenix = useCallback(() => {
+    setShowPhoenix((v) => !v);
+  }, []);
 
   const renderMockup = () => {
-    if (aiRenderUrl && !showCss) {
-      const ratio = aspectRatioForFormat(variant.ad_format);
-      const cssRatio = ratio.replace(":", " / ");
+    if (showPhoenix) {
       return (
-        <div
-          ref={mockupRef}
-          style={{ aspectRatio: cssRatio }}
-          className="w-full overflow-hidden rounded relative bg-black"
-        >
-          <img
-            src={aiRenderUrl}
-            alt={`AI render: ${variant.creative_overlay}`}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <PhoenixRenderer
+          variant={variant}
+          theme={theme}
+          templateIndex={templateIndex}
+          mockupRef={mockupRef}
+        />
       );
     }
 
@@ -2369,53 +2298,55 @@ function AdMockup({
     <div className={`rounded-lg border overflow-hidden transition-colors ${approved ? "border-docebo-bright-green/50 bg-docebo-bright-green/5" : "border-docebo-border bg-docebo-card/30"}`}>
       {/* Approve bar */}
       <div className={`flex items-center justify-between px-3 py-1.5 ${approved ? "bg-docebo-bright-green/15" : "bg-docebo-card/40"}`}>
-        <button
-          onClick={onToggleApprove}
-          className={`flex items-center gap-2 text-xs font-medium px-2 py-1 rounded transition-colors cursor-pointer ${
-            approved
-              ? "text-docebo-bright-green"
-              : "text-docebo-muted hover:text-white"
-          }`}
-        >
-          <span className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
-            approved
-              ? "bg-docebo-bright-green border-docebo-bright-green text-docebo-midnight"
-              : "border-docebo-muted hover:border-white/50"
-          }`}>
-            {approved && (
-              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </span>
-          {approved ? "Approved for Figma" : "Approve for Figma"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleApprove}
+            className={`flex items-center gap-2 text-xs font-medium px-2 py-1 rounded transition-colors cursor-pointer ${
+              approved
+                ? "text-docebo-bright-green"
+                : "text-docebo-muted hover:text-white"
+            }`}
+          >
+            <span className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
+              approved
+                ? "bg-docebo-bright-green border-docebo-bright-green text-docebo-midnight"
+                : "border-docebo-muted hover:border-white/50"
+            }`}>
+              {approved && (
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            {approved ? "Approved for Figma" : "Approve for Figma"}
+          </button>
+          <PhoenixScoreBadge
+            result={scoreResult}
+            expanded={scoreExpanded}
+            onToggle={() => setScoreExpanded((v) => !v)}
+          />
+        </div>
         <div className="flex items-center gap-1.5">
-          {!isGif && (
+          {!isGif && showPhoenix && phoenixCandidates.length > 1 && (
             <button
-              onClick={handleAiRender}
-              disabled={aiRendering}
-              title="Generate AI render via Gemini 2.5 Flash Image"
-              className="text-xs px-2 py-1 rounded bg-docebo-electric-purple/30 text-docebo-purple hover:bg-docebo-electric-purple/50 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+              onClick={() => setTemplateIndex((i) => i + 1)}
+              title={`Audition: ${TEMPLATE_LABEL[currentTemplateKey]} (${(templateIndex % phoenixCandidates.length) + 1}/${phoenixCandidates.length})`}
+              className="text-xs px-2 py-1 rounded bg-docebo-blue/20 text-docebo-light-blue hover:bg-docebo-blue/40 hover:text-white transition-colors cursor-pointer font-mono"
             >
-              {aiRendering ? "Rendering…" : aiRenderUrl ? "↻ Re-render" : "✨ AI render"}
+              🎲 {TEMPLATE_LABEL[currentTemplateKey]}{" "}
+              <span className="opacity-60">
+                {(templateIndex % phoenixCandidates.length) + 1}/{phoenixCandidates.length}
+              </span>
             </button>
           )}
-          {aiRenderUrl && !isGif && (
-            <>
-              <button
-                onClick={() => setShowCss((v) => !v)}
-                className="text-xs px-2 py-1 rounded bg-docebo-card text-docebo-muted hover:bg-docebo-border hover:text-white transition-colors cursor-pointer"
-              >
-                {showCss ? "Show AI" : "Show wireframe"}
-              </button>
-              <button
-                onClick={handleDownloadAi}
-                className="text-xs px-2 py-1 rounded bg-docebo-card text-docebo-muted hover:bg-docebo-border hover:text-white transition-colors cursor-pointer"
-              >
-                ↓ AI PNG
-              </button>
-            </>
+          {!isGif && (
+            <button
+              onClick={togglePhoenix}
+              title="Render with the Docebo Phoenix design system"
+              className="text-xs px-2 py-1 rounded bg-docebo-electric-purple/30 text-docebo-purple hover:bg-docebo-electric-purple/50 hover:text-white transition-colors cursor-pointer"
+            >
+              {showPhoenix ? "Show wireframe" : "✨ Phoenix render"}
+            </button>
           )}
           {isGif ? (
             <button
@@ -2435,12 +2366,7 @@ function AdMockup({
           )}
         </div>
       </div>
-      {aiRenderError && (
-        <div className="px-3 py-1.5 bg-docebo-pink/10 border-b border-docebo-pink/30">
-          <p className="text-xs text-docebo-pink">AI render failed: {aiRenderError}</p>
-        </div>
-      )}
-
+      {scoreExpanded && <PhoenixScoreIssues result={scoreResult} />}
       {/* Variant header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-docebo-border/30">
         <div className="flex items-center gap-2 flex-wrap">
@@ -2503,6 +2429,72 @@ function AdMockup({
           utm: {variant.utm_content_tag}
         </p>
       </div>
+
+      {/* Matching landing page link. Hidden when NEXT_PUBLIC_LOVABLE_LP_BASE_URL
+          is not set (buildLpUrlForVariant returns null) or persona is missing. */}
+      {(() => {
+        const lpUrl = buildLpUrlForVariant(variant);
+        if (!lpUrl) return null;
+        return (
+          <div className="px-3 py-2 border-t border-docebo-border/30">
+            <a
+              href={lpUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-docebo-pink/10 hover:bg-docebo-pink/20 border border-docebo-pink/30 hover:border-docebo-pink/50 text-docebo-pink transition-colors"
+              title="Open the Lovable landing page that mirrors this ad's persona, angle, and hook"
+            >
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-docebo-pink shrink-0" aria-hidden="true" />
+              <span className="font-medium">View matching landing page</span>
+              <span aria-hidden="true">→</span>
+            </a>
+            <p className="text-[10px] text-docebo-muted/60 mt-1 font-mono break-all">
+              {lpUrl}
+            </p>
+          </div>
+        );
+      })()}
+
+      {/* Evidence trace — claimed-only provenance from Gong-call evidence pool.
+          Shown only when the variant came from an evidence-backed persona. */}
+      {variant.evidence_used && Object.values(variant.evidence_used).some((t) => t && t.source_type !== "none") && (
+        <details open className="px-3 py-2 border-t border-docebo-pink/20 bg-docebo-pink/5">
+          <summary className="text-xs cursor-pointer hover:text-white flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-docebo-pink shrink-0" aria-hidden="true" />
+            <span className="text-docebo-pink font-medium">Gong evidence trace</span>
+            <span className="text-docebo-muted">— which prospect calls fed this ad</span>
+          </summary>
+          <div className="mt-2 space-y-2">
+            {[
+              { key: "creative_overlay", label: "In-image headline" },
+              { key: "headline", label: "Below-image headline" },
+              { key: "overlay_subtext", label: "In-image subtext" },
+              { key: "intro_text", label: "Body / intro text" },
+              { key: "cta_text", label: "CTA" },
+            ].map((field) => {
+              const trace = variant.evidence_used?.[field.key as keyof NonNullable<typeof variant.evidence_used>];
+              if (!trace || trace.source_type === "none" || !trace.source_excerpt) return null;
+              return (
+                <div key={field.key} className="border-l-2 border-docebo-pink/40 pl-2">
+                  <p className="text-[10px] uppercase tracking-wider text-docebo-muted/70 font-mono">
+                    {field.label}
+                  </p>
+                  <p className="text-xs text-white/85 italic mt-0.5 leading-snug">
+                    &ldquo;{trace.source_excerpt}&rdquo;
+                  </p>
+                  <p className="text-[10px] text-docebo-muted mt-0.5">
+                    <span className="text-docebo-pink/80 font-mono">{trace.source_type.replace(/_/g, " ")}</span>
+                    {trace.attribution && <> · {trace.attribution}</>}
+                  </p>
+                </div>
+              );
+            })}
+            <p className="text-[10px] text-docebo-muted/60 italic mt-2">
+              Claimed-only provenance. The model self-reports which evidence inspired each field; not text-verified.
+            </p>
+          </div>
+        </details>
+      )}
 
       {/* Collapsible details */}
       <details className="px-3 py-2 border-t border-docebo-border/30">

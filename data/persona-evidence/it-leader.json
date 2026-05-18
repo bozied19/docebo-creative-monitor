@@ -1,0 +1,121 @@
+{
+  "persona_id": "it-leader",
+  "persona_label": "IT Leader",
+  "evidence_summary": {
+    "row_count": 4,
+    "primary_segment": "Mid-Market to Major",
+    "primary_employee_range": "89-4000",
+    "primary_region": "NA",
+    "last_refreshed": "2026-05-06",
+    "source": "Gong call analysis Feb-May 2026",
+    "evidence_density": "light — fewer rows than other personas, more conservative claims"
+  },
+  "headline_pain": {
+    "summary": "API ownership and data flow control. Authentication / iframe / SSO edge cases that break content delivery. TCO at scale.",
+    "confidence": "common-thread",
+    "frequency_label": "consistent across the IT-buyer rows"
+  },
+  "pain_quotes": [
+    {
+      "quote": "we in the ECE area of our organization. We own two of the leading platforms in the space, fame and PST. And both are getting toward end of life. We're thinking about what is next.",
+      "attribution": "Andrew Sage · StraighterLine · 89 employees",
+      "use_case": "platform-replacement-end-of-life",
+      "incumbent": "FAME + PST (homegrown / legacy)",
+      "tags": ["end-of-life", "platform-decision", "api-control"]
+    },
+    {
+      "quote": "it's five times more than what we were planning. we want to be incentivized to grow on your platform obviously. But it'll be like our comfort level with this as a long term partnership that we can afford to move everybody over.",
+      "attribution": "Andrew Sage · StraighterLine · 89 employees",
+      "use_case": "tco-scale-pricing",
+      "incumbent": null,
+      "tags": ["sticker-shock", "tco", "scale-pricing", "long-term-commitment"]
+    },
+    {
+      "quote": "The underlying issue is that as all content launches from Docebo leverage a frameset to launch everything inline, our content is externally hosted. So when that occurs in that same inline frameset, we're invoking a request out to the client's IDP. They don't allow their login portal to display in your frame.",
+      "attribution": "Kevin Legro · Choice Hotels · 1460 employees",
+      "use_case": "sso-iframe-cross-domain",
+      "incumbent": "Skillsoft + Docebo + Okta combo",
+      "tags": ["okta", "iframe", "cross-domain-policy", "auth"]
+    },
+    {
+      "quote": "We won a bid with the department of war and they need post quantum encryption training. From the standpoint of training the people how to get their cryptographic bill of materials together, use that toward becoming agile in updating crypto modules.",
+      "attribution": "John D'Agostino · ECS · 4000 employees",
+      "use_case": "federal-short-term-deployment",
+      "incumbent": null,
+      "tags": ["fedramp", "short-term-engagement", "federal-bid", "post-quantum"]
+    }
+  ],
+  "decision_criteria": [
+    { "criterion": "API ownership and data-flow control (push events to registries, custom workflows)", "frequency_label": "strong-pattern" },
+    { "criterion": "SSO + SAML + Okta / Azure AD with cross-domain content support", "frequency_label": "strong-pattern" },
+    { "criterion": "HRIS-driven user provisioning (Paycor, Sage HR, Workday, BambooHR)", "frequency_label": "common" },
+    { "criterion": "AI model transparency, zero data retention, governance posture", "frequency_label": "common" },
+    { "criterion": "FedRAMP / SOC 2 / ISO 27001 for regulated environments", "frequency_label": "outlier-but-loud" },
+    { "criterion": "TCO at scale with predictable unit economics", "frequency_label": "strong-pattern" },
+    { "criterion": "Granular permissions and role-based access", "frequency_label": "common" },
+    { "criterion": "Eventing / webhooks for downstream system updates", "frequency_label": "common" }
+  ],
+  "language_they_use": [
+    "API ownership",
+    "data flow control",
+    "eventing",
+    "webhooks",
+    "TCO at scale",
+    "unit economics",
+    "trust portal",
+    "AI governance",
+    "zero data retention",
+    "iframe cross-domain policy",
+    "SSO / SAML",
+    "FedRAMP",
+    "data residency",
+    "shadow IT"
+  ],
+  "headline_ready_quotes": [
+    "It's five times more than what we were planning.",
+    "Both are getting toward end of life. We're thinking about what is next.",
+    "Their login portal won't display in your frame.",
+    "We need this for like five or six months tops."
+  ],
+  "competitive_triggers": [
+    { "incumbent": "Homegrown legacy (FAME, PST)", "switch_reason": "end of life, can't keep up with feature demand or scale", "row_count": 1 },
+    { "incumbent": "Absorb / Brightspace / D2L", "switch_reason": "evaluating against, comparing API depth and TCO", "row_count": 1 },
+    { "incumbent": "Skillsoft + iframe content delivery", "switch_reason": "Okta cross-domain blocks iframe SSO; auth fails in production", "row_count": 1 }
+  ],
+  "use_case_distribution": [
+    { "use_case": "platform-replacement-tech-led", "frequency_label": "common" },
+    { "use_case": "sso-iframe-cross-domain-resolution", "frequency_label": "outlier-but-loud" },
+    { "use_case": "federal-short-term-engagement", "frequency_label": "outlier" },
+    { "use_case": "scale-tco-evaluation", "frequency_label": "common" }
+  ],
+  "ask_yourself_prompts": [
+    "Who owns the data flow when this LMS is in production? Is it your team, or a vendor escape-hatch nobody documented?",
+    "Have you tested the SSO flow with content hosted outside the LMS? Cross-domain iframe policy breaks more pilots than people admit.",
+    "What's your unit cost per active learner at 10x current volume? If the answer is 'we'd need to ask sales', you don't have TCO clarity."
+  ],
+  "ask_next_vendor_prompts": [
+    "Show me the eventing model. When a learner completes a course, what events fire, where do they go, and how do I subscribe?",
+    "Show me an SSO flow with a customer IDP that blocks iframe. What's your fallback?",
+    "Walk me through the unit economics at 1x, 5x, 10x my current learner count. Lock the per-unit price for 3 years.",
+    "Where does AI processing happen? Which model, what data residency, what retention policy?"
+  ],
+  "pricing_pattern": {
+    "common_mistake": "Negotiating Year 1 pricing without locking long-term scale economics — sticker shock hits at 5x growth",
+    "what_they_should_compare": "FedRAMP premium (~100% over commercial) vs commercial; per-unit cost at projected scale; vendor-provided AI tokens vs bring-your-own",
+    "typical_sticker_shock": "Multi-x current-spend at scale; FedRAMP delta double commercial",
+    "advice": "Get unit-cost commitment in writing before signing. The Year 3 conversation is where the regret is."
+  },
+  "evaluation_committee": {
+    "size_range": "2-4",
+    "median": 3,
+    "common_pattern": "TPM / IT lead drives discovery, CTO joins for scale + TCO, plus internal champion (often L&D or sales-engineering)",
+    "confidence": "sharp-insight"
+  },
+  "avoid_framing": [
+    "feature-first pitches without API depth",
+    "AI claims without naming models, residency, retention",
+    "promising integrations without describing eventing/webhook architecture",
+    "ignoring the TCO-at-scale conversation (this is the actual buy decision)",
+    "FedRAMP-only pricing for short-term federal engagements (offer commercial backup)"
+  ]
+}

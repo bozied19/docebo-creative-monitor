@@ -726,6 +726,9 @@ export interface Variant {
   publishing_platform: string;
   /** Ad format from the 6-format taxonomy */
   ad_format: string;
+  /** Persona id (one of PERSONA_OPTIONS), e.g. "ld-leader". Carried as a
+   *  top-level field so the LP-URL builder doesn't have to parse the UTM tag. */
+  persona?: string;
   /** Composed UTM tag: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id] */
   utm_content_tag: string;
   gemini_image_prompt: string;
@@ -769,6 +772,38 @@ export interface Variant {
     /** Card-specific visual note for the designer. */
     card_visual_note?: string;
   }>;
+  /** Per-field provenance trace. When the request included a persona with a
+   *  Gong-evidence file, the model self-reports which evidence piece inspired
+   *  each copy field. "claimed only" — not text-verified. Fields where
+   *  no evidence was used carry source_type "none". */
+  evidence_used?: {
+    creative_overlay?: EvidenceTrace;
+    headline?: EvidenceTrace;
+    overlay_subtext?: EvidenceTrace;
+    intro_text?: EvidenceTrace;
+    cta_text?: EvidenceTrace;
+  };
+}
+
+export type EvidenceSourceType =
+  | "pain_quote"
+  | "headline_ready_quote"
+  | "language_they_use"
+  | "decision_criterion"
+  | "competitive_trigger"
+  | "ask_yourself_prompt"
+  | "ask_next_vendor_prompt"
+  | "pricing_pattern"
+  | "headline_pain_summary"
+  | "none";
+
+export interface EvidenceTrace {
+  source_type: EvidenceSourceType;
+  /** Verbatim phrase from the evidence pool that inspired this field.
+   *  Empty string when source_type is "none". */
+  source_excerpt: string;
+  /** Speaker / company attribution when source is a quote. */
+  attribution?: string;
 }
 
 /** Props passed to the canvas for format-aware rendering */
@@ -785,23 +820,56 @@ interface RefreshEngineProps {
   onVariantsGenerated: (variants: Variant[], renderContext: CanvasRenderContext) => void;
 }
 
-/* ── Persona options (unchanged) ───────────────────────────────── */
+/* ── Persona options ───────────────────────────────────────────────
+   evidenceBacked === true means a JSON file exists at
+   data/persona-evidence/<id>.json and the API will inject verbatim
+   Gong-call evidence into the prompt. Personas without evidence fall
+   back to a static blurb in route.ts and are disabled in the UI so the
+   demo always renders ads grounded in real prospect language. To enable
+   a new persona, drop a file at data/persona-evidence/<id>.json and
+   flip this flag. */
 const PERSONA_OPTIONS = [
-  { id: "brand", label: "Brand", group: "Brand & Learning", desc: "Big bold statements. Broad appeal across all Docebo audiences." },
-  { id: "ld-leader", label: "L&D Leader", group: "Brand & Learning", desc: "CLO, VP/Director of L&D. Learning ROI, workforce readiness, vendor consolidation." },
-  { id: "pro-dev", label: "Professional Development", group: "Brand & Learning", desc: "Skills frameworks, Kirkpatrick measurement, career pathing." },
-  { id: "hr-leader", label: "HR Leader", group: "Brand & Learning", desc: "CHRO, CPO, VP of HR. People strategy, HRIS integration, retention, compliance." },
-  { id: "enablement", label: "Revenue & Enablement", group: "Go-to-market", desc: "CRO, CSO, Sales Enablement. Pipeline, win rates, Salesforce, rep ramp." },
-  { id: "customer-ed", label: "Customer Education", group: "Go-to-market", desc: "Monetization, support deflection, time-to-value, NRR." },
-  { id: "partnerships", label: "Partner Enablement", group: "Go-to-market", desc: "Partner certification, revenue attribution, ecosystem growth." },
-  { id: "franchise", label: "Franchise & Frontline", group: "Operations & Compliance", desc: "Device policy, offline learning, brand consistency at scale." },
-  { id: "compliance", label: "Compliance", group: "Operations & Compliance", desc: "Audit readiness, automated assignment, regulatory defensibility." },
-  { id: "finance", label: "Finance", group: "Operations & Compliance", desc: "CFO, VP Finance. TCO transparency, ROI defensibility, AI spend governance." },
-  { id: "it-leader", label: "IT", group: "Operations & Compliance", desc: "CIO, CTO, VP IT. Security, SSO, API architecture, AI governance." },
-  { id: "operations", label: "Operations", group: "Operations & Compliance", desc: "COO, Head of Ops. Scalability, frontline readiness, time-to-productivity." },
+  { id: "brand", label: "Brand", group: "Brand & Learning", desc: "Big bold statements. Broad appeal across all Docebo audiences.", evidenceBacked: false },
+  { id: "ld-leader", label: "L&D Leader", group: "Brand & Learning", desc: "CLO, VP/Director of L&D. Learning ROI, workforce readiness, vendor consolidation.", evidenceBacked: true },
+  { id: "pro-dev", label: "Professional Development", group: "Brand & Learning", desc: "Skills frameworks, Kirkpatrick measurement, career pathing.", evidenceBacked: true },
+  { id: "hr-leader", label: "HR Leader", group: "Brand & Learning", desc: "CHRO, CPO, VP of HR. People strategy, HRIS integration, retention, compliance.", evidenceBacked: true },
+  { id: "enablement", label: "Revenue & Enablement", group: "Go-to-market", desc: "CRO, CSO, Sales Enablement. Pipeline, win rates, Salesforce, rep ramp.", evidenceBacked: false },
+  { id: "customer-ed", label: "Customer Education", group: "Go-to-market", desc: "Monetization, support deflection, time-to-value, NRR.", evidenceBacked: true },
+  { id: "partnerships", label: "Partner Enablement", group: "Go-to-market", desc: "Partner certification, revenue attribution, ecosystem growth.", evidenceBacked: true },
+  { id: "franchise", label: "Franchise & Frontline", group: "Operations & Compliance", desc: "Device policy, offline learning, brand consistency at scale.", evidenceBacked: false },
+  { id: "compliance", label: "Compliance", group: "Operations & Compliance", desc: "Audit readiness, automated assignment, regulatory defensibility.", evidenceBacked: false },
+  { id: "finance", label: "Finance", group: "Operations & Compliance", desc: "CFO, VP Finance. TCO transparency, ROI defensibility, AI spend governance.", evidenceBacked: false },
+  { id: "it-leader", label: "IT", group: "Operations & Compliance", desc: "CIO, CTO, VP IT. Security, SSO, API architecture, AI governance.", evidenceBacked: true },
+  { id: "operations", label: "Operations", group: "Operations & Compliance", desc: "COO, Head of Ops. Scalability, frontline readiness, time-to-productivity.", evidenceBacked: false },
 ];
 
 const PERSONA_GROUPS = ["Brand & Learning", "Go-to-market", "Operations & Compliance"] as const;
+
+/* ── Segment options ───────────────────────────────────────────────
+   Enterprise = default behavior (CLO/CHRO buyer, 12-24mo horizon,
+   org-wide AI framing). Mid-Market = MM doctrine layer that injects
+   tone-dial deltas, tribal language, copy substitutions, and visual
+   rules from data/reference-examples/MM_VOICE_GUIDE.md into the prompt.
+   See that file for the editable source of MM voice rules. */
+const SEGMENT_OPTIONS = [
+  {
+    id: "enterprise",
+    label: "Enterprise",
+    desc: "5,000+ employees · CLO / CHRO / CRO buyer · 12–24 month horizon · org-wide AI mandate",
+  },
+  {
+    id: "mid-market",
+    label: "Mid-Market",
+    desc: "1,000–5,000 employees · VP/Director of L&D buyer · this-quarter horizon · single rollout, lean team",
+  },
+] as const;
+
+type SegmentId = (typeof SEGMENT_OPTIONS)[number]["id"];
+
+/** Maya-flavored override for the L&D Leader persona description when
+ *  the Mid-Market segment is active. Mirrors §3 of MM_VOICE_GUIDE.md. */
+const LD_LEADER_MM_DESC =
+  "Maya Chen archetype: VP/Director of L&D at a 2,800-person company. Leads a team of 6. Drowning in admin, asked to 'do AI.' Needs to ship rollout by Q3 and prove ROI to a skeptical CFO.";
 
 /* ── Scoring standards ─────────────────────────────────────────── */
 const SCORING_STANDARDS = [
@@ -821,6 +889,7 @@ function buildAutoPrompt(
   visualStyle: VisualStyleOption,
   adFormat: AdFormatOption,
   platform: PlatformOption,
+  segment: (typeof SEGMENT_OPTIONS)[number],
   campaign: FatigueRow | null,
 ): string {
   const subAngle = angle.subAngles[subAngleIndex];
@@ -835,7 +904,14 @@ function buildAutoPrompt(
     );
   }
 
+  const isMM = segment.id === "mid-market";
+  const personaDesc =
+    isMM && persona.id === "ld-leader" ? LD_LEADER_MM_DESC : persona.desc;
+
   lines.push(
+    `═══ SEGMENT ═══`,
+    `${segment.label}: ${segment.desc}`,
+    "",
     `═══ UTM DIMENSIONS ═══`,
     `Publishing Platform: ${platform.label}`,
     `Visual Style: ${visualStyle.label} — ${visualStyle.coreIdea}`,
@@ -848,7 +924,7 @@ function buildAutoPrompt(
     `  Dimensions: ${adFormat.dimensions.label}`,
     "",
     `═══ TARGET PERSONA ═══`,
-    `${persona.label}: ${persona.desc}`,
+    `${persona.label}: ${personaDesc}`,
     "",
     `═══ BRAND VOICE GUIDE: ${brandVoice.label.toUpperCase()} ═══`,
     ...(brandVoice.positioning
@@ -875,16 +951,50 @@ function buildAutoPrompt(
       : []),
     ...(brandVoice.promise ? [``, `Brand Promise: ${brandVoice.promise}`] : []),
     ``,
+    ...(isMM
+      ? [
+          `═══ SEGMENT VARIATION: MID-MARKET ═══`,
+          `This ad targets a mid-market buyer (1,000–5,000 employees). The "${brandVoice.label}" voice still applies — but retune the dials per the MM Voice Guide:`,
+          `  - Swagger 70% → 50% empathetic confidence`,
+          `  - Provocation 20% → 30% knowing solidarity`,
+          `  - Technical precision 10% → 20% tactical specificity`,
+          `  - Status quo indignation 30% → 40% "I've been there" validation`,
+          `  - Scale of ambition: this quarter, this team, this metric — NOT org-wide transformation`,
+          `  - Proof style: named-customer before/after — NOT industry statistics (88%, 91%, etc.)`,
+          `  - AI framing: time-back-in-your-day leverage — NOT strategic vision`,
+          ``,
+          `Voice pillar rewrites: Rebelliously Smart → Practically Brilliant. Confidently Irreverent → Knowing Solidarity. Addictively Human → Effortlessly Lean.`,
+          ``,
+          `Mandatory copy substitutions:`,
+          `  - "AI-powered learning ecosystem" → "the platform that handles [specific task]"`,
+          `  - "Workforce of the future" → "Your team, this quarter"`,
+          `  - "Organization-wide AI readiness" → "Roll out AI training by [timeframe]"`,
+          `  - "Capability building at scale" → "Get N people trained without burning out your team of M"`,
+          `  - "Transformative skills strategy" → "The dashboard your CFO actually reads"`,
+          `  - Industry stats (88%, 91%) → named-customer before/after`,
+          `  - Glass tower / cityscape visuals → home office / open-plan mid-size HQ`,
+          `  - Board-deck language → Slack-thread language`,
+          ``,
+          `5-second rule: In the first 5 seconds, the MM buyer must think "this is for me." Headline names her role, team size, or problem — not an industry trend. Metric is one she personally tracks (completion rate, time-to-launch, hours saved) — not a macro-stat.`,
+          ``,
+          `Visual direction for MM creative:`,
+          `  DO: real humans (40s, approachable VPs/Directors), open-plan offices, mid-size HQs, laptop/phone screens with clean dashboards, natural lighting, warm tones, candid over-the-shoulder shots.`,
+          `  DON'T: glass towers, skyline shots, abstract AI imagery, suits-around-boardroom-tables stock, blue gradients, robot hands, circuit boards, "AI brain" visuals, all-text creative.`,
+          ``,
+          `Full MM doctrine is appended below by the API — defer to it for any conflict.`,
+          ``,
+        ]
+      : []),
     `═══ GENERATION INSTRUCTIONS ═══`,
     `Generate 5 ad variants using these exact UTM dimensions. Each variant must:`,
-    `- Use the "${brandVoice.label}" brand voice with tone mix: ${brandVoice.toneMix}`,
-    `- Apply the "${visualStyle.label}" visual style in visual_direction and gemini_image_prompt`,
+    `- Use the "${brandVoice.label}" brand voice with tone mix: ${brandVoice.toneMix}${isMM ? " (retuned per the MM dials above)" : ""}`,
+    `- Apply the "${visualStyle.label}" visual style in visual_direction and gemini_image_prompt${isMM ? " (constrained by the MM visual Do's/Don'ts above)" : ""}`,
     `- Lead with the "${angle.label} → ${subAngle.name}" messaging angle`,
     `- Each variant uses a DIFFERENT hook_type from the 12-type taxonomy`,
     `- Target the "${platform.label}" platform — adapt copy length, tone, and visual direction accordingly`,
     `- Follow "${adFormat.label}" format specs: ${adFormat.specs}`,
-    `- Compose utm_content_tag as: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id]`,
-    `- Speak directly to the ${persona.label} persona's pain points and language`,
+    `- Compose utm_content_tag as: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[segment]_[variant-id] (segment = "${segment.id}")`,
+    `- Speak directly to the ${persona.label} persona's pain points and language${isMM ? ` under the Mid-Market segment lens` : ""}`,
     `- Self-score each variant (min 7/10 each dimension)`,
   );
 
@@ -902,6 +1012,7 @@ export default function RefreshEngine({
   const [step, setStep] = useState<FlowStep>("select");
 
   // Selection state — Ad Ingredients (all selections in one step)
+  const [selectedSegment, setSelectedSegment] = useState<SegmentId | null>(null);
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
   const [selectedAngle, setSelectedAngle] = useState<string | null>(null);
   const [selectedSubAngleIndex, setSelectedSubAngleIndex] = useState<number>(0);
@@ -933,6 +1044,7 @@ export default function RefreshEngine({
   }, [selectedCampaign, selectedPlatform]);
 
   /* ── Derived data ─────────────────────────────────────────── */
+  const segment = SEGMENT_OPTIONS.find((s) => s.id === selectedSegment);
   const persona = PERSONA_OPTIONS.find((p) => p.id === selectedPersona);
   const angle = MESSAGING_ANGLE_OPTIONS.find((a) => a.id === selectedAngle);
   const platform = PLATFORM_OPTIONS.find((p) => p.id === selectedPlatform);
@@ -941,13 +1053,13 @@ export default function RefreshEngine({
   const adFormat = AD_FORMAT_OPTIONS.find((f) => f.id === selectedFormat);
   const visualStyle = VISUAL_STYLE_OPTIONS.find((s) => s.id === selectedVisualStyle);
 
-  const canGeneratePrompt = selectedPersona && selectedAngle && platform && voice && hookType && adFormat && visualStyle;
+  const canGeneratePrompt = segment && selectedPersona && selectedAngle && platform && voice && hookType && adFormat && visualStyle;
 
   /* ── Auto-generate prompt when all selections are made ──── */
   function handleGeneratePrompt() {
-    if (!persona || !angle || !platform || !voice || !hookType || !adFormat || !visualStyle) return;
+    if (!segment || !persona || !angle || !platform || !voice || !hookType || !adFormat || !visualStyle) return;
     const prompt = buildAutoPrompt(
-      persona, angle, selectedSubAngleIndex, hookType, voice, visualStyle, adFormat, platform, selectedCampaign,
+      persona, angle, selectedSubAngleIndex, hookType, voice, visualStyle, adFormat, platform, segment, selectedCampaign,
     );
     setEditablePrompt(prompt);
     setStep("prompt");
@@ -964,6 +1076,7 @@ export default function RefreshEngine({
     try {
       const body: Record<string, unknown> = {
         prompt: editablePrompt,
+        segment: selectedSegment,
         persona: selectedPersona,
         messaging_angle: selectedAngle,
         messaging_sub_angle: angle?.subAngles[selectedSubAngleIndex]?.name,
@@ -1013,6 +1126,7 @@ export default function RefreshEngine({
   /* ── Reset ────────────────────────────────────────────────── */
   function handleReset() {
     setStep("select");
+    setSelectedSegment(null);
     setSelectedPersona(null);
     setSelectedAngle(null);
     setSelectedSubAngleIndex(0);
@@ -1095,6 +1209,46 @@ export default function RefreshEngine({
       {/* ═══ STEP 1: CHOOSE YOUR AD INGREDIENTS ═══ */}
       {step === "select" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-4">
+          {/* Segment picker — Enterprise vs Mid-Market */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-docebo-muted">
+                Segment
+              </p>
+              {selectedSegment && (
+                <button
+                  onClick={() => setSelectedSegment(null)}
+                  className="text-[10px] text-docebo-muted/50 hover:text-docebo-muted transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {SEGMENT_OPTIONS.map((s) => {
+                const active = selectedSegment === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedSegment(active ? null : s.id)}
+                    className={`text-left px-2.5 py-2 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue cursor-pointer ${
+                      active
+                        ? "border-docebo-bright-green/60 bg-docebo-bright-green/10 shadow-[0_0_8px_rgba(84,250,119,0.15)]"
+                        : "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60"
+                    }`}
+                  >
+                    <p className={`text-xs font-medium ${active ? "text-docebo-bright-green" : "text-white/80"}`}>
+                      {s.label}
+                    </p>
+                    <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
+                      {s.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Persona picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -1110,6 +1264,12 @@ export default function RefreshEngine({
                 </button>
               )}
             </div>
+            <div className="mb-2 flex items-center gap-2 px-2 py-1.5 rounded-md bg-docebo-pink/5 border border-docebo-pink/20">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-docebo-pink shrink-0" aria-hidden="true" />
+              <p className="text-[10px] text-docebo-muted leading-snug">
+                <span className="text-docebo-pink font-medium">Gong evidence</span> personas inject verbatim prospect quotes, named incumbents, and real decision criteria. Personas without the badge use general framing.
+              </p>
+            </div>
             <div className="space-y-3">
               {PERSONA_GROUPS.map((group) => (
                 <div key={group}>
@@ -1123,8 +1283,10 @@ export default function RefreshEngine({
                       return (
                         <button
                           key={p.id}
-                          onClick={() => setSelectedPersona(active ? null : p.id)}
-                          className={`text-left px-2.5 py-2 rounded-lg border transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue ${
+                          onClick={() => {
+                            setSelectedPersona(active ? null : p.id);
+                          }}
+                          className={`text-left px-2.5 py-2 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue relative cursor-pointer ${
                             isBrand && !active
                               ? "col-span-2 border-dashed border-docebo-electric-purple/30 bg-docebo-electric-purple/5 hover:border-docebo-electric-purple/50 hover:bg-docebo-electric-purple/10"
                               : ""
@@ -1138,15 +1300,27 @@ export default function RefreshEngine({
                                 : ""
                           }`}
                         >
-                          <p className={`text-xs font-medium ${
-                            active
-                              ? isBrand ? "text-docebo-purple" : "text-docebo-light-blue"
-                              : "text-white/80"
-                          }`}>
-                            {p.label}
-                          </p>
+                          <div className="flex items-start justify-between gap-1.5">
+                            <p className={`text-xs font-medium ${
+                              active
+                                ? isBrand ? "text-docebo-purple" : "text-docebo-light-blue"
+                                : "text-white/80"
+                            }`}>
+                              {p.label}
+                            </p>
+                            {p.evidenceBacked && (
+                              <span
+                                className="text-[8px] font-mono uppercase tracking-wider px-1 py-px rounded bg-docebo-pink/15 text-docebo-pink shrink-0"
+                                title="Backed by verbatim Gong-call evidence"
+                              >
+                                Gong
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
-                            {p.desc}
+                            {selectedSegment === "mid-market" && p.id === "ld-leader"
+                              ? LD_LEADER_MM_DESC
+                              : p.desc}
                           </p>
                         </button>
                       );
@@ -1546,6 +1720,7 @@ export default function RefreshEngine({
             {canGeneratePrompt
               ? "Generate prompt →"
               : `Select: ${[
+                  !selectedSegment && "segment",
                   !selectedPersona && "persona",
                   !selectedAngle && "messaging angle",
                   !selectedPlatform && "platform",
