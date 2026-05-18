@@ -845,6 +845,32 @@ const PERSONA_OPTIONS = [
 
 const PERSONA_GROUPS = ["Brand & Learning", "Go-to-market", "Operations & Compliance"] as const;
 
+/* ── Segment options ───────────────────────────────────────────────
+   Enterprise = default behavior (CLO/CHRO buyer, 12-24mo horizon,
+   org-wide AI framing). Mid-Market = MM doctrine layer that injects
+   tone-dial deltas, tribal language, copy substitutions, and visual
+   rules from data/reference-examples/MM_VOICE_GUIDE.md into the prompt.
+   See that file for the editable source of MM voice rules. */
+const SEGMENT_OPTIONS = [
+  {
+    id: "enterprise",
+    label: "Enterprise",
+    desc: "5,000+ employees · CLO / CHRO / CRO buyer · 12–24 month horizon · org-wide AI mandate",
+  },
+  {
+    id: "mid-market",
+    label: "Mid-Market",
+    desc: "1,000–5,000 employees · VP/Director of L&D buyer · this-quarter horizon · single rollout, lean team",
+  },
+] as const;
+
+type SegmentId = (typeof SEGMENT_OPTIONS)[number]["id"];
+
+/** Maya-flavored override for the L&D Leader persona description when
+ *  the Mid-Market segment is active. Mirrors §3 of MM_VOICE_GUIDE.md. */
+const LD_LEADER_MM_DESC =
+  "Maya Chen archetype: VP/Director of L&D at a 2,800-person company. Leads a team of 6. Drowning in admin, asked to 'do AI.' Needs to ship rollout by Q3 and prove ROI to a skeptical CFO.";
+
 /* ── Scoring standards ─────────────────────────────────────────── */
 const SCORING_STANDARDS = [
   { key: "voice_compliance", label: "Voice", desc: "Docebo 'Learning Insurgent' tone — would this make a Cornerstone ad writer uncomfortable?" },
@@ -863,6 +889,7 @@ function buildAutoPrompt(
   visualStyle: VisualStyleOption,
   adFormat: AdFormatOption,
   platform: PlatformOption,
+  segment: (typeof SEGMENT_OPTIONS)[number],
   campaign: FatigueRow | null,
 ): string {
   const subAngle = angle.subAngles[subAngleIndex];
@@ -877,7 +904,14 @@ function buildAutoPrompt(
     );
   }
 
+  const isMM = segment.id === "mid-market";
+  const personaDesc =
+    isMM && persona.id === "ld-leader" ? LD_LEADER_MM_DESC : persona.desc;
+
   lines.push(
+    `═══ SEGMENT ═══`,
+    `${segment.label}: ${segment.desc}`,
+    "",
     `═══ UTM DIMENSIONS ═══`,
     `Publishing Platform: ${platform.label}`,
     `Visual Style: ${visualStyle.label} — ${visualStyle.coreIdea}`,
@@ -890,7 +924,7 @@ function buildAutoPrompt(
     `  Dimensions: ${adFormat.dimensions.label}`,
     "",
     `═══ TARGET PERSONA ═══`,
-    `${persona.label}: ${persona.desc}`,
+    `${persona.label}: ${personaDesc}`,
     "",
     `═══ BRAND VOICE GUIDE: ${brandVoice.label.toUpperCase()} ═══`,
     ...(brandVoice.positioning
@@ -917,16 +951,50 @@ function buildAutoPrompt(
       : []),
     ...(brandVoice.promise ? [``, `Brand Promise: ${brandVoice.promise}`] : []),
     ``,
+    ...(isMM
+      ? [
+          `═══ SEGMENT VARIATION: MID-MARKET ═══`,
+          `This ad targets a mid-market buyer (1,000–5,000 employees). The "${brandVoice.label}" voice still applies — but retune the dials per the MM Voice Guide:`,
+          `  - Swagger 70% → 50% empathetic confidence`,
+          `  - Provocation 20% → 30% knowing solidarity`,
+          `  - Technical precision 10% → 20% tactical specificity`,
+          `  - Status quo indignation 30% → 40% "I've been there" validation`,
+          `  - Scale of ambition: this quarter, this team, this metric — NOT org-wide transformation`,
+          `  - Proof style: named-customer before/after — NOT industry statistics (88%, 91%, etc.)`,
+          `  - AI framing: time-back-in-your-day leverage — NOT strategic vision`,
+          ``,
+          `Voice pillar rewrites: Rebelliously Smart → Practically Brilliant. Confidently Irreverent → Knowing Solidarity. Addictively Human → Effortlessly Lean.`,
+          ``,
+          `Mandatory copy substitutions:`,
+          `  - "AI-powered learning ecosystem" → "the platform that handles [specific task]"`,
+          `  - "Workforce of the future" → "Your team, this quarter"`,
+          `  - "Organization-wide AI readiness" → "Roll out AI training by [timeframe]"`,
+          `  - "Capability building at scale" → "Get N people trained without burning out your team of M"`,
+          `  - "Transformative skills strategy" → "The dashboard your CFO actually reads"`,
+          `  - Industry stats (88%, 91%) → named-customer before/after`,
+          `  - Glass tower / cityscape visuals → home office / open-plan mid-size HQ`,
+          `  - Board-deck language → Slack-thread language`,
+          ``,
+          `5-second rule: In the first 5 seconds, the MM buyer must think "this is for me." Headline names her role, team size, or problem — not an industry trend. Metric is one she personally tracks (completion rate, time-to-launch, hours saved) — not a macro-stat.`,
+          ``,
+          `Visual direction for MM creative:`,
+          `  DO: real humans (40s, approachable VPs/Directors), open-plan offices, mid-size HQs, laptop/phone screens with clean dashboards, natural lighting, warm tones, candid over-the-shoulder shots.`,
+          `  DON'T: glass towers, skyline shots, abstract AI imagery, suits-around-boardroom-tables stock, blue gradients, robot hands, circuit boards, "AI brain" visuals, all-text creative.`,
+          ``,
+          `Full MM doctrine is appended below by the API — defer to it for any conflict.`,
+          ``,
+        ]
+      : []),
     `═══ GENERATION INSTRUCTIONS ═══`,
     `Generate 5 ad variants using these exact UTM dimensions. Each variant must:`,
-    `- Use the "${brandVoice.label}" brand voice with tone mix: ${brandVoice.toneMix}`,
-    `- Apply the "${visualStyle.label}" visual style in visual_direction and gemini_image_prompt`,
+    `- Use the "${brandVoice.label}" brand voice with tone mix: ${brandVoice.toneMix}${isMM ? " (retuned per the MM dials above)" : ""}`,
+    `- Apply the "${visualStyle.label}" visual style in visual_direction and gemini_image_prompt${isMM ? " (constrained by the MM visual Do's/Don'ts above)" : ""}`,
     `- Lead with the "${angle.label} → ${subAngle.name}" messaging angle`,
     `- Each variant uses a DIFFERENT hook_type from the 12-type taxonomy`,
     `- Target the "${platform.label}" platform — adapt copy length, tone, and visual direction accordingly`,
     `- Follow "${adFormat.label}" format specs: ${adFormat.specs}`,
-    `- Compose utm_content_tag as: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[variant-id]`,
-    `- Speak directly to the ${persona.label} persona's pain points and language`,
+    `- Compose utm_content_tag as: [visual-style]_[ad-format]_[messaging-angle]_[hook-type]_[brand-voice]_[persona]_[segment]_[variant-id] (segment = "${segment.id}")`,
+    `- Speak directly to the ${persona.label} persona's pain points and language${isMM ? ` under the Mid-Market segment lens` : ""}`,
     `- Self-score each variant (min 7/10 each dimension)`,
   );
 
@@ -944,6 +1012,7 @@ export default function RefreshEngine({
   const [step, setStep] = useState<FlowStep>("select");
 
   // Selection state — Ad Ingredients (all selections in one step)
+  const [selectedSegment, setSelectedSegment] = useState<SegmentId | null>(null);
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
   const [selectedAngle, setSelectedAngle] = useState<string | null>(null);
   const [selectedSubAngleIndex, setSelectedSubAngleIndex] = useState<number>(0);
@@ -975,6 +1044,7 @@ export default function RefreshEngine({
   }, [selectedCampaign, selectedPlatform]);
 
   /* ── Derived data ─────────────────────────────────────────── */
+  const segment = SEGMENT_OPTIONS.find((s) => s.id === selectedSegment);
   const persona = PERSONA_OPTIONS.find((p) => p.id === selectedPersona);
   const angle = MESSAGING_ANGLE_OPTIONS.find((a) => a.id === selectedAngle);
   const platform = PLATFORM_OPTIONS.find((p) => p.id === selectedPlatform);
@@ -983,13 +1053,13 @@ export default function RefreshEngine({
   const adFormat = AD_FORMAT_OPTIONS.find((f) => f.id === selectedFormat);
   const visualStyle = VISUAL_STYLE_OPTIONS.find((s) => s.id === selectedVisualStyle);
 
-  const canGeneratePrompt = selectedPersona && selectedAngle && platform && voice && hookType && adFormat && visualStyle;
+  const canGeneratePrompt = segment && selectedPersona && selectedAngle && platform && voice && hookType && adFormat && visualStyle;
 
   /* ── Auto-generate prompt when all selections are made ──── */
   function handleGeneratePrompt() {
-    if (!persona || !angle || !platform || !voice || !hookType || !adFormat || !visualStyle) return;
+    if (!segment || !persona || !angle || !platform || !voice || !hookType || !adFormat || !visualStyle) return;
     const prompt = buildAutoPrompt(
-      persona, angle, selectedSubAngleIndex, hookType, voice, visualStyle, adFormat, platform, selectedCampaign,
+      persona, angle, selectedSubAngleIndex, hookType, voice, visualStyle, adFormat, platform, segment, selectedCampaign,
     );
     setEditablePrompt(prompt);
     setStep("prompt");
@@ -1006,6 +1076,7 @@ export default function RefreshEngine({
     try {
       const body: Record<string, unknown> = {
         prompt: editablePrompt,
+        segment: selectedSegment,
         persona: selectedPersona,
         messaging_angle: selectedAngle,
         messaging_sub_angle: angle?.subAngles[selectedSubAngleIndex]?.name,
@@ -1055,6 +1126,7 @@ export default function RefreshEngine({
   /* ── Reset ────────────────────────────────────────────────── */
   function handleReset() {
     setStep("select");
+    setSelectedSegment(null);
     setSelectedPersona(null);
     setSelectedAngle(null);
     setSelectedSubAngleIndex(0);
@@ -1137,6 +1209,46 @@ export default function RefreshEngine({
       {/* ═══ STEP 1: CHOOSE YOUR AD INGREDIENTS ═══ */}
       {step === "select" && (
         <div className="flex-1 overflow-auto px-4 py-3 space-y-4">
+          {/* Segment picker — Enterprise vs Mid-Market */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-docebo-muted">
+                Segment
+              </p>
+              {selectedSegment && (
+                <button
+                  onClick={() => setSelectedSegment(null)}
+                  className="text-[10px] text-docebo-muted/50 hover:text-docebo-muted transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {SEGMENT_OPTIONS.map((s) => {
+                const active = selectedSegment === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedSegment(active ? null : s.id)}
+                    className={`text-left px-2.5 py-2 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue cursor-pointer ${
+                      active
+                        ? "border-docebo-bright-green/60 bg-docebo-bright-green/10 shadow-[0_0_8px_rgba(84,250,119,0.15)]"
+                        : "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60"
+                    }`}
+                  >
+                    <p className={`text-xs font-medium ${active ? "text-docebo-bright-green" : "text-white/80"}`}>
+                      {s.label}
+                    </p>
+                    <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
+                      {s.desc}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Persona picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -1155,7 +1267,7 @@ export default function RefreshEngine({
             <div className="mb-2 flex items-center gap-2 px-2 py-1.5 rounded-md bg-docebo-pink/5 border border-docebo-pink/20">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-docebo-pink shrink-0" aria-hidden="true" />
               <p className="text-[10px] text-docebo-muted leading-snug">
-                <span className="text-docebo-pink font-medium">Gong evidence</span> personas inject verbatim prospect quotes, named incumbents, and real decision criteria. Personas without evidence are disabled for this demo.
+                <span className="text-docebo-pink font-medium">Gong evidence</span> personas inject verbatim prospect quotes, named incumbents, and real decision criteria. Personas without the badge use general framing.
               </p>
             </div>
             <div className="space-y-3">
@@ -1168,31 +1280,22 @@ export default function RefreshEngine({
                     {PERSONA_OPTIONS.filter((p) => p.group === group).map((p) => {
                       const active = selectedPersona === p.id;
                       const isBrand = p.id === "brand";
-                      const isDisabled = !p.evidenceBacked;
                       return (
                         <button
                           key={p.id}
                           onClick={() => {
-                            if (isDisabled) return;
                             setSelectedPersona(active ? null : p.id);
                           }}
-                          disabled={isDisabled}
-                          aria-disabled={isDisabled}
-                          title={isDisabled ? "No Gong-call evidence yet for this persona — disabled for demo" : undefined}
-                          className={`text-left px-2.5 py-2 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue relative ${
-                            isDisabled
-                              ? "cursor-not-allowed opacity-40 border-docebo-border/40 bg-docebo-card/10"
-                              : "cursor-pointer"
-                          } ${
-                            !isDisabled && isBrand && !active
+                          className={`text-left px-2.5 py-2 rounded-lg border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-docebo-blue relative cursor-pointer ${
+                            isBrand && !active
                               ? "col-span-2 border-dashed border-docebo-electric-purple/30 bg-docebo-electric-purple/5 hover:border-docebo-electric-purple/50 hover:bg-docebo-electric-purple/10"
                               : ""
                           } ${
-                            !isDisabled && active
+                            active
                               ? isBrand
                                 ? "col-span-2 border-docebo-electric-purple/50 bg-docebo-electric-purple/15 shadow-[0_0_8px_rgba(126,46,233,0.15)]"
                                 : "border-docebo-blue/50 bg-docebo-blue/15 shadow-[0_0_8px_rgba(0,87,255,0.15)]"
-                              : !isDisabled && !isBrand
+                              : !isBrand
                                 ? "border-docebo-border bg-docebo-card/30 hover:border-docebo-muted/40 hover:bg-docebo-card/60"
                                 : ""
                           }`}
@@ -1215,7 +1318,9 @@ export default function RefreshEngine({
                             )}
                           </div>
                           <p className="text-[10px] text-docebo-muted mt-0.5 leading-snug">
-                            {isDisabled ? "No Gong-call evidence yet — disabled for demo." : p.desc}
+                            {selectedSegment === "mid-market" && p.id === "ld-leader"
+                              ? LD_LEADER_MM_DESC
+                              : p.desc}
                           </p>
                         </button>
                       );
@@ -1615,6 +1720,7 @@ export default function RefreshEngine({
             {canGeneratePrompt
               ? "Generate prompt →"
               : `Select: ${[
+                  !selectedSegment && "segment",
                   !selectedPersona && "persona",
                   !selectedAngle && "messaging angle",
                   !selectedPlatform && "platform",

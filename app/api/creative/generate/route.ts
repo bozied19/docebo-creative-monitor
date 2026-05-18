@@ -39,6 +39,18 @@ async function loadPersonaEvidence(personaId: string): Promise<PersonaEvidence |
   }
 }
 
+/** Loads the MM voice guide markdown. Edited at
+ *  data/reference-examples/MM_VOICE_GUIDE.md by non-engineers; no code
+ *  change needed when doctrine evolves. Returns null on read failure. */
+async function loadMidMarketVoiceGuide(): Promise<string | null> {
+  try {
+    const filePath = path.join(process.cwd(), "data", "reference-examples", "MM_VOICE_GUIDE.md");
+    return await fs.readFile(filePath, "utf8");
+  } catch {
+    return null;
+  }
+}
+
 function sampleN<T>(arr: T[], n: number): T[] {
   if (arr.length <= n) return [...arr];
   const copy = [...arr];
@@ -245,7 +257,7 @@ Return a JSON array of variant objects. Each variant object has these fields:
   "variant_id": "v1",
   "intro_text": "30-50 words, platform-appropriate",
   "headline": "7 words max, this is the BELOW-IMAGE feed headline (LinkedIn feed chrome). It must be DIFFERENT from creative_overlay. Think of it as a complementary hook or CTA-style line that entices the click AFTER the reader has seen the in-image text.",
-  "creative_overlay": "4-7 words. HARD CAP at 8 words. This is the PRIMARY IN-IMAGE text, set in a heavy italic display face (Special Gothic Expanded) and rendered huge inside the canvas. Longer copy shrinks; shorter copy dominates. Write like a poster headline, not a sentence. Examples of the right scale: 'Training that people finish.' / 'Stop proving completions. Prove impact.' / 'The Netflix of enterprise training.' It must be DIFFERENT from headline, intro_text, and overlay_subtext. Never duplicate or paraphrase any of them.",
+  "creative_overlay": "4-7 words. HARD CAP at 8 words AND 45 characters. This is the PRIMARY IN-IMAGE text, set in a heavy italic display face (Special Gothic Expanded) and rendered huge inside the canvas. Longer copy shrinks; shorter copy dominates. Going past 45 chars forces the renderer into a smaller xlong tier and the headline starts crowding the subtext and CTA. Write like a poster headline, not a sentence. Examples of the right scale: 'Training that people finish.' / 'Stop proving completions. Prove impact.' / 'The Netflix of enterprise training.' It must be DIFFERENT from headline, intro_text, and overlay_subtext. Never duplicate or paraphrase any of them.",
   "overlay_subtext": "6-12 words. This is the SMALLER supporting line rendered inside the canvas, directly under creative_overlay. Its job is to complete the thought the creative_overlay started, add the specific outcome, number, or twist. It must be DIFFERENT from creative_overlay (which delivers the slap) and DIFFERENT from headline (which does the arguing below the image). Think of it as the 'because' line. Example: creative_overlay='We killed death by PowerPoint.' → overlay_subtext='94% completion rates. Zero begging required.' Do not repeat phrases or paraphrase.",
   "visual_direction": "Specific guidance for designer matching the visual_style",
   "cta_text": "CTA button text",
@@ -822,6 +834,7 @@ export async function POST(req: NextRequest) {
       ad_format,
       publishing_platform,
       persona,
+      segment,
     } = await req.json();
 
     if (!prompt) {
@@ -891,6 +904,17 @@ export async function POST(req: NextRequest) {
 
     if (publishing_platform) {
       userMessage += `\n\nPublishing Platform: ${publishing_platform}. Adapt tone, copy length, visual style, and creative direction for this platform.`;
+    }
+
+    if (segment === "mid-market") {
+      const mmGuide = await loadMidMarketVoiceGuide();
+      if (mmGuide) {
+        userMessage += `\n\n═══ MID-MARKET VOICE DOCTRINE (authoritative) ═══\nAll 5 variants target the Mid-Market segment (1,000–5,000 employees, VP/Director of L&D as primary signer). Apply the doctrine below as overrides on top of the existing brand voice — same product, different story:\n\n${mmGuide}`;
+      } else {
+        userMessage += `\n\nSegment: Mid-Market (1,000–5,000 employees). Retune voice toward empathetic confidence + knowing solidarity. Replace industry stats with named-customer before/after. Frame AI as time-back-in-your-day leverage, not strategic vision. Avoid glass-tower visuals; favor real humans in mid-size HQs.`;
+      }
+    } else if (segment === "enterprise") {
+      userMessage += `\n\nSegment: Enterprise (5,000+ employees, CLO/CHRO/CRO buyer, 12–24 month horizon). Keep the existing Learning Insurgent voice and org-wide AI framing.`;
     }
 
     if (campaign_context) {
